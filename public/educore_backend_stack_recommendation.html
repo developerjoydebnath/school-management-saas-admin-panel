@@ -1,0 +1,174 @@
+
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+.w{padding:.75rem 0;font-family:var(--font-sans)}
+.card{background:var(--color-background-primary);border:0.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-lg);padding:1rem 1.25rem;margin-bottom:10px}
+.card.featured{border:2px solid var(--color-border-info)}
+.sec{font-size:11px;font-weight:500;color:var(--color-text-tertiary);text-transform:uppercase;letter-spacing:.07em;margin:16px 0 8px}
+.row{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:8px;margin-bottom:10px}
+.choice{background:var(--color-background-primary);border:0.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-lg);padding:12px 14px}
+.choice.pick{border:2px solid var(--color-border-success)}
+.choice.no{opacity:.55}
+.choice-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:6px}
+.choice-name{font-size:14px;font-weight:500;color:var(--color-text-primary)}
+.badge{font-size:10px;padding:2px 8px;border-radius:20px;font-weight:500}
+.b-yes{background:#EAF3DE;color:#27500A}
+.b-no{background:#FCEBEB;color:#791F1F}
+.b-ok{background:#FAEEDA;color:#633806}
+.b-info{background:#E6F1FB;color:#0C447C}
+.choice-desc{font-size:12px;color:var(--color-text-secondary);line-height:1.5}
+.pro{display:flex;align-items:flex-start;gap:5px;font-size:11px;color:var(--color-text-secondary);margin-top:4px;line-height:1.4}
+.pro i{color:#3B6D11;margin-top:1px;flex-shrink:0}
+.con i{color:#A32D2D;margin-top:1px;flex-shrink:0}
+.con{display:flex;align-items:flex-start;gap:5px;font-size:11px;color:var(--color-text-secondary);margin-top:4px;line-height:1.4}
+.verdict{background:var(--color-background-secondary);border-radius:var(--border-radius-md);padding:10px 14px;margin-top:8px;font-size:12px;color:var(--color-text-primary);border-left:3px solid #3B6D11;border-radius:0 var(--border-radius-md) var(--border-radius-md) 0}
+.arch-block{background:var(--color-background-secondary);border-radius:var(--border-radius-md);padding:10px 12px;font-size:12px;margin-bottom:6px}
+.arch-head{font-size:13px;font-weight:500;color:var(--color-text-primary);margin-bottom:4px;display:flex;align-items:center;gap:6px}
+.arch-desc{font-size:12px;color:var(--color-text-secondary);line-height:1.5}
+.stat-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-bottom:12px}
+.stat{background:var(--color-background-secondary);border-radius:var(--border-radius-md);padding:8px 10px;text-align:center}
+.stat-n{font-size:15px;font-weight:500;color:var(--color-text-primary)}
+.stat-l{font-size:10px;color:var(--color-text-tertiary);margin-top:2px}
+.warn{background:#FAEEDA;border-radius:var(--border-radius-md);padding:8px 12px;border-left:3px solid #EF9F27;border-radius:0 var(--border-radius-md) var(--border-radius-md) 0;font-size:12px;color:#633806;margin-bottom:8px}
+.tip{background:#E6F1FB;border-radius:var(--border-radius-md);padding:8px 12px;border-left:3px solid #185FA5;border-radius:0 var(--border-radius-md) var(--border-radius-md) 0;font-size:12px;color:#0C447C;margin-bottom:8px}
+.stack-final{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:6px;margin-top:8px}
+.sf{background:var(--color-background-secondary);border-radius:var(--border-radius-md);padding:8px 10px}
+.sf-cat{font-size:10px;color:var(--color-text-tertiary);margin-bottom:3px}
+.sf-val{font-size:13px;font-weight:500;color:var(--color-text-primary)}
+.sf-why{font-size:10px;color:var(--color-text-secondary);margin-top:2px;line-height:1.35}
+</style>
+<h2 class="sr-only">Complete backend tech stack recommendation for EduCore school management SaaS targeting 500+ schools in Bangladesh</h2>
+<div class="w">
+
+<div class="stat-grid">
+  <div class="stat"><div class="stat-n">500+</div><div class="stat-l">Target schools</div></div>
+  <div class="stat"><div class="stat-n">1.5M+</div><div class="stat-l">Max users</div></div>
+  <div class="stat"><div class="stat-n">Month-1</div><div class="stat-l">Fee spike event</div></div>
+  <div class="stat"><div class="stat-n">VPS+S3</div><div class="stat-l">Hosting model</div></div>
+</div>
+
+<div class="sec">Backend framework</div>
+<div class="row">
+  <div class="choice pick">
+    <div class="choice-head"><span class="choice-name">NestJS</span><span class="badge b-yes">Recommended</span></div>
+    <div class="choice-desc">TypeScript-first, modular, built-in DI, guards, interceptors. Shares TypeScript with your React frontend — one language across the full stack.</div>
+    <div class="pro"><i class="ti ti-check" style="font-size:12px" aria-hidden="true"></i>Shares types with React frontend via shared DTOs</div>
+    <div class="pro"><i class="ti ti-check" style="font-size:12px" aria-hidden="true"></i>Built-in module system matches your 20-module design</div>
+    <div class="pro"><i class="ti ti-check" style="font-size:12px" aria-hidden="true"></i>Guards make multi-tenant RBAC clean and declarative</div>
+    <div class="pro"><i class="ti ti-check" style="font-size:12px" aria-hidden="true"></i>Microservices-ready when you need to split later</div>
+    <div class="pro"><i class="ti ti-check" style="font-size:12px" aria-hidden="true"></i>Best ecosystem for JWT, queues, WebSockets, cron jobs</div>
+  </div>
+  <div class="choice no">
+    <div class="choice-head"><span class="choice-name">Laravel</span><span class="badge b-ok">Avoid</span></div>
+    <div class="choice-desc">Excellent for monoliths. But PHP = different language from your React frontend. Slower under heavy concurrent load vs Node. Not ideal for real-time features.</div>
+    <div class="con"><i class="ti ti-x" style="font-size:12px" aria-hidden="true"></i>PHP type system doesn't share with TypeScript frontend</div>
+    <div class="con"><i class="ti ti-x" style="font-size:12px" aria-hidden="true"></i>Weaker on concurrent real-time (WebSocket, SSE)</div>
+  </div>
+  <div class="choice no">
+    <div class="choice-head"><span class="choice-name">Golang</span><span class="badge b-ok">Overkill now</span></div>
+    <div class="choice-desc">Fastest raw performance. But steep learning curve, no ORM as mature as TypeORM/Prisma, and premature for this stage. Revisit at 2000+ schools.</div>
+    <div class="con"><i class="ti ti-x" style="font-size:12px" aria-hidden="true"></i>Ecosystem less mature for rapid feature dev</div>
+    <div class="con"><i class="ti ti-x" style="font-size:12px" aria-hidden="true"></i>No shared types with React; harder to hire for</div>
+  </div>
+</div>
+
+<div class="sec">Database</div>
+<div class="row">
+  <div class="choice pick">
+    <div class="choice-head"><span class="choice-name">PostgreSQL</span><span class="badge b-yes">Recommended</span></div>
+    <div class="choice-desc">Gold standard for relational SaaS. Row-level security, JSONB columns for flexible fields, excellent indexing, native UUID, and full ACID transactions for fee payments.</div>
+    <div class="pro"><i class="ti ti-check" style="font-size:12px" aria-hidden="true"></i>ACID transactions — critical for fee collection & payroll</div>
+    <div class="pro"><i class="ti ti-check" style="font-size:12px" aria-hidden="true"></i>Row-Level Security (RLS) for tenant isolation at DB level</div>
+    <div class="pro"><i class="ti ti-check" style="font-size:12px" aria-hidden="true"></i>JSONB for flexible custom fields per school</div>
+    <div class="pro"><i class="ti ti-check" style="font-size:12px" aria-hidden="true"></i>Handles 500+ schools on one instance easily</div>
+  </div>
+  <div class="choice no">
+    <div class="choice-head"><span class="choice-name">MongoDB</span><span class="badge b-no">Wrong fit</span></div>
+    <div class="choice-desc">No ACID transactions across collections. Fee payments, payroll, and ledgers need strict consistency. School data is deeply relational — students → classes → subjects → marks → fees.</div>
+    <div class="con"><i class="ti ti-x" style="font-size:12px" aria-hidden="true"></i>No multi-document transactions (until v4, still weak)</div>
+    <div class="con"><i class="ti ti-x" style="font-size:12px" aria-hidden="true"></i>Relational joins are expensive and awkward</div>
+  </div>
+  <div class="choice no">
+    <div class="choice-head"><span class="choice-name">MySQL</span><span class="badge b-ok">Acceptable</span></div>
+    <div class="choice-desc">Works, but PostgreSQL is strictly better: native JSON, better constraints, superior indexing, window functions, and a cleaner ORM experience with Prisma/TypeORM.</div>
+    <div class="con"><i class="ti ti-x" style="font-size:12px" aria-hidden="true"></i>Inferior JSON support vs Postgres JSONB</div>
+    <div class="con"><i class="ti ti-x" style="font-size:12px" aria-hidden="true"></i>No Row-Level Security natively</div>
+  </div>
+</div>
+
+<div class="sec">The critical question — multi-tenant strategy</div>
+<div class="warn"><strong>Your plan (one VPS per school) is the wrong approach at 500+ schools.</strong> That is 500+ servers to manage, patch, monitor, and pay for — a DevOps nightmare. Here is the right model.</div>
+<div class="row">
+  <div class="choice pick">
+    <div class="choice-head"><span class="choice-name">Shared DB + schema isolation</span><span class="badge b-yes">Use this</span></div>
+    <div class="choice-desc">One PostgreSQL instance. Each school gets its own PostgreSQL schema (like a namespace). All schools share the same binary but their data is fully separated at the schema level.</div>
+    <div class="pro"><i class="ti ti-check" style="font-size:12px" aria-hidden="true"></i>One server, 500+ schools — manageable DevOps</div>
+    <div class="pro"><i class="ti ti-check" style="font-size:12px" aria-hidden="true"></i>Full data isolation — school A cannot see school B</div>
+    <div class="pro"><i class="ti ti-check" style="font-size:12px" aria-hidden="true"></i>Easy per-school backup (dump one schema)</div>
+    <div class="pro"><i class="ti ti-check" style="font-size:12px" aria-hidden="true"></i>Migrations run once, apply to all schemas</div>
+    <div class="pro"><i class="ti ti-check" style="font-size:12px" aria-hidden="true"></i">Custom domain = just a CNAME, same server</div>
+  </div>
+  <div class="choice no">
+    <div class="choice-head"><span class="choice-name">One VPS per school</span><span class="badge b-no">Don't do this</span></div>
+    <div class="choice-desc">500 schools = 500 servers. Security patches × 500. Database migrations × 500. Monitoring × 500. Costs spiral. One school's server goes down at midnight — you wake up.</div>
+    <div class="con"><i class="ti ti-x" style="font-size:12px" aria-hidden="true"></i>500+ servers to maintain, patch, and monitor</div>
+    <div class="con"><i class="ti ti-x" style="font-size:12px" aria-hidden="true"></i>Feature deployment = 500 separate deploys</div>
+    <div class="con"><i class="ti ti-x" style="font-size:12px" aria-hidden="true"></i>Cost: 500 VPS × BDT ~800/mo = BDT 4 lakh/month</div>
+    <div class="con"><i class="ti ti-x" style="font-size:12px" aria-hidden="true"></i>When a school wants a custom domain, far harder</div>
+  </div>
+  <div class="choice no">
+    <div class="choice-head"><span class="choice-name">Row-level isolation (school_id)</span><span class="badge b-ok">Simpler but weaker</span></div>
+    <div class="choice-desc">One schema, all schools in same tables, every row has school_id. Simpler to build, but a missed WHERE clause leaks data across schools. Not suitable for 500+ schools handling fee data.</div>
+    <div class="con"><i class="ti ti-x" style="font-size:12px" aria-hidden="true"></i>One missed WHERE leaks data between schools</div>
+    <div class="con"><i class="ti ti-x" style="font-size:12px" aria-hidden="true"></i>Per-school backup is complicated</div>
+  </div>
+</div>
+
+<div class="sec">Handling the month-1 fee payment spike</div>
+<div class="tip">When 500 schools × 1500 students each hit "Pay fees" on the 1st of the month, that's 750,000 near-simultaneous requests. Raw synchronous DB writes will kill your server. Here is what you need.</div>
+<div class="arch-block">
+  <div class="arch-head"><i class="ti ti-stack" style="font-size:14px;color:#185FA5" aria-hidden="true"></i> BullMQ job queue (Redis-backed)</div>
+  <div class="arch-desc">Payment requests don't hit PostgreSQL directly. They enter a BullMQ queue. Workers process them in controlled batches (e.g. 100 concurrent). The API returns "Payment received — processing" immediately. The student sees success in seconds. DB never gets slammed.</div>
+</div>
+<div class="arch-block">
+  <div class="arch-head"><i class="ti ti-database" style="font-size:14px;color:#0F6E56" aria-hidden="true"></i> Redis for session, rate limiting, and cache</div>
+  <div class="arch-desc">Store JWT sessions in Redis (not DB). Cache fee structures, class lists, and dashboard stats in Redis with TTL. Rate-limit bKash/Nagad webhook endpoints. Dramatically reduces DB reads during peak time.</div>
+</div>
+<div class="arch-block">
+  <div class="arch-head"><i class="ti ti-refresh" style="font-size:14px;color:#633806" aria-hidden="true"></i> PostgreSQL connection pooling (PgBouncer)</div>
+  <div class="arch-desc">Postgres can't handle 10,000 simultaneous connections. PgBouncer sits between NestJS and Postgres and pools connections to ~200 max. Essential for any SaaS at this scale.</div>
+</div>
+
+<div class="sec">File storage — your question about documents</div>
+<div class="arch-block">
+  <div class="arch-head"><i class="ti ti-cloud" style="font-size:14px;color:#534AB7" aria-hidden="true"></i> Cloudflare R2 (not AWS S3)</div>
+  <div class="arch-desc">For Bangladesh, Cloudflare R2 is the right choice over AWS S3. R2 has zero egress fees (S3 charges per GB downloaded — adds up fast for report PDFs and documents). R2 is S3-compatible so your SDK code is identical. Store: student photos, admission documents, result PDFs, certificates, assignment uploads, teacher NID scans.</div>
+</div>
+<div class="arch-block">
+  <div class="arch-head"><i class="ti ti-folder" style="font-size:14px;color:#3B6D11" aria-hidden="true"></i> Storage folder structure per school</div>
+  <div class="arch-desc">Bucket → /school-slug/ → /students/ /documents/ /results/ /certificates/ /assignments/ — each school's files are namespaced. Signed URLs for access (files never public). Auto-expiring download links for report cards shared with parents.</div>
+</div>
+
+<div class="sec">Subdomain + custom domain routing</div>
+<div class="arch-block">
+  <div class="arch-head"><i class="ti ti-world" style="font-size:14px;color:#993C1D" aria-hidden="true"></i> Nginx on one VPS handles all routing</div>
+  <div class="arch-desc">One Nginx reverse proxy reads the Host header. "school-a.educore.com.bd" → extracts slug "school-a" → passes to NestJS as X-Tenant header. NestJS middleware reads the header, sets the PostgreSQL schema to "school_a". Custom domains: school provides CNAME record pointing to your server IP. Nginx catches it, maps it to their slug. Zero new servers needed.</div>
+</div>
+
+<div class="sec">Final recommended stack</div>
+<div class="stack-final">
+  <div class="sf"><div class="sf-cat">Backend</div><div class="sf-val">NestJS + TypeScript</div><div class="sf-why">Modular, shared types with React, strong ecosystem</div></div>
+  <div class="sf"><div class="sf-cat">Database</div><div class="sf-val">PostgreSQL</div><div class="sf-why">Schema-per-tenant isolation, ACID for payments</div></div>
+  <div class="sf"><div class="sf-cat">Tenancy</div><div class="sf-val">Schema-per-school</div><div class="sf-why">Full isolation, one server, easy backup</div></div>
+  <div class="sf"><div class="sf-cat">Cache + Queue</div><div class="sf-val">Redis + BullMQ</div><div class="sf-why">Session cache + payment queue for spike handling</div></div>
+  <div class="sf"><div class="sf-cat">DB Pool</div><div class="sf-val">PgBouncer</div><div class="sf-why">Handles 500+ school concurrent connections</div></div>
+  <div class="sf"><div class="sf-cat">File storage</div><div class="sf-val">Cloudflare R2</div><div class="sf-why">S3-compatible, zero egress cost, BD-friendly</div></div>
+  <div class="sf"><div class="sf-cat">ORM</div><div class="sf-val">Prisma</div><div class="sf-why">Type-safe, schema migrations, multi-schema support</div></div>
+  <div class="sf"><div class="sf-cat">Routing</div><div class="sf-val">Nginx</div><div class="sf-why">Subdomain + custom domain via Host header</div></div>
+  <div class="sf"><div class="sf-cat">Hosting</div><div class="sf-val">2–3 VPS total</div><div class="sf-why">App server + DB server + Redis. Not per school.</div></div>
+  <div class="sf"><div class="sf-cat">PDF gen</div><div class="sf-val">Puppeteer (queue)</div><div class="sf-why">Async job — never block API for report cards</div></div>
+  <div class="sf"><div class="sf-cat">Payments</div><div class="sf-val">bKash + Nagad API</div><div class="sf-why">Via queue workers, not synchronous API handlers</div></div>
+  <div class="sf"><div class="sf-cat">SMS</div><div class="sf-val">SSL Wireless BD</div><div class="sf-why">BD-specific, bulk SMS for attendance/fees</div></div>
+</div>
+
+</div>

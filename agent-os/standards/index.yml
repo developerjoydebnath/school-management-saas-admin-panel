@@ -1,0 +1,22 @@
+# Agent OS Standards Index
+
+backend:
+  api-proxy:
+    description: "Next.js API proxy patterns: catch-all route forwarding, server-side secure token injection, and automatic token refresh handling"
+
+
+javascript:
+  components:
+    description: "Shared UI component patterns: Mega-Controller InputField for forms, Generic DataTable wrapper, and inline column definitions"
+  data-fetching:
+    description: "Data fetching patterns: axios singleton via /api/proxy, useSWR/useTableData/useSWRInfinite wrappers, and SWR cache invalidation after mutations"
+  data-models:
+    description: "Class-based data models with private fields, getters, and an _original property for raw API data"
+  error-handling:
+    description: "Global error handling patterns: auto-toasting via Axios interceptor, 404 GET suppression, and NestJS error shape parsing"
+  i18n:
+    description: "Internationalization patterns: Cookie-based next-intl routing without [locale] segments, feature namespacing in translation files, and dynamic data fallback handling"
+  module-structure:
+    description: "Feature module structure conventions: domain-driven folders, feature encapsulation, and separation from Next.js routing"
+  permissions:
+    description: "Permissions and authorization patterns: PermissionGuard component, centralized hasAccess utility, and Zustand auth sync"

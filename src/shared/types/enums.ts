@@ -1,0 +1,19 @@
+export enum SubjectTypeEnum {
+	MANDATORY = "MANDATORY",
+	OPTIONAL = "OPTIONAL",
+	PRACTICAL = "PRACTICAL",
+}
+
+export enum StatusEnum {
+	ACTIVE = "ACTIVE",
+	INACTIVE = "INACTIVE",
+}
+
+export enum BaseRoleEnum {
+	DEVELOPER = "DEVELOPER",
+	SUPER_ADMIN = "SUPER_ADMIN",
+	SCHOOL_ADMIN = "SCHOOL_ADMIN",
+	TEACHER = "TEACHER",
+	STUDENT = "STUDENT",
+	PARENT = "PARENT",
+}
