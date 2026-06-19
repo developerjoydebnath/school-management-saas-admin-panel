@@ -15,3 +15,8 @@ export const deleteSubscriptionPlan = async (id: string) => {
 	const response = await axios.delete(`/superadmin/subscription-plans/${id}`);
 	return response.data;
 };
+
+export const updateSubscriptionPlanStatus = async (id: string, isActive: boolean) => {
+	const response = await axios.patch(`/superadmin/subscription-plans/${id}/is-active`, { isActive });
+	return response.data;
+};

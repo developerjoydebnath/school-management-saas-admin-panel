@@ -9,6 +9,7 @@ import {
 } from "@/shared/components/custom/Filter";
 import FilterButton from "@/shared/components/form/FilterButton";
 import { IconFilter } from "@tabler/icons-react";
+import { useTranslations } from "next-intl";
 import React from "react";
 import { VoucherFilter } from "./VoucherList";
 
@@ -19,66 +20,53 @@ type Props = {
 };
 
 export default function VoucherFilterBar({ children, filter, setFilter }: Props) {
+	const t = useTranslations("VouchersPage");
+
 	const statusOptions = [
-		{ label: "Active", value: "active" },
-		{ label: "Inactive", value: "inactive" },
+		{ label: "Active", value: "true" },
+		{ label: "Inactive", value: "false" },
 	];
 
-	const typeOptions = [
+	const discountTypeOptions = [
 		{ label: "Percentage", value: "percentage" },
 		{ label: "Fixed Amount", value: "fixed_amount" },
 	];
 
+	const filterButtons = (
+		<>
+			<FilterButton
+				title="Status"
+				selected={filter.isActive}
+				onSelect={(values: string[]) => setFilter({ ...filter, isActive: values })}
+				clearFilter={() => setFilter({ ...filter, isActive: [] })}
+				options={statusOptions}
+			/>
+			<FilterButton
+				title="Discount Type"
+				selected={filter.discountType}
+				onSelect={(values: string[]) => setFilter({ ...filter, discountType: values })}
+				clearFilter={() => setFilter({ ...filter, discountType: [] })}
+				options={discountTypeOptions}
+			/>
+		</>
+	);
+
 	return (
 		<div>
-			<FilterDesktopWrapper>
-				<FilterButton
-					title="Status"
-					selected={filter.status ? [filter.status] : []}
-					onSelect={(values: string[]) => setFilter({ ...filter, status: values[0] || "" })}
-					clearFilter={() => setFilter({ ...filter, status: "" })}
-					options={statusOptions}
-				/>
-				<FilterButton
-					title="Type"
-					selected={filter.discountType ? [filter.discountType] : []}
-					onSelect={(values: string[]) => setFilter({ ...filter, discountType: values[0] || "" })}
-					clearFilter={() => setFilter({ ...filter, discountType: "" })}
-					options={typeOptions}
-				/>
-			</FilterDesktopWrapper>
+			<FilterDesktopWrapper>{filterButtons}</FilterDesktopWrapper>
 
 			<FilterMobileWrapper>
-				{children && children}
+				{children}
 
 				<FilterContainer>
 					<FilterTriggerButton className="w-fit">
 						<span className="flex items-center gap-2">
 							<IconFilter strokeWidth={1.5} className="size-4" />
-							<span>Filter</span>
+							<span>{t("filter")}</span>
 						</span>
 					</FilterTriggerButton>
 
-					<FilterContent>
-						<FilterButton
-							title="Status"
-							selected={filter.status ? [filter.status] : []}
-							onSelect={(values: string[]) =>
-								setFilter({ ...filter, status: values[0] || "" })
-							}
-							clearFilter={() => setFilter({ ...filter, status: "" })}
-							options={statusOptions}
-						/>
-						<FilterButton
-							title="Type"
-							selected={filter.discountType ? [filter.discountType] : []}
-							onSelect={(values: string[]) =>
-								setFilter({ ...filter, discountType: values[0] || "" })
-							}
-							clearFilter={() => setFilter({ ...filter, discountType: "" })}
-							options={typeOptions}
-						/>
-					</FilterContent>
+					<FilterContent>{filterButtons}</FilterContent>
 				</FilterContainer>
 			</FilterMobileWrapper>
 		</div>

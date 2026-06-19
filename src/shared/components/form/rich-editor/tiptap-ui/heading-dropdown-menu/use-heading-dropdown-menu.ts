@@ -51,42 +51,6 @@ export function getActiveHeadingLevel(
 
 /**
  * Custom hook that provides heading dropdown menu functionality for Tiptap editor
- *
- * @example
- * ```tsx
- * // Simple usage
- * function MyHeadingDropdown() {
- *   const {
- *     isVisible,
- *     activeLevel,
- *     isAnyHeadingActive,
- *     canToggle,
- *     levels,
- *   } = useHeadingDropdownMenu()
- *
- *   if (!isVisible) return null
- *
- *   return (
- *     <DropdownMenu>
- *       // dropdown content
- *     </DropdownMenu>
- *   )
- * }
- *
- * // Advanced usage with configuration
- * function MyAdvancedHeadingDropdown() {
- *   const {
- *     isVisible,
- *     activeLevel,
- *   } = useHeadingDropdownMenu({
- *     editor: myEditor,
- *     levels: [1, 2, 3],
- *     hideWhenUnavailable: true,
- *   })
- *
- *   // component implementation
- * }
- * ```
  */
 export function useHeadingDropdownMenu(config?: UseHeadingDropdownMenuConfig) {
   const {
@@ -97,7 +61,10 @@ export function useHeadingDropdownMenu(config?: UseHeadingDropdownMenuConfig) {
 
   const { editor } = useTiptapEditor(providedEditor)
   const [isVisible, setIsVisible] = useState(true)
+  const [, forceUpdate] = useState({})
 
+  // isActive/activeLevel/canToggleState are read fresh on every render;
+  // forceUpdate drives re-renders whenever a transaction fires.
   const activeLevel = getActiveHeadingLevel(editor, levels)
   const isActive = isHeadingActive(editor)
   const canToggleState = canToggle(editor)
@@ -105,18 +72,19 @@ export function useHeadingDropdownMenu(config?: UseHeadingDropdownMenuConfig) {
   useEffect(() => {
     if (!editor) return
 
-    const handleSelectionUpdate = () => {
+    const handleUpdate = () => {
       setIsVisible(
         shouldShowButton({ editor, hideWhenUnavailable, level: levels })
       )
+      forceUpdate({})
     }
 
-    handleSelectionUpdate()
+    handleUpdate()
 
-    editor.on("selectionUpdate", handleSelectionUpdate)
+    editor.on("transaction", handleUpdate)
 
     return () => {
-      editor.off("selectionUpdate", handleSelectionUpdate)
+      editor.off("transaction", handleUpdate)
     }
   }, [editor, hideWhenUnavailable, levels])
 

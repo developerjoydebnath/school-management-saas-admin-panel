@@ -135,40 +135,6 @@ export function getFormattedMarkName(type: Mark): string {
 
 /**
  * Custom hook that provides mark functionality for Tiptap editor
- *
- * @example
- * ```tsx
- * // Simple usage
- * function MySimpleBoldButton() {
- *   const { isVisible, handleMark } = useMark({ type: "bold" })
- *
- *   if (!isVisible) return null
- *
- *   return <button onClick={handleMark}>Bold</button>
- * }
- *
- * // Advanced usage with configuration
- * function MyAdvancedItalicButton() {
- *   const { isVisible, handleMark, label, isActive } = useMark({
- *     editor: myEditor,
- *     type: "italic",
- *     hideWhenUnavailable: true,
- *     onToggled: () => console.log('Mark toggled!')
- *   })
- *
- *   if (!isVisible) return null
- *
- *   return (
- *     <MyButton
- *       onClick={handleMark}
- *       aria-pressed={isActive}
- *       aria-label={label}
- *     >
- *       Italic
- *     </MyButton>
- *   )
- * }
- * ```
  */
 export function useMark(config: UseMarkConfig) {
   const {
@@ -180,22 +146,27 @@ export function useMark(config: UseMarkConfig) {
 
   const { editor } = useTiptapEditor(providedEditor)
   const [isVisible, setIsVisible] = useState<boolean>(true)
+  const [, forceUpdate] = useState({})
+
+  // isActive and canToggle are read fresh on every render;
+  // forceUpdate drives re-renders whenever the editor's transaction fires.
   const canToggle = canToggleMark(editor, type)
   const isActive = isMarkActive(editor, type)
 
   useEffect(() => {
     if (!editor) return
 
-    const handleSelectionUpdate = () => {
+    const handleUpdate = () => {
       setIsVisible(shouldShowButton({ editor, type, hideWhenUnavailable }))
+      forceUpdate({})
     }
 
-    handleSelectionUpdate()
+    handleUpdate()
 
-    editor.on("selectionUpdate", handleSelectionUpdate)
+    editor.on("transaction", handleUpdate)
 
     return () => {
-      editor.off("selectionUpdate", handleSelectionUpdate)
+      editor.off("transaction", handleUpdate)
     }
   }, [editor, type, hideWhenUnavailable])
 

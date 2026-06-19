@@ -143,6 +143,7 @@ export function useImageUpload(config?: UseImageUploadConfig) {
   const { editor } = useTiptapEditor(providedEditor)
   const isMobile = useIsBreakpoint()
   const [isVisible, setIsVisible] = useState<boolean>(true)
+  const [, forceUpdate] = useState({})
   const canInsert = canInsertImage(editor)
   const isActive = isImageActive(editor)
 
@@ -151,14 +152,15 @@ export function useImageUpload(config?: UseImageUploadConfig) {
 
     const handleSelectionUpdate = () => {
       setIsVisible(shouldShowButton({ editor, hideWhenUnavailable }))
+      forceUpdate({})
     }
 
     handleSelectionUpdate()
 
-    editor.on("selectionUpdate", handleSelectionUpdate)
+    editor.on("transaction", handleSelectionUpdate)
 
     return () => {
-      editor.off("selectionUpdate", handleSelectionUpdate)
+      editor.off("transaction", handleSelectionUpdate)
     }
   }, [editor, hideWhenUnavailable])
 

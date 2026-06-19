@@ -27,8 +27,13 @@ axios.interceptors.response.use(
 
 		if (error.response?.data) {
 			const data = error.response.data;
+			
+			// Handle detailed validation errors array: { errors: [{ message: "..." }] }
+			if (Array.isArray(data.errors) && data.errors.length > 0 && typeof data.errors[0].message === "string") {
+				errorMessage = data.errors[0].message;
+			} 
 			// Handle NestJS format: { message: "...", error: "..." }
-			if (typeof data.message === "string") {
+			else if (typeof data.message === "string") {
 				errorMessage = data.message;
 			} else if (Array.isArray(data.message) && data.message.length > 0) {
 				errorMessage = data.message[0]; // First validation error

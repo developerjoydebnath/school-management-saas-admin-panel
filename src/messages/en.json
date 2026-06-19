@@ -920,6 +920,38 @@
 		"title": "Edit Subscription Plan",
 		"description": "Modify the details of an existing subscription plan."
 	},
+	"VouchersPage": {
+		"title": "Vouchers",
+		"description": "Manage discount vouchers",
+		"addVoucher": "Add Voucher",
+		"createVoucher": "Create Voucher",
+		"updateVoucher": "Update Voucher",
+		"createSuccess": "Voucher created successfully.",
+		"updateSuccess": "Voucher updated successfully.",
+		"deleteSuccess": "Voucher deleted successfully.",
+		"statusUpdateSuccess": "Status updated successfully.",
+		"deleteVoucherTitle": "Delete Voucher",
+		"deleteVoucherDescription": "Are you sure you want to delete this voucher? This action cannot be undone.",
+		"code": "Voucher Code",
+		"name": "Internal Name",
+		"discount": "Discount",
+		"usage": "Usage",
+		"status": "Status",
+		"filter": "Filter",
+		"sectionBasicInfo": "Basic Information",
+		"sectionDiscount": "Discount Config",
+		"sectionLimits": "Limits & Duration",
+		"sectionSettings": "Settings",
+		"confirmStatusChange": "Change Status?"
+	},
+	"VoucherCreatePage": {
+		"title": "Create Voucher",
+		"description": "Add a new voucher to the system"
+	},
+	"VoucherEditPage": {
+		"title": "Edit Voucher",
+		"description": "Update voucher details"
+	},
 	"SubscriptionPlansPage": {
 		"title": "Subscription Plans",
 		"description": "Description",
@@ -994,7 +1026,8 @@
 		"sectionPricing": "Pricing & Billing",
 		"sectionLimits": "Usage Limits",
 		"sectionFeatures": "Features & Modules",
-		"sectionSettings": "Settings"
+		"sectionSettings": "Settings",
+		"confirmStatusChange": "Change Status?"
 	},
 	"SubscriptionPlanCreatePage": {
 		"title": "Create Subscription Plan",

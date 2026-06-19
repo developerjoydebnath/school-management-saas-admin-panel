@@ -312,6 +312,7 @@ export function useList(config: UseListConfig) {
 
   const { editor } = useTiptapEditor(providedEditor)
   const [isVisible, setIsVisible] = useState<boolean>(true)
+  const [, forceUpdate] = useState({})
   const canToggle = canToggleList(editor, type)
   const isActive = isListActive(editor, type)
 
@@ -320,14 +321,15 @@ export function useList(config: UseListConfig) {
 
     const handleSelectionUpdate = () => {
       setIsVisible(shouldShowButton({ editor, type, hideWhenUnavailable }))
+      forceUpdate({})
     }
 
     handleSelectionUpdate()
 
-    editor.on("selectionUpdate", handleSelectionUpdate)
+    editor.on("transaction", handleSelectionUpdate)
 
     return () => {
-      editor.off("selectionUpdate", handleSelectionUpdate)
+      editor.off("transaction", handleSelectionUpdate)
     }
   }, [editor, type, hideWhenUnavailable])
 

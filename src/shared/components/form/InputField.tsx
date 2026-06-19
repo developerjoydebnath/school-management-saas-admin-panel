@@ -1,6 +1,7 @@
 import UploadImage from "@/shared/components/form/UploadImage";
 import { Input } from "@/shared/components/ui/input";
 import { Label } from "@/shared/components/ui/label";
+import { NativeSelect, NativeSelectOption } from "@/shared/components/ui/native-select";
 import { RadioGroup, RadioGroupItem } from "@/shared/components/ui/radio-group";
 import {
 	Select,
@@ -43,7 +44,7 @@ interface FormFieldProps extends UseControllerProps {
 }
 
 export default function InputField({
-	required = true,
+	required = false,
 	labelClass,
 	className,
 	helperText,
@@ -71,9 +72,18 @@ export default function InputField({
 							? field.name
 							: undefined
 					}
-					className={cn("text-muted-foreground text-sm font-medium", labelClass)}
+					className={cn(
+						"text-muted-foreground text-sm font-medium",
+						required ? "gap-0" : "gap-1",
+						labelClass
+					)}
 				>
-					{props.label} {!required && "(Optional)"}
+					{props.label}
+					{required ? (
+						<span className="text-destructive">*</span>
+					) : (
+						<span>(Optional)</span>
+					)}
 				</Label>
 			)}
 			{match(props.type)
@@ -154,6 +164,22 @@ export default function InputField({
 							))}
 						</SelectContent>
 					</Select>
+				))
+
+				// Type native_select
+				.with("native_select", () => (
+					<NativeSelect
+						name={field.name}
+						value={field.value?.toString()}
+						onChange={field.onChange}
+						className={cn("h-10", className)}
+					>
+						{props?.options?.map((opt) => (
+							<NativeSelectOption key={opt.value} value={opt.value}>
+								{opt.label}
+							</NativeSelectOption>
+						))}
+					</NativeSelect>
 				))
 
 				.with("password", () => (

@@ -26,9 +26,9 @@ export function useSubscriptionPlans(params?: UseSubscriptionPlansParams) {
 	if (params?.isPublic && params.isPublic.length === 1) {
 		apiParams.isPublic = params.isPublic[0];
 	}
-	// billingCycle can be multi-value (future backend support) — for now send first selected
+	// billingCycle can be multi-value, join by commas for the backend
 	if (params?.billingCycle && params.billingCycle.length > 0) {
-		apiParams.billingCycle = params.billingCycle[0];
+		apiParams.billingCycle = params.billingCycle.join(',');
 	}
 
 	const { data, meta, isLoading, isError, mutate } = useTableData(

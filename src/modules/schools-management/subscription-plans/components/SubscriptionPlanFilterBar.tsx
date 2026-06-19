@@ -35,9 +35,10 @@ export default function SubscriptionPlanFilterBar({ children, filter, setFilter 
 	const billingCycleOptions = [
 		{ label: "Monthly", value: "monthly" },
 		{ label: "Quarterly", value: "quarterly" },
-		{ label: "Half Yearly", value: "half_yearly" },
-		{ label: "Yearly", value: "yearly" },
+		{ label: "Semi Annual", value: "semi_annual" },
+		{ label: "Annual", value: "annual" },
 		{ label: "Lifetime", value: "lifetime" },
+		{ label: "Custom", value: "custom" },
 	];
 
 	const filterButtons = (
@@ -68,9 +69,7 @@ export default function SubscriptionPlanFilterBar({ children, filter, setFilter 
 
 	return (
 		<div>
-			<FilterDesktopWrapper>
-				{filterButtons}
-			</FilterDesktopWrapper>
+			<FilterDesktopWrapper>{filterButtons}</FilterDesktopWrapper>
 
 			<FilterMobileWrapper>
 				{children}
@@ -83,9 +82,7 @@ export default function SubscriptionPlanFilterBar({ children, filter, setFilter 
 						</span>
 					</FilterTriggerButton>
 
-					<FilterContent>
-						{filterButtons}
-					</FilterContent>
+					<FilterContent>{filterButtons}</FilterContent>
 				</FilterContainer>
 			</FilterMobileWrapper>
 		</div>

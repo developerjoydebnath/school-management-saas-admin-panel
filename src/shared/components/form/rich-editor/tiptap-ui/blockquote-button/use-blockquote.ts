@@ -232,6 +232,7 @@ export function useBlockquote(config?: UseBlockquoteConfig) {
 
   const { editor } = useTiptapEditor(providedEditor)
   const [isVisible, setIsVisible] = useState<boolean>(true)
+  const [, forceUpdate] = useState({})
   const canToggle = canToggleBlockquote(editor)
   const isActive = editor?.isActive("blockquote") || false
 
@@ -240,14 +241,15 @@ export function useBlockquote(config?: UseBlockquoteConfig) {
 
     const handleSelectionUpdate = () => {
       setIsVisible(shouldShowButton({ editor, hideWhenUnavailable }))
+      forceUpdate({})
     }
 
     handleSelectionUpdate()
 
-    editor.on("selectionUpdate", handleSelectionUpdate)
+    editor.on("transaction", handleSelectionUpdate)
 
     return () => {
-      editor.off("selectionUpdate", handleSelectionUpdate)
+      editor.off("transaction", handleSelectionUpdate)
     }
   }, [editor, hideWhenUnavailable])
 

@@ -17,9 +17,10 @@ import { createSubscriptionPlan } from "../hooks/use-subscription-plan-mutations
 const BILLING_CYCLE_OPTIONS = [
 	{ label: "Monthly", value: "monthly" },
 	{ label: "Quarterly", value: "quarterly" },
-	{ label: "Half Yearly", value: "half_yearly" },
-	{ label: "Yearly", value: "yearly" },
+	{ label: "Semi Annual", value: "semi_annual" },
+	{ label: "Annual", value: "annual" },
 	{ label: "Lifetime", value: "lifetime" },
+	{ label: "Custom", value: "custom" },
 ];
 
 export function SubscriptionPlanCreateForm() {
@@ -71,8 +72,21 @@ export function SubscriptionPlanCreateForm() {
 			await createSubscriptionPlan(data);
 			toast.success(t("createSuccess"));
 			router.push(PATHS.SCHOOLS_MANAGEMENT.SUBSCRIPTION_PLANS.ROOT);
-		} catch {
+		} catch (error: any) {
 			// Global axios interceptor auto-toasts errors
+			if (error.response?.data?.errors) {
+				const errors = error.response.data.errors;
+				if (Array.isArray(errors)) {
+					errors.forEach((err: any) => {
+						if (err.field && err.message) {
+							form.setError(err.field as any, {
+								type: "server",
+								message: err.message,
+							});
+						}
+					});
+				}
+			}
 		} finally {
 			setIsSubmitting(false);
 		}
@@ -107,7 +121,7 @@ export function SubscriptionPlanCreateForm() {
 						control={form.control}
 						name="description"
 						label="Description"
-						type="textarea"
+						type="textEditor"
 						placeholder="Enter description"
 					/>
 				</CardContent>
@@ -132,7 +146,7 @@ export function SubscriptionPlanCreateForm() {
 							control={form.control}
 							name="billingCycle"
 							label="Billing Cycle"
-							type="select"
+							type="native_select"
 							options={BILLING_CYCLE_OPTIONS}
 							required
 						/>
@@ -142,6 +156,7 @@ export function SubscriptionPlanCreateForm() {
 							label="Setup Fee (BDT)"
 							type="number"
 							placeholder="0"
+							required
 						/>
 					</div>
 					<div className="grid grid-cols-1 gap-4 @2xl/page:grid-cols-3">
@@ -151,6 +166,7 @@ export function SubscriptionPlanCreateForm() {
 							label="Trial Days"
 							type="number"
 							placeholder="0"
+							required
 						/>
 						<InputField
 							control={form.control}
@@ -158,6 +174,7 @@ export function SubscriptionPlanCreateForm() {
 							label="Grace Period Days"
 							type="number"
 							placeholder="7"
+							required
 						/>
 						<InputField
 							control={form.control}
@@ -165,6 +182,7 @@ export function SubscriptionPlanCreateForm() {
 							label="Free Student Limit"
 							type="number"
 							placeholder="0"
+							required
 						/>
 					</div>
 				</CardContent>
@@ -332,6 +350,7 @@ export function SubscriptionPlanCreateForm() {
 							label="Sort Order"
 							type="number"
 							placeholder="0"
+							required
 						/>
 					</div>
 					<InputField

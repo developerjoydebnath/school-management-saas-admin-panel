@@ -242,6 +242,7 @@ export function useCodeBlock(config?: UseCodeBlockConfig) {
 
   const { editor } = useTiptapEditor(providedEditor)
   const [isVisible, setIsVisible] = useState<boolean>(true)
+  const [, forceUpdate] = useState({})
   const canToggleState = canToggle(editor)
   const isActive = editor?.isActive("codeBlock") || false
 
@@ -250,14 +251,15 @@ export function useCodeBlock(config?: UseCodeBlockConfig) {
 
     const handleSelectionUpdate = () => {
       setIsVisible(shouldShowButton({ editor, hideWhenUnavailable }))
+      forceUpdate({})
     }
 
     handleSelectionUpdate()
 
-    editor.on("selectionUpdate", handleSelectionUpdate)
+    editor.on("transaction", handleSelectionUpdate)
 
     return () => {
-      editor.off("selectionUpdate", handleSelectionUpdate)
+      editor.off("transaction", handleSelectionUpdate)
     }
   }, [editor, hideWhenUnavailable])
 

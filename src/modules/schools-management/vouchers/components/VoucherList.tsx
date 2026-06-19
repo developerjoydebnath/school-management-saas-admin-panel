@@ -1,44 +1,48 @@
 "use client";
 
+import ConfirmationModal from "@/shared/components/custom/ConfirmationModal";
 import PermissionGuard from "@/shared/components/custom/PermissionGuard";
 import DataTable from "@/shared/components/table/DataTable";
 import TableFilter from "@/shared/components/table/TableFilter";
-import { Badge } from "@/shared/components/ui/badge";
+import { AlertDialogTrigger } from "@/shared/components/ui/alert-dialog";
 import { Button } from "@/shared/components/ui/button";
 import { Card, CardContent, CardHeader } from "@/shared/components/ui/card";
+import { Switch } from "@/shared/components/ui/switch";
+import { PATHS } from "@/shared/configs/paths.config";
 import { PERMISSIONS } from "@/shared/configs/permissions.config";
 import { ColumnDef } from "@tanstack/react-table";
-import { Edit2, Eye, Plus, Trash2 } from "lucide-react";
+import { Edit2, Trash2 } from "lucide-react";
 import { useTranslations } from "next-intl";
-import { useState } from "react";
-import { useVouchers } from "../../hooks/use-vouchers";
-import { VoucherModel } from "../../models/voucher.model";
-import VoucherFilterBar from "./VoucherFilterBar";
-import { PATHS } from "@/shared/configs/paths.config";
 import Link from "next/link";
-import ConfirmationModal from "@/shared/components/custom/ConfirmationModal";
-import { AlertDialogTrigger } from "@/shared/components/ui/alert-dialog";
-import axios from "@/shared/lib/axios";
+import { useState } from "react";
 import { toast } from "sonner";
 import { useSWRConfig } from "swr";
-import { format } from "date-fns";
+import { useVouchers } from "../hooks/use-vouchers";
+import { VoucherModel } from "../../models/voucher.model";
+import {
+	deleteVoucher,
+	updateVoucherStatus,
+} from "../hooks/use-voucher-mutations";
+import { VoucherCreateButton } from "./VoucherCreateButton";
+import VoucherFilterBar from "./VoucherFilterBar";
 
 export type VoucherFilter = {
 	search: string;
-	status: string;
-	discountType: string;
+	isActive: string[];
+	discountType: string[];
 };
 
 const initialFilters: VoucherFilter = {
 	search: "",
-	status: "",
-	discountType: "",
+	isActive: [],
+	discountType: [],
 };
 
 export function VoucherList() {
 	const [filter, setFilter] = useState<VoucherFilter>(initialFilters);
-	const t = useTranslations("SchoolsManagement");
+	const t = useTranslations("VouchersPage");
 	const tc = useTranslations("Common");
+	const tf = useTranslations("Forms");
 	const [page, setPage] = useState(1);
 	const [limit, setLimit] = useState(10);
 	const { mutate } = useSWRConfig();
@@ -51,25 +55,42 @@ export function VoucherList() {
 		page,
 		limit,
 		search: filter.search,
-		status: filter.status,
+		isActive: filter.isActive,
 		discountType: filter.discountType,
 	});
 
-	const [voucherToDelete, setVoucherToDelete] = useState<string | null>(null);
+	const [itemToDelete, setItemToDelete] = useState<string | null>(null);
 	const [isDeleting, setIsDeleting] = useState(false);
 
 	const confirmDelete = async (id: string) => {
-		setVoucherToDelete(id);
+		setItemToDelete(id);
 		setIsDeleting(true);
 		try {
-			await axios.delete(`/superadmin/vouchers/${id}`);
-			toast.success("Voucher deleted successfully");
-			mutate((key: any) => typeof key === "string" && key.startsWith("/superadmin/vouchers"));
-		} catch (error: any) {
-			// Toast is handled automatically by axios singleton
+			await deleteVoucher(id);
+			toast.success(t("deleteSuccess"));
+			mutate(
+				(key: any) =>
+					typeof key === "string" && key.startsWith("/superadmin/vouchers")
+			);
+		} catch {
+			// Global axios interceptor auto-toasts errors
 		} finally {
 			setIsDeleting(false);
-			setVoucherToDelete(null);
+			setItemToDelete(null);
+		}
+	};
+
+	const handleStatusToggle = async (id: string, currentStatus: boolean) => {
+		const newStatus = !currentStatus;
+		try {
+			await updateVoucherStatus(id, newStatus);
+			toast.success(t("statusUpdateSuccess") || "Status updated successfully");
+			mutate(
+				(key: any) =>
+					typeof key === "string" && key.startsWith("/superadmin/vouchers")
+			);
+		} catch {
+			// Global interceptor handles error toast
 		}
 	};
 
@@ -77,12 +98,18 @@ export function VoucherList() {
 		{
 			id: "code",
 			accessorKey: "code",
-			header: "Voucher Code",
-			cell: ({ row }) => <div className="font-mono font-medium text-primary bg-muted p-1 rounded inline-block">{row.original.code}</div>,
+			header: t("code"),
+			cell: ({ row }) => <div className="text-primary font-bold">{row.original.code}</div>,
+		},
+		{
+			id: "name",
+			accessorKey: "name",
+			header: t("name"),
+			cell: ({ row }) => <div className="font-medium">{row.original.name}</div>,
 		},
 		{
 			id: "discount",
-			header: "Discount",
+			header: t("discount"),
 			cell: ({ row }) => (
 				<div>
 					{row.original.discountType === "percentage" 
@@ -93,37 +120,35 @@ export function VoucherList() {
 		},
 		{
 			id: "usage",
-			header: "Usage",
+			header: t("usage"),
 			cell: ({ row }) => (
 				<div className="text-sm">
-					{row.original.usedCount} / {row.original.maxUses || "∞"}
-				</div>
-			),
-		},
-		{
-			id: "validity",
-			header: "Validity",
-			cell: ({ row }) => (
-				<div className="text-sm">
-					<div className="text-muted-foreground">From: {row.original.validFrom ? format(new Date(row.original.validFrom), "MMM d, yyyy") : "N/A"}</div>
-					<div className="text-muted-foreground">To: {row.original.validUntil ? format(new Date(row.original.validUntil), "MMM d, yyyy") : "N/A"}</div>
+					{row.original.currentRedemptions} / {row.original.maxRedemptions || "∞"}
 				</div>
 			),
 		},
 		{
 			id: "status",
-			accessorKey: "status",
-			header: "Status",
+			header: t("status"),
 			cell: ({ row }) => {
-				const status = row.original.status;
-				const isExpired = row.original.validUntil && new Date(row.original.validUntil) < new Date();
+				const isActive = row.original.isActive;
 				return (
-					<Badge
-						variant={status === "active" && !isExpired ? "default" : "secondary"}
-						className="capitalize"
+					<ConfirmationModal
+						onConfirm={() => handleStatusToggle(row.original.id, row.original.isActive)}
+						title={t("confirmStatusChange")}
+						description={isActive ? tc("changeToInactiveDesc") : tc("changeToActiveDesc")}
+						confirmText={tc("changeStatus")}
+						variant="default"
 					>
-						{isExpired ? "Expired" : status}
-					</Badge>
+						<AlertDialogTrigger asChild>
+							<div className="group flex w-fit cursor-pointer items-center gap-2">
+								<Switch checked={isActive} className="pointer-events-none" />
+								<span className="text-sm capitalize">
+									{isActive ? tf("active") : tf("inactive")}
+								</span>
+							</div>
+						</AlertDialogTrigger>
+					</ConfirmationModal>
 				);
 			},
 		},
@@ -134,21 +159,27 @@ export function VoucherList() {
 				const voucher = row.original;
 				return (
 					<div className="flex items-center gap-2">
-						<PermissionGuard permissions={[PERMISSIONS.SCHOOLS_MANAGEMENT.VOUCHERS.EDIT]}>
+						<PermissionGuard
+							permissions={[PERMISSIONS.SCHOOLS_MANAGEMENT.VOUCHERS.EDIT]}
+						>
 							<Button asChild variant="outline" size="icon">
-								<Link href={PATHS.SCHOOLS_MANAGEMENT.VOUCHERS.EDIT(voucher.id)}>
+								<Link
+									href={PATHS.SCHOOLS_MANAGEMENT.VOUCHERS.EDIT(voucher.id)}
+								>
 									<Edit2 className="text-muted-foreground hover:text-foreground h-4 w-4" />
 								</Link>
 							</Button>
 						</PermissionGuard>
-						<PermissionGuard permissions={[PERMISSIONS.SCHOOLS_MANAGEMENT.VOUCHERS.DELETE]}>
+						<PermissionGuard
+							permissions={[PERMISSIONS.SCHOOLS_MANAGEMENT.VOUCHERS.DELETE]}
+						>
 							<ConfirmationModal
 								onConfirm={() => confirmDelete(voucher.id)}
-								title="Delete Voucher"
-								description="Are you sure you want to delete this voucher? This action cannot be undone."
+								title={t("deleteVoucherTitle")}
+								description={t("deleteVoucherDescription")}
 								confirmText={tc("delete")}
 								variant="destructive"
-								isLoading={isDeleting && voucherToDelete === voucher.id}
+								isLoading={isDeleting && itemToDelete === voucher.id}
 							>
 								<AlertDialogTrigger asChild>
 									<Button variant="outline" size="icon">
@@ -173,14 +204,7 @@ export function VoucherList() {
 		<Card className="p-6 shadow-none ring-0">
 			<CardHeader className="p-0">
 				<VoucherFilterBar filter={filter} setFilter={setFilter}>
-					<PermissionGuard permissions={[PERMISSIONS.SCHOOLS_MANAGEMENT.VOUCHERS.CREATE]}>
-						<Button asChild>
-							<Link href={PATHS.SCHOOLS_MANAGEMENT.VOUCHERS.CREATE}>
-								<Plus className="size-4" />
-								Add Voucher
-							</Link>
-						</Button>
-					</PermissionGuard>
+					<VoucherCreateButton />
 				</VoucherFilterBar>
 			</CardHeader>
 

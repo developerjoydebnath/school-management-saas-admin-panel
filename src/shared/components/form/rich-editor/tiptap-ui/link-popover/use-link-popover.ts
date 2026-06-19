@@ -130,9 +130,9 @@ export function useLinkHandler(props: LinkHandlerProps) {
       setUrl(href || "")
     }
 
-    editor.on("selectionUpdate", updateLinkState)
+    editor.on("transaction", updateLinkState)
     return () => {
-      editor.off("selectionUpdate", updateLinkState)
+      editor.off("transaction", updateLinkState)
     }
   }, [editor])
 
@@ -203,6 +203,7 @@ export function useLinkState(props: {
   const isActive = isLinkActive(editor)
 
   const [isVisible, setIsVisible] = useState(true)
+  const [, forceUpdate] = useState({})
 
   useEffect(() => {
     if (!editor) return
@@ -214,14 +215,15 @@ export function useLinkState(props: {
           hideWhenUnavailable,
         })
       )
+      forceUpdate({})
     }
 
     handleSelectionUpdate()
 
-    editor.on("selectionUpdate", handleSelectionUpdate)
+    editor.on("transaction", handleSelectionUpdate)
 
     return () => {
-      editor.off("selectionUpdate", handleSelectionUpdate)
+      editor.off("transaction", handleSelectionUpdate)
     }
   }, [editor, hideWhenUnavailable])
 
@@ -234,40 +236,6 @@ export function useLinkState(props: {
 
 /**
  * Main hook that provides link popover functionality for Tiptap editor
- *
- * @example
- * ```tsx
- * // Simple usage
- * function MyLinkButton() {
- *   const { isVisible, canSet, isActive, Icon, label } = useLinkPopover()
- *
- *   if (!isVisible) return null
- *
- *   return <button disabled={!canSet}>Link</button>
- * }
- *
- * // Advanced usage with configuration
- * function MyAdvancedLinkButton() {
- *   const { isVisible, canSet, isActive, Icon, label } = useLinkPopover({
- *     editor: myEditor,
- *     hideWhenUnavailable: true,
- *     onSetLink: () => console.log('Link set!')
- *   })
- *
- *   if (!isVisible) return null
- *
- *   return (
- *     <MyButton
- *       disabled={!canSet}
- *       aria-label={label}
- *       aria-pressed={isActive}
- *     >
- *       <Icon />
- *       {label}
- *     </MyButton>
- *   )
- * }
- * ```
  */
 export function useLinkPopover(config?: UseLinkPopoverConfig) {
   const {

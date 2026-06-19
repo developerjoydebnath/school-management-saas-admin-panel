@@ -914,6 +914,38 @@
 		"title": "সাবস্ক্রিপশন প্ল্যান সম্পাদনা",
 		"description": "বিদ্যমান সাবস্ক্রিপশন প্ল্যানের বিবরণ পরিবর্তন করুন।"
 	},
+	"VouchersPage": {
+		"title": "ভাউচার",
+		"description": "ডিসকাউন্ট ভাউচার পরিচালনা করুন",
+		"addVoucher": "ভাউচার যোগ করুন",
+		"createVoucher": "ভাউচার তৈরি করুন",
+		"updateVoucher": "ভাউচার আপডেট করুন",
+		"createSuccess": "ভাউচার সফলভাবে তৈরি হয়েছে।",
+		"updateSuccess": "ভাউচার সফলভাবে আপডেট হয়েছে।",
+		"deleteSuccess": "ভাউচার সফলভাবে মুছে ফেলা হয়েছে।",
+		"statusUpdateSuccess": "অবস্থা সফলভাবে আপডেট হয়েছে।",
+		"deleteVoucherTitle": "ভাউচার মুছুন",
+		"deleteVoucherDescription": "আপনি কি নিশ্চিত যে আপনি এই ভাউচারটি মুছতে চান? এই কাজটি পূর্বাবস্থায় ফেরানো যাবে না।",
+		"code": "ভাউচার কোড",
+		"name": "আভ্যন্তরীণ নাম",
+		"discount": "ডিসকাউন্ট",
+		"usage": "ব্যবহার",
+		"status": "অবস্থা",
+		"filter": "ফিল্টার",
+		"sectionBasicInfo": "মূল তথ্য",
+		"sectionDiscount": "ডিসকাউন্ট কনফিগারেশন",
+		"sectionLimits": "সীমা এবং সময়কাল",
+		"sectionSettings": "সেটিংস",
+		"confirmStatusChange": "স্ট্যাটাস পরিবর্তন করবেন?"
+	},
+	"VoucherCreatePage": {
+		"title": "ভাউচার তৈরি করুন",
+		"description": "সিস্টেমে একটি নতুন ভাউচার যোগ করুন"
+	},
+	"VoucherEditPage": {
+		"title": "ভাউচার সম্পাদনা করুন",
+		"description": "ভাউচারের বিবরণ আপডেট করুন"
+	},
 	"SubscriptionPlansPage": {
 		"title": "সাবস্ক্রিপশন প্ল্যান",
 		"description": "বিবরণ",
@@ -985,10 +1017,11 @@
 		"notes": "অভ্যন্তরীণ নোট",
 		"notesPlaceholder": "এই প্ল্যান সম্পর্কে অভ্যন্তরীণ নোট...",
 		"sectionBasicInfo": "মূল তথ্য",
-		"sectionPricing": "মূল্য নির্ধারণ ও বিলিং",
+		"sectionPricing": "মূল্য এবং বিলিং",
 		"sectionLimits": "ব্যবহারের সীমা",
-		"sectionFeatures": "ফিচার ও মডিউল",
-		"sectionSettings": "সেটিংস"
+		"sectionFeatures": "বৈশিষ্ট্য ও মডিউল",
+		"sectionSettings": "সেটিংস",
+		"confirmStatusChange": "স্ট্যাটাস পরিবর্তন করবেন?"
 	},
 	"SubscriptionPlanCreatePage": {
 		"title": "সাবস্ক্রিপশন প্ল্যান তৈরি করুন",

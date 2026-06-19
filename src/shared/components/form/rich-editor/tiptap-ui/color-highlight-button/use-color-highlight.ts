@@ -282,6 +282,7 @@ export function useColorHighlight(config: UseColorHighlightConfig) {
   const { editor } = useTiptapEditor(providedEditor)
   const isMobile = useIsBreakpoint()
   const [isVisible, setIsVisible] = useState<boolean>(true)
+  const [, forceUpdate] = useState({})
   const canColorHighlightState = canColorHighlight(editor, mode)
   const actualColor = highlightColor
     ? getHighlightColorValue(highlightColor, useColorValue)
@@ -293,14 +294,15 @@ export function useColorHighlight(config: UseColorHighlightConfig) {
 
     const handleSelectionUpdate = () => {
       setIsVisible(shouldShowButton({ editor, hideWhenUnavailable, mode }))
+      forceUpdate({})
     }
 
     handleSelectionUpdate()
 
-    editor.on("selectionUpdate", handleSelectionUpdate)
+    editor.on("transaction", handleSelectionUpdate)
 
     return () => {
-      editor.off("selectionUpdate", handleSelectionUpdate)
+      editor.off("transaction", handleSelectionUpdate)
     }
   }, [editor, hideWhenUnavailable, mode])
 

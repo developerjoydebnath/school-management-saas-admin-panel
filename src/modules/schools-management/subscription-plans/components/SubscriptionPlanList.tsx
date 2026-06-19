@@ -8,6 +8,7 @@ import { AlertDialogTrigger } from "@/shared/components/ui/alert-dialog";
 import { Badge } from "@/shared/components/ui/badge";
 import { Button } from "@/shared/components/ui/button";
 import { Card, CardContent, CardHeader } from "@/shared/components/ui/card";
+import { Switch } from "@/shared/components/ui/switch";
 import { PATHS } from "@/shared/configs/paths.config";
 import { PERMISSIONS } from "@/shared/configs/permissions.config";
 import { ColumnDef } from "@tanstack/react-table";
@@ -19,7 +20,10 @@ import { toast } from "sonner";
 import { useSWRConfig } from "swr";
 import { useSubscriptionPlans } from "../../hooks/use-subscription-plans";
 import { SubscriptionPlanModel } from "../../models/subscription-plan.model";
-import { deleteSubscriptionPlan } from "../hooks/use-subscription-plan-mutations";
+import {
+	deleteSubscriptionPlan,
+	updateSubscriptionPlanStatus,
+} from "../hooks/use-subscription-plan-mutations";
 import { SubscriptionPlanCreate } from "./SubscriptionPlanCreateButton";
 import SubscriptionPlanFilterBar from "./SubscriptionPlanFilterBar";
 
@@ -45,7 +49,11 @@ export function SubscriptionPlanList() {
 	const [limit, setLimit] = useState(10);
 	const { mutate } = useSWRConfig();
 
-	const { data: plans, meta, isLoading } = useSubscriptionPlans({
+	const {
+		data: plans,
+		meta,
+		isLoading,
+	} = useSubscriptionPlans({
 		page,
 		limit,
 		search: filter.search,
@@ -63,7 +71,10 @@ export function SubscriptionPlanList() {
 		try {
 			await deleteSubscriptionPlan(id);
 			toast.success(t("deleteSuccess"));
-			mutate((key: any) => typeof key === "string" && key.startsWith("/superadmin/subscription-plans"));
+			mutate(
+				(key: any) =>
+					typeof key === "string" && key.startsWith("/superadmin/subscription-plans")
+			);
 		} catch {
 			// Global axios interceptor auto-toasts errors
 		} finally {
@@ -72,12 +83,26 @@ export function SubscriptionPlanList() {
 		}
 	};
 
+	const handleStatusToggle = async (id: string, currentStatus: string) => {
+		const newStatus = currentStatus !== "active";
+		try {
+			await updateSubscriptionPlanStatus(id, newStatus);
+			toast.success("Status updated successfully");
+			mutate(
+				(key: any) =>
+					typeof key === "string" && key.startsWith("/superadmin/subscription-plans")
+			);
+		} catch {
+			// Global interceptor handles error toast
+		}
+	};
+
 	const columns: ColumnDef<SubscriptionPlanModel>[] = [
 		{
 			id: "name",
 			accessorKey: "name",
 			header: t("planName"),
-			cell: ({ row }) => <div className="font-medium text-primary">{row.original.name}</div>,
+			cell: ({ row }) => <div className="text-primary font-medium">{row.original.name}</div>,
 		},
 		{
 			id: "price",
@@ -95,9 +120,13 @@ export function SubscriptionPlanList() {
 			id: "limits",
 			header: t("limits"),
 			cell: ({ row }) => (
-				<div className="text-sm space-y-0.5">
-					<div>Students: <span className="font-medium">{row.original.maxStudents}</span></div>
-					<div>Staff: <span className="font-medium">{row.original.maxStaff}</span></div>
+				<div className="space-y-0.5 text-sm">
+					<div>
+						Students: <span className="font-medium">{row.original.maxStudents}</span>
+					</div>
+					<div>
+						Staff: <span className="font-medium">{row.original.maxStaff}</span>
+					</div>
 				</div>
 			),
 		},
@@ -105,7 +134,10 @@ export function SubscriptionPlanList() {
 			id: "visibility",
 			header: t("visibility"),
 			cell: ({ row }) => (
-				<Badge variant={row.original.isPublic ? "default" : "secondary"} className="capitalize">
+				<Badge
+					variant={row.original.isPublic ? "default" : "secondary"}
+					className="capitalize"
+				>
 					{row.original.isPublic ? "Public" : "Private"}
 				</Badge>
 			),
@@ -113,14 +145,27 @@ export function SubscriptionPlanList() {
 		{
 			id: "status",
 			header: t("status"),
-			cell: ({ row }) => (
-				<Badge
-					variant={row.original.status === "active" ? "default" : "secondary"}
-					className="capitalize"
-				>
-					{row.original.status === "active" ? "Active" : "Inactive"}
-				</Badge>
-			),
+			cell: ({ row }) => {
+				const isActive = row.original.status === "active";
+				return (
+					<ConfirmationModal
+						onConfirm={() => handleStatusToggle(row.original.id, row.original.status)}
+						title={t("confirmStatusChange")}
+						description={isActive ? tc("changeToInactiveDesc") : tc("changeToActiveDesc")}
+						confirmText={tc("changeStatus")}
+						variant="default"
+					>
+						<AlertDialogTrigger asChild>
+							<div className="group flex w-fit cursor-pointer items-center gap-2">
+								<Switch checked={isActive} className="pointer-events-none" />
+								<span className="text-sm capitalize">
+									{isActive ? "Active" : "Inactive"}
+								</span>
+							</div>
+						</AlertDialogTrigger>
+					</ConfirmationModal>
+				);
+			},
 		},
 		{
 			id: "actions",
@@ -129,18 +174,20 @@ export function SubscriptionPlanList() {
 				const plan = row.original;
 				return (
 					<div className="flex items-center gap-2">
-						<PermissionGuard permissions={[PERMISSIONS.SCHOOLS_MANAGEMENT.SUBSCRIPTION_PLANS.EDIT]}>
-							<Button
-								asChild
-								variant="outline"
-								size="icon"
-							>
-								<Link href={PATHS.SCHOOLS_MANAGEMENT.SUBSCRIPTION_PLANS.EDIT(plan.id)}>
-									<Edit2 className="h-4 w-4 text-muted-foreground hover:text-foreground" />
+						<PermissionGuard
+							permissions={[PERMISSIONS.SCHOOLS_MANAGEMENT.SUBSCRIPTION_PLANS.EDIT]}
+						>
+							<Button asChild variant="outline" size="icon">
+								<Link
+									href={PATHS.SCHOOLS_MANAGEMENT.SUBSCRIPTION_PLANS.EDIT(plan.id)}
+								>
+									<Edit2 className="text-muted-foreground hover:text-foreground h-4 w-4" />
 								</Link>
 							</Button>
 						</PermissionGuard>
-						<PermissionGuard permissions={[PERMISSIONS.SCHOOLS_MANAGEMENT.SUBSCRIPTION_PLANS.DELETE]}>
+						<PermissionGuard
+							permissions={[PERMISSIONS.SCHOOLS_MANAGEMENT.SUBSCRIPTION_PLANS.DELETE]}
+						>
 							<ConfirmationModal
 								onConfirm={() => confirmDelete(plan.id)}
 								title={t("deletePlanTitle")}

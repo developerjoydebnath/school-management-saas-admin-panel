@@ -57,7 +57,7 @@ export function SessionSwitcher() {
 							{sessions.find((s) => s.id === selectedSessionId)?.name}
 						</SelectValue>
 					</SelectTrigger>
-					<SelectContent align="start">
+					<SelectContent position="popper" align="start">
 						{sessions.map((session) => (
 							<SelectItem
 								key={session.id}
