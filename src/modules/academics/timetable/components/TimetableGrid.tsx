@@ -99,17 +99,13 @@ export function TimetableGrid({
 										confirmText={t("delete")}
 										variant="destructive"
 									>
-										<AlertDialogTrigger
-											render={
-												<Button
+										<AlertDialogTrigger asChild><Button
 													variant="destructive"
 													size="icon-xs"
 													className="h-5 w-5"
 												>
 													<Trash2 className="size-3" />
-												</Button>
-											}
-										/>
+												</Button></AlertDialogTrigger>
 									</ConfirmationModal>
 								</div>
 							</th>

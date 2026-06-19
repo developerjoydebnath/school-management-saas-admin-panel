@@ -2,7 +2,6 @@
 
 import SyllabusClassCard from "@/modules/academics/syllabus/components/SyllabusClassCard";
 import SyllabusClassList from "@/modules/academics/syllabus/components/SyllabusClassList";
-import SyllabusClassViewToggle from "@/modules/academics/syllabus/components/SyllabusClassViewToggle";
 import { SyllabusOverview } from "@/modules/academics/syllabus/dto/syllabus.dto";
 import PageHeading from "@/shared/components/custom/PageHeading";
 import { Skeleton } from "@/shared/components/ui/skeleton";
@@ -18,7 +17,7 @@ export default function SyllabusPage() {
 	const t = useTranslations("Syllabus");
 	const tNav = useTranslations("Navigation");
 
-	const { data: syllabusOverview, isLoading } = useSWR<SyllabusOverview[]>("/syllabus_overview");
+	const { data: syllabusOverview, isLoading } = useSWR("/syllabus_overview");
 	const [view, setView] = useState<"grid" | "list">("grid");
 
 	useEffect(() => {
@@ -91,12 +90,12 @@ export default function SyllabusPage() {
 				<>
 					{view === "grid" ? (
 						<div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-							{syllabusOverview.map((item) => (
+							{(syllabusOverview as SyllabusOverview[]).map((item: SyllabusOverview) => (
 								<SyllabusClassCard key={item.id} syllabus={item} />
 							))}
 						</div>
 					) : (
-						<SyllabusClassList syllabusList={syllabusOverview} />
+						<SyllabusClassList syllabusList={syllabusOverview as SyllabusOverview[]} />
 					)}
 				</>
 			)}

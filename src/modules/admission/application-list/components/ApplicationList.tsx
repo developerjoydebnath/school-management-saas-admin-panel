@@ -37,7 +37,7 @@ import StudentRollList from "./StudentRollList";
 
 export type ApplicationFilter = {
 	search: string;
-	status: TOption[];
+	status: string[];
 };
 
 const initialFilters: ApplicationFilter = { search: "", status: [] };
@@ -257,13 +257,9 @@ export default function ApplicationList() {
 							variant="destructive"
 							isLoading={isDeleting && applicationToDelete === app.id}
 						>
-							<AlertDialogTrigger
-								render={
-									<Button variant="destructive" size="icon-sm">
+							<AlertDialogTrigger asChild><Button variant="destructive" size="icon-sm">
 										<Trash2 className="h-4 w-4 text-red-500 hover:text-red-600" />
-									</Button>
-								}
-							/>
+									</Button></AlertDialogTrigger>
 						</ConfirmationModal>
 					</div>
 				);
@@ -335,14 +331,12 @@ export default function ApplicationList() {
 											if (open) mutateStudents();
 										}}
 									>
-										<DialogTrigger
-											render={
-												<Button variant="outline" type="button">
-													<List className="h-4 w-4" />
-													<span>{t("studentListButton")}</span>
-												</Button>
-											}
-										/>
+										<DialogTrigger asChild>
+											<Button variant="outline" type="button">
+												<List className="h-4 w-4" />
+												<span>{t("studentListButton")}</span>
+											</Button>
+										</DialogTrigger>
 										<DialogContent className="max-w-2xl">
 											<DialogHeader>
 												<DialogTitle>{t("rollListTitle")}</DialogTitle>

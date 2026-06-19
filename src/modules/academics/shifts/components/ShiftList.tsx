@@ -128,10 +128,9 @@ export default function ShiftList() {
 							variant="default"
 							isLoading={isChangingStatus && shiftToChangeStatus?.id === shift.id}
 						>
-							<AlertDialogTrigger
-								nativeButton={false}
-								render={<Switch checked={shift.status === StatusEnum.ACTIVE} />}
-							/>
+							<AlertDialogTrigger asChild>
+								<Switch checked={shift.status === StatusEnum.ACTIVE} />
+							</AlertDialogTrigger>
 						</ConfirmationModal>
 						<div
 							className={`w-fit rounded-full px-2.5 py-1 text-xs font-medium ${
@@ -187,13 +186,11 @@ export default function ShiftList() {
 								variant="destructive"
 								isLoading={isDeleting && shiftToDelete === shift.id}
 							>
-								<AlertDialogTrigger
-									render={
-										<Button variant="destructive" size="icon-sm">
-											<Trash2 />
-										</Button>
-									}
-								/>
+								<AlertDialogTrigger asChild>
+									<Button variant="destructive" size="icon-sm">
+										<Trash2 />
+									</Button>
+								</AlertDialogTrigger>
 							</ConfirmationModal>
 						</PermissionGuard>
 					</div>

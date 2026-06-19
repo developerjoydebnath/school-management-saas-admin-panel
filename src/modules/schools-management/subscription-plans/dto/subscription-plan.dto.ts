@@ -1,0 +1,37 @@
+import { z } from "zod";
+
+export const subscriptionPlanSchema = z.object({
+	name: z.string().min(1, "Plan name is required"),
+	tagline: z.string().optional(),
+	description: z.string().optional(),
+	priceBdt: z.coerce.number().min(0, "Price must be 0 or more"),
+	billingCycle: z.enum(["monthly", "quarterly", "half_yearly", "yearly", "lifetime"]),
+	setupFeeBdt: z.coerce.number().min(0).optional(),
+	trialDays: z.coerce.number().int().min(0).optional(),
+	gracePeriodDays: z.coerce.number().int().min(0).optional(),
+	maxStudents: z.coerce.number().int().min(0).optional(),
+	maxTeachers: z.coerce.number().int().min(0).optional(),
+	maxStaff: z.coerce.number().int().min(0).optional(),
+	maxClasses: z.coerce.number().int().min(0).optional(),
+	maxSubjects: z.coerce.number().int().min(0).optional(),
+	maxBranches: z.coerce.number().int().min(0).optional(),
+	storageGb: z.coerce.number().int().min(0).optional(),
+	freeStudentLimit: z.coerce.number().int().min(0).optional(),
+	hasSmsNotifications: z.boolean().optional(),
+	hasEmailNotifications: z.boolean().optional(),
+	hasParentPortal: z.boolean().optional(),
+	hasOnlineAdmission: z.boolean().optional(),
+	hasOnlineFeePayment: z.boolean().optional(),
+	hasResultPublishing: z.boolean().optional(),
+	hasCustomDomain: z.boolean().optional(),
+	hasApiAccess: z.boolean().optional(),
+	hasAdvancedReports: z.boolean().optional(),
+	hasPrioritySupport: z.boolean().optional(),
+	hasDedicatedAccountManager: z.boolean().optional(),
+	isPublic: z.boolean().optional(),
+	isActive: z.boolean().optional(),
+	sortOrder: z.coerce.number().int().min(0).optional(),
+	notes: z.string().optional(),
+});
+
+export type SubscriptionPlanFormValues = z.infer<typeof subscriptionPlanSchema>;

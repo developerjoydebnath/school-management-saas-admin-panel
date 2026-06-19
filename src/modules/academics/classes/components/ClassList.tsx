@@ -167,16 +167,13 @@ export default function ClassList() {
 													classToChangeStatus?.id === cls.id
 												}
 											>
-												<AlertDialogTrigger
-													nativeButton={false}
-													render={
-														<Switch
-															checked={
-																cls.status === StatusEnum.ACTIVE
-															}
-														/>
-													}
-												/>
+												<AlertDialogTrigger asChild>
+													<Switch
+														checked={
+															cls.status === StatusEnum.ACTIVE
+														}
+													/>
+												</AlertDialogTrigger>
 											</ConfirmationModal>
 											<div
 												className={`rounded-full px-2.5 py-1 text-xs font-medium ${
@@ -207,17 +204,15 @@ export default function ClassList() {
 												variant="destructive"
 												isLoading={isDeleting && classToDelete === cls.id}
 											>
-												<AlertDialogTrigger
-													render={
-														<Button
-															title={t("deleteClassTitle")}
-															variant="outline"
-															size="icon"
-														>
-															<Trash2 className="h-4 w-4 text-red-500 hover:text-red-600" />
-														</Button>
-													}
-												/>
+												<AlertDialogTrigger asChild>
+													<Button
+														title={t("deleteClassTitle")}
+														variant="outline"
+														size="icon"
+													>
+														<Trash2 className="h-4 w-4 text-red-500 hover:text-red-600" />
+													</Button>
+												</AlertDialogTrigger>
 											</ConfirmationModal>
 										</div>
 									</div>

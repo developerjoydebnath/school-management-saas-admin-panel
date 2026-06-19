@@ -14,7 +14,9 @@ import { PERMISSIONS } from "@/shared/configs/permissions.config";
 import { useTableData } from "@/shared/hooks/use-table-data";
 import axios from "@/shared/lib/axios";
 import { SessionModel } from "@/shared/models/session.model";
+import { useAuthStore } from "@/shared/stores/authStore";
 import { StatusEnum } from "@/shared/types/enums";
+import { hasAccess } from "@/shared/utils/permission";
 import { ColumnDef } from "@tanstack/react-table";
 import { Pencil, Trash2 } from "lucide-react";
 import { useTranslations } from "next-intl";
@@ -42,6 +44,8 @@ export default function SessionList() {
 
 	const [sessionToChangeStatus, setSessionToChangeStatus] = useState<SessionModel | null>(null);
 	const [isChangingStatus, setIsChangingStatus] = useState(false);
+
+	const { user } = useAuthStore((state) => state.auth);
 
 	const {
 		data: sessions,
@@ -108,25 +112,38 @@ export default function SessionList() {
 				const session = row.original;
 				return (
 					<div className="flex items-center gap-2">
-						<ConfirmationModal
-							onConfirm={() =>
-								confirmStatusChange(session, session.status !== StatusEnum.ACTIVE)
+						<PermissionGuard
+							permissions={
+								[
+									PERMISSIONS.ACADEMICS.SESSIONS.EDIT,
+									PERMISSIONS.ACADEMICS.ALL,
+								].filter(Boolean) as string[]
 							}
-							title={t("statusChangeTitle")}
-							description={
-								session.status === StatusEnum.ACTIVE
-									? tc("changeToInactiveDesc")
-									: tc("changeToActiveDesc")
-							}
-							confirmText={tc("changeStatus")}
-							variant="default"
-							isLoading={isChangingStatus && sessionToChangeStatus?.id === session.id}
 						>
-							<AlertDialogTrigger
-								nativeButton={false}
-								render={<Switch checked={session.status === StatusEnum.ACTIVE} />}
-							/>
-						</ConfirmationModal>
+							<ConfirmationModal
+								onConfirm={() =>
+									confirmStatusChange(
+										session,
+										session.status !== StatusEnum.ACTIVE
+									)
+								}
+								title={t("statusChangeTitle")}
+								description={
+									session.status === StatusEnum.ACTIVE
+										? tc("changeToInactiveDesc")
+										: tc("changeToActiveDesc")
+								}
+								confirmText={tc("changeStatus")}
+								variant="default"
+								isLoading={
+									isChangingStatus && sessionToChangeStatus?.id === session.id
+								}
+							>
+								<AlertDialogTrigger asChild>
+									<Switch checked={session.status === StatusEnum.ACTIVE} />
+								</AlertDialogTrigger>
+							</ConfirmationModal>
+						</PermissionGuard>
 						<div
 							className={`w-fit rounded-full px-2.5 py-1 text-xs font-medium ${
 								session.status === StatusEnum.ACTIVE
@@ -148,7 +165,12 @@ export default function SessionList() {
 				return (
 					<div className="flex items-center gap-2">
 						<PermissionGuard
-							permissions={[PERMISSIONS.ACADEMICS.ALL].filter(Boolean) as string[]}
+							permissions={
+								[
+									PERMISSIONS.ACADEMICS.SESSIONS.EDIT,
+									PERMISSIONS.ACADEMICS.ALL,
+								].filter(Boolean) as string[]
+							}
 						>
 							<Button
 								variant="outline"
@@ -159,7 +181,12 @@ export default function SessionList() {
 							</Button>
 						</PermissionGuard>
 						<PermissionGuard
-							permissions={[PERMISSIONS.ACADEMICS.ALL].filter(Boolean) as string[]}
+							permissions={
+								[
+									PERMISSIONS.ACADEMICS.SESSIONS.DELETE,
+									PERMISSIONS.ACADEMICS.ALL,
+								].filter(Boolean) as string[]
+							}
 						>
 							<ConfirmationModal
 								onConfirm={() => confirmDelete(session.id)}
@@ -169,13 +196,9 @@ export default function SessionList() {
 								variant="destructive"
 								isLoading={isDeleting && sessionToDelete === session.id}
 							>
-								<AlertDialogTrigger
-									render={
-										<Button variant="destructive" size="icon-sm">
+								<AlertDialogTrigger asChild><Button variant="destructive" size="icon-sm">
 											<Trash2 />
-										</Button>
-									}
-								/>
+										</Button></AlertDialogTrigger>
 							</ConfirmationModal>
 						</PermissionGuard>
 					</div>
@@ -198,6 +221,12 @@ export default function SessionList() {
 						filter={filter}
 						setFilter={setFilter}
 						resetFilters={resetFilters}
+						hideExport={
+							!hasAccess(user, [
+								PERMISSIONS.ACADEMICS.SESSIONS.EXPORT,
+								PERMISSIONS.ACADEMICS.ALL,
+							])
+						}
 					/>
 
 					<DataTable<SessionModel>
@@ -227,7 +256,7 @@ export default function SessionList() {
 					<ScrollArea className="max-h-[80vh] px-4">
 						{editingSession && (
 							<SessionForm
-								initialData={editingSession}
+								initialData={editingSession as any}
 								onSuccess={() => setEditingSession(null)}
 							/>
 						)}

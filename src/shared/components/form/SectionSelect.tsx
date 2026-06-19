@@ -39,7 +39,7 @@ export default function SectionSelect({
 	if (isLoading) return <Skeleton className="h-10 w-full" />;
 
 	return (
-		<Select value={value?.toString() || null} onValueChange={onChange} disabled={!classId}>
+		<Select value={value?.toString() || undefined} onValueChange={onChange} disabled={!classId}>
 			<SelectTrigger className={cn("h-10! w-full", className)}>
 				<SelectValue placeholder={!classId ? "Select a class first" : placeholder} />
 			</SelectTrigger>

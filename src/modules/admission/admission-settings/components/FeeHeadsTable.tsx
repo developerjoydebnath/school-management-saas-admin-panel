@@ -205,17 +205,13 @@ function FeeTableRow({ fee, onUpdate, onDelete }: FeeTableRowProps) {
 						confirmText={t("feeRemoveConfirm")}
 						variant="destructive"
 					>
-						<AlertDialogTrigger
-							render={
-								<Button
+						<AlertDialogTrigger asChild><Button
 									variant="ghost"
 									size="icon"
 									className="text-muted-foreground h-8 w-8 hover:bg-red-50 hover:text-red-600"
 								>
 									<Trash2 className="h-4 w-4" />
-								</Button>
-							}
-						/>
+								</Button></AlertDialogTrigger>
 					</ConfirmationModal>
 				)}
 			</TableCell>

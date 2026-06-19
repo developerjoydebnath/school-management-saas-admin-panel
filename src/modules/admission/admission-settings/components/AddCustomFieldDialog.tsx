@@ -32,7 +32,7 @@ export function AddCustomFieldDialog() {
 	const t = useTranslations("AdmissionSettings");
 
 	const form = useForm<CustomFieldFormValues>({
-		resolver: zodResolver(customFieldSchema),
+		resolver: zodResolver(customFieldSchema as any),
 		defaultValues: {
 			label: "",
 			category: "student_info",
@@ -60,14 +60,12 @@ export function AddCustomFieldDialog() {
 
 	return (
 		<Dialog open={isOpen} onOpenChange={setIsOpen}>
-			<DialogTrigger
-				render={
-					<Button variant="outline">
-						<Plus className="h-4 w-4" />
-						{t("addCustomField")}
-					</Button>
-				}
-			></DialogTrigger>
+			<DialogTrigger asChild>
+				<Button variant="outline">
+					<Plus className="h-4 w-4" />
+					{t("addCustomField")}
+				</Button>
+			</DialogTrigger>
 			<DialogContent className="gap-4">
 				<DialogHeader>
 					<DialogTitle>{t("addCustomFieldTitle")}</DialogTitle>

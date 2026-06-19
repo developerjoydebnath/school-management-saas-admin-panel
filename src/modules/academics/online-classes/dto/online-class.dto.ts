@@ -25,9 +25,9 @@ export const onlineClassSchema = z.object({
 	date: z.string().min(1, "Date is required"),
 	startTime: z.string().min(1, "Start time is required"),
 	endTime: z.string().min(1, "End time is required"),
-	platform: z.enum(["Zoom", "Google Meet", "Teams"]).default("Zoom"),
+	platform: z.enum(["Zoom", "Google Meet", "Teams"]),
 	meetingLink: z.string().url("Valid meeting link is required"),
-	status: z.enum(["Scheduled", "Ongoing", "Completed", "Cancelled"]).default("Scheduled"),
+	status: z.enum(["Scheduled", "Ongoing", "Completed", "Cancelled"]),
 });
 
 export type OnlineClassFormValues = z.infer<typeof onlineClassSchema>;

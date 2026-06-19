@@ -9,8 +9,12 @@ export const SESSION_FORM_FIELDS = [
 	{
 		name: "year",
 		label: "Session Year",
-		placeholder: "e.g. 2024",
-		type: "number",
+		placeholder: "Select Year",
+		type: "select",
+		options: Array.from({ length: 11 }, (_, i) => {
+			const year = 2020 + i;
+			return { label: year.toString(), value: year.toString() };
+		}),
 		required: true,
 	},
 	{

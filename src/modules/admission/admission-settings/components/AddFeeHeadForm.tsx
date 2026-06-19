@@ -62,7 +62,7 @@ export function AddFeeHeadDialog({ onAdd }: AddFeeHeadDialogProps) {
 	];
 
 	const form = useForm<FeeHeadFormValues>({
-		resolver: zodResolver(feeHeadSchema),
+		resolver: zodResolver(feeHeadSchema as any),
 		defaultValues: {
 			name: "",
 			type: "One-time",
@@ -100,14 +100,12 @@ export function AddFeeHeadDialog({ onAdd }: AddFeeHeadDialogProps) {
 				if (!open) form.reset();
 			}}
 		>
-			<DialogTrigger
-				render={
-					<Button>
-						<Plus className="h-4 w-4" />
-						{t("addFeeHead")}
-					</Button>
-				}
-			/>
+			<DialogTrigger asChild>
+				<Button>
+					<Plus className="h-4 w-4" />
+					{t("addFeeHead")}
+				</Button>
+			</DialogTrigger>
 
 			<DialogContent className="gap-4 sm:max-w-md">
 				<DialogHeader>

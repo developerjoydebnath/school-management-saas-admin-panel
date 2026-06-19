@@ -56,14 +56,13 @@ export function NavUser({
 
   return (
     <DropdownMenu>
-      <DropdownMenuTrigger render={
+      <DropdownMenuTrigger asChild>
         <button className="flex h-9 w-9 cursor-pointer items-center justify-center rounded-full outline-hidden ring-sidebar-ring hover:ring-2 focus-visible:ring-2">
           <Avatar className="h-9 w-9 rounded-full border">
             <AvatarImage src={user.avatar} alt={user.name} />
             <AvatarFallback className="rounded-full">AD</AvatarFallback>
           </Avatar>
         </button>
-      }>
       </DropdownMenuTrigger>
       <DropdownMenuContent
         className="w-64 rounded-lg shadow"

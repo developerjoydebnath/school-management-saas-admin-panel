@@ -210,20 +210,27 @@ async function handleResponse(axiosResponse: AxiosResponse): Promise<NextRespons
 	// Check for standard format { success, data: { access_token... } }
 	const responseData = data?.data || data;
 
-	if (responseData?.access_token) {
-		const accessTokenStr = responseData.access_token;
+	if (responseData?.accessToken) {
+		const accessTokenStr = responseData.accessToken;
 		// const encryptedToken = encrypt(accessTokenStr);
 		cookieStore.set(appConfig.ACCESS_TOKEN_KEY, accessTokenStr, TOKEN_COOKIE_OPTIONS);
 	}
 
-	if (responseData?.refresh_token) {
-		const refreshTokenStr = responseData.refresh_token;
+	if (responseData?.refreshToken) {
+		const refreshTokenStr = responseData.refreshToken;
 		cookieStore.set(appConfig.REFRESH_TOKEN_KEY, refreshTokenStr, TOKEN_COOKIE_OPTIONS);
 	}
 
 	// If a user object is returned (e.g., from login), save it to the session
 	if (responseData?.user) {
 		await createSession(responseData.user);
+	}
+
+	if (axiosResponse.status === 204 || axiosResponse.status === 304) {
+		return new NextResponse(null, {
+			status: axiosResponse.status,
+			headers: normalizeAxiosHeaders(axiosResponse.headers),
+		});
 	}
 
 	return NextResponse.json(data, {
@@ -261,6 +268,10 @@ function handleApiError(error: AxiosError): NextResponse {
 		} else {
 			errorData = data as ApiErrorData;
 		}
+	}
+
+	if (statusCode === 204 || statusCode === 304) {
+		return new NextResponse(null, { status: statusCode });
 	}
 
 	return NextResponse.json(errorData, { status: statusCode });

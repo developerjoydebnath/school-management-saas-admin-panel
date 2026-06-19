@@ -34,7 +34,7 @@ export default function ClassForm({ onSuccess, initialData }: ClassFormProps) {
 		})) || [];
 
 	const form = useForm<ClassFormValues>({
-		resolver: zodResolver(classSchema),
+		resolver: zodResolver(classSchema as any),
 		defaultValues: {
 			name: {
 				en:

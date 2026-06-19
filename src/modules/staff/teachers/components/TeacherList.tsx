@@ -29,8 +29,8 @@ import TeacherForm from "./TeacherForm";
 
 export type TeacherFilter = {
 	search: string;
-	base_role: TOption[];
-	status: TOption[];
+	base_role: string[];
+	status: string[];
 };
 
 const initialFilters: TeacherFilter = { search: "", base_role: [], status: [] };
@@ -171,10 +171,9 @@ export default function TeacherList() {
 							variant="default"
 							isLoading={isChangingStatus && teacherToChangeStatus?.id === teacher.id}
 						>
-							<AlertDialogTrigger
-								nativeButton={false}
-								render={<Switch checked={teacher.status === StatusEnum.ACTIVE} />}
-							/>
+							<AlertDialogTrigger asChild>
+								<Switch checked={teacher.status === StatusEnum.ACTIVE} />
+							</AlertDialogTrigger>
 						</ConfirmationModal>
 						<div
 							className={`w-fit rounded-full px-2.5 py-1 text-xs font-medium ${
@@ -226,13 +225,11 @@ export default function TeacherList() {
 								variant="destructive"
 								isLoading={isDeleting && teacherToDelete === teacher.id}
 							>
-								<AlertDialogTrigger
-									render={
-										<Button variant="destructive" size="icon-sm">
-											<Trash2 className="h-4 w-4 text-red-500 hover:text-red-600" />
-										</Button>
-									}
-								/>
+								<AlertDialogTrigger asChild>
+									<Button variant="destructive" size="icon-sm">
+										<Trash2 className="h-4 w-4 text-red-500 hover:text-red-600" />
+									</Button>
+								</AlertDialogTrigger>
 							</ConfirmationModal>
 						</PermissionGuard>
 					</div>

@@ -2,6 +2,45 @@ export const PERMISSIONS = {
 	DASHBOARD: {
 		VIEW: "dashboard.view",
 	},
+	SCHOOLS_MANAGEMENT: {
+		VIEW: "schools_management.view",
+		ALL: "schools_management.all",
+		SCHOOLS: {
+			ALL: "schools_management.schools.all",
+			VIEW: "schools_management.schools.view",
+			CREATE: "schools_management.schools.create",
+			EDIT: "schools_management.schools.edit",
+			DELETE: "schools_management.schools.delete",
+		},
+		SUBSCRIPTION_PLANS: {
+			ALL: "schools_management.subscription_plans.all",
+			VIEW: "schools_management.subscription_plans.view",
+			CREATE: "schools_management.subscription_plans.create",
+			EDIT: "schools_management.subscription_plans.edit",
+			DELETE: "schools_management.subscription_plans.delete",
+		},
+		VOUCHERS: {
+			ALL: "schools_management.vouchers.all",
+			VIEW: "schools_management.vouchers.view",
+			CREATE: "schools_management.vouchers.create",
+			EDIT: "schools_management.vouchers.edit",
+			DELETE: "schools_management.vouchers.delete",
+		},
+		SCHOOL_SUBSCRIPTIONS: {
+			ALL: "schools_management.school_subscriptions.all",
+			VIEW: "schools_management.school_subscriptions.view",
+			CREATE: "schools_management.school_subscriptions.create",
+			EDIT: "schools_management.school_subscriptions.edit",
+			DELETE: "schools_management.school_subscriptions.delete",
+		},
+		BANK_ACCOUNTS: {
+			ALL: "schools_management.bank_accounts.all",
+			VIEW: "schools_management.bank_accounts.view",
+			CREATE: "schools_management.bank_accounts.create",
+			EDIT: "schools_management.bank_accounts.edit",
+			DELETE: "schools_management.bank_accounts.delete",
+		},
+	},
 	ACADEMICS: {
 		VIEW: "academics.view",
 		ALL: "academics.all",
@@ -60,6 +99,7 @@ export const PERMISSIONS = {
 			CREATE: "academics.sessions.create",
 			EDIT: "academics.sessions.edit",
 			DELETE: "academics.sessions.delete",
+			EXPORT: "academics.sessions.export",
 		},
 	},
 	ADMISSION: {

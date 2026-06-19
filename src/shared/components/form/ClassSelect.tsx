@@ -30,7 +30,7 @@ export default function ClassSelect({
 	if (isLoading) return <Skeleton className="h-10 w-full" />;
 
 	return (
-		<Select value={value?.toString() || null} onValueChange={onChange}>
+		<Select value={value?.toString() || undefined} onValueChange={onChange}>
 			<SelectTrigger className={cn("h-10! w-full", className)}>
 				<SelectValue placeholder={placeholder} />
 			</SelectTrigger>

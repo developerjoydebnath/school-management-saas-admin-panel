@@ -48,14 +48,12 @@ export default function TableFilter<T extends WithSearch>({
 			<div className="flex items-center gap-2">
 				{!hideExport && (
 					<DropdownMenu>
-						<DropdownMenuTrigger
-							render={
-								<Button variant="outline">
-									<IconCloudDownload className="size-4" />
-									{t("export")}
-								</Button>
-							}
-						/>
+						<DropdownMenuTrigger asChild>
+							<Button variant="outline">
+								<IconCloudDownload className="size-4" />
+								<span className="hidden @lg/page:flex">{t("export")}</span>
+							</Button>
+						</DropdownMenuTrigger>
 						<DropdownMenuContent>
 							<DropdownMenuItem className="cursor-pointer">
 								<IconCopy className="size-4" />
@@ -93,7 +91,7 @@ export default function TableFilter<T extends WithSearch>({
 				{!hideReset && (
 					<Button onClick={resetFilters ? resetFilters : () => {}} variant={"outline"}>
 						<IconFilter2Cancel className="size-4" />
-						<span className="hidden sm:block">{t("reset")}</span>
+						<span className="hidden @lg/page:block">{t("reset")}</span>
 					</Button>
 				)}
 			</div>

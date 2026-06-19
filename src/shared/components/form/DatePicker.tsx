@@ -22,8 +22,7 @@ export default function DatePicker({
 }) {
   return (
     <Popover>
-      <PopoverTrigger className="w-full"
-        render={
+      <PopoverTrigger asChild>
           <Button
             size="lg"
             className={cn(
@@ -34,8 +33,7 @@ export default function DatePicker({
             <IconCalendar className="h-4 w-4 opacity-50" />
             {value ? format(value, "dd-MM-yyyy") : <span>Pick a date</span>}
           </Button>
-        }
-      />
+      </PopoverTrigger>
       <PopoverContent
         align="start"
         className="min-w-fit rounded-[10px] p-1 leading-6"

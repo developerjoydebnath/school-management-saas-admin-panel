@@ -10,9 +10,11 @@ type Meta = {
 	hasPreviousPage: boolean;
 };
 
+type RequestQuery = Record<string, unknown>;
+
 export const useTableData = (
 	url: string | null,
-	query?: Record<string, any>,
+	query?: RequestQuery,
 	options?: SWRConfiguration
 ) => {
 	const { data, ...rest } = useSWR(url, query, options);

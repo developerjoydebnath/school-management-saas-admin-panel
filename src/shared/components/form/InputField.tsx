@@ -17,6 +17,7 @@ import { match } from "ts-pattern";
 import ClassSelect from "./ClassSelect";
 import ClassSelection from "./ClassSelection";
 import DatePicker from "./DatePicker";
+import MultiCheckbox from "./MultiCheckbox";
 import NumberInput from "./NumberInput";
 import PasswordInput from "./PasswordInput";
 import SectionSelect from "./SectionSelect";
@@ -53,7 +54,23 @@ export default function InputField({
 		<div className="flex flex-col gap-2">
 			{props.label && (
 				<Label
-					htmlFor={field.name}
+					htmlFor={
+						[
+							"text",
+							"email",
+							"date",
+							"tel",
+							"url",
+							"search",
+							"color",
+							"time",
+							"number",
+							"password",
+							"textarea",
+						].includes(props.type)
+							? field.name
+							: undefined
+					}
 					className={cn("text-muted-foreground text-sm font-medium", labelClass)}
 				>
 					{props.label} {!required && "(Optional)"}
@@ -94,6 +111,16 @@ export default function InputField({
 					</RadioGroup>
 				))
 
+				// multi-checkbox
+				.with("multi-checkbox", () => (
+					<MultiCheckbox
+						value={field.value || []}
+						onChange={field.onChange}
+						options={props.options || []}
+						className={className}
+					/>
+				))
+
 				// number
 				.with("number", () => (
 					<NumberInput
@@ -107,11 +134,15 @@ export default function InputField({
 
 				// Type select option
 				.with("select", () => (
-					<Select value={field.value?.toString()} onValueChange={field.onChange}>
+					<Select
+						name={field.name}
+						value={field.value?.toString()}
+						onValueChange={field.onChange}
+					>
 						<SelectTrigger className="h-10! w-full">
 							<SelectValue placeholder={props.placeholder} />
 						</SelectTrigger>
-						<SelectContent className="p-1">
+						<SelectContent className="p-1" sideOffset={4}>
 							{props?.options?.map((opt) => (
 								<SelectItem
 									key={opt.value}

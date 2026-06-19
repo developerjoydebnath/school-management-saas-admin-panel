@@ -24,7 +24,7 @@ export default function SessionForm({ onSuccess, initialData }: SessionFormProps
 	const ts = useTranslations("Sessions");
 
 	const form = useForm<z.input<typeof sessionSchema>, any, SessionFormValues>({
-		resolver: zodResolver(sessionSchema),
+		resolver: zodResolver(sessionSchema as any),
 		defaultValues: {
 			name: initialData?.name || "",
 			year: initialData?.year || new Date().getFullYear(),
@@ -52,7 +52,7 @@ export default function SessionForm({ onSuccess, initialData }: SessionFormProps
 				toast.success("Session added successfully");
 			}
 			form.reset();
-			mutate("/sessions");
+			mutate((key: any) => typeof key === "string" && key.startsWith("/sessions"));
 			if (onSuccess) {
 				onSuccess();
 			}
@@ -70,7 +70,13 @@ export default function SessionForm({ onSuccess, initialData }: SessionFormProps
 					key={field.name}
 					control={form.control}
 					{...(field as any)}
-					label={field.name === "name" ? ts("sessionName") : field.name === "year" ? ts("sessionYear") : ts("status")}
+					label={
+						field.name === "name"
+							? ts("sessionName")
+							: field.name === "year"
+								? ts("sessionYear")
+								: ts("status")
+					}
 				/>
 			))}
 

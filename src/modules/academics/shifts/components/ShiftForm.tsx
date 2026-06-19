@@ -23,7 +23,7 @@ export default function ShiftForm({ onSuccess, initialData }: ShiftFormProps) {
 	const t = useTranslations("Forms");
 
 	const form = useForm<ShiftFormValues>({
-		resolver: zodResolver(shiftSchema),
+		resolver: zodResolver(shiftSchema as any),
 		defaultValues: {
 			name: initialData?.name || "",
 			startTime: initialData?.startTime || "",

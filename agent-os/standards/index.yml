@@ -7,7 +7,7 @@ backend:
 
 javascript:
   components:
-    description: "Shared UI component patterns: Mega-Controller InputField for forms, Generic DataTable wrapper, and inline column definitions"
+    description: "Full page & component patterns: 3-layer page architecture (page route → EntityList → EntityFilterBar), dialog-vs-page form decision rule, EntityCreate trigger, EntityForm (dialog), EntityEditForm (dedicated page with useSWR fetch by ID), EntityList (DataTable + delete + edit), mutation hooks in use-entity-mutations.ts, Zod schemas in dto/, and Filter component desktop/mobile layout"
   data-fetching:
     description: "Data fetching patterns: axios singleton via /api/proxy, useSWR/useTableData/useSWRInfinite wrappers, and SWR cache invalidation after mutations"
   data-models:

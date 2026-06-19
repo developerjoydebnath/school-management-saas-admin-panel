@@ -35,15 +35,15 @@ export default function LoginForm() {
 	const setAuth = useAuthStore((state) => state.setAuth);
 
 	const form = useForm<LoginFormValues>({
-		resolver: zodResolver(loginSchema),
+		resolver: zodResolver(loginSchema as any),
 		defaultValues: {
-			email: "",
+			identifier: "",
 			password: "",
 		},
 	});
 
-	const handleDemoClick = (email: string) => {
-		form.setValue("email", email);
+	const handleDemoClick = (identifier: string) => {
+		form.setValue("identifier", identifier);
 		form.setValue("password", "password123");
 		form.clearErrors();
 	};

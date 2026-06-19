@@ -24,7 +24,7 @@ export default function SubjectForm({ onSuccess, initialData }: SubjectFormProps
 	const ft = useTranslations("Forms");
 
 	const form = useForm<SubjectFormValues>({
-		resolver: zodResolver(subjectSchema),
+		resolver: zodResolver(subjectSchema as any),
 		defaultValues: {
 			name: {
 				en:

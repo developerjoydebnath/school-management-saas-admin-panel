@@ -47,13 +47,11 @@ export default function ShiftsPage() {
 					}
 				>
 					<Dialog open={isCreateOpen} onOpenChange={setIsCreateOpen}>
-						<DialogTrigger
-							render={
-								<Button>
-									<Plus className="h-4 w-4" /> {t("addShift")}
-								</Button>
-							}
-						></DialogTrigger>
+						<DialogTrigger asChild>
+							<Button>
+								<Plus className="h-4 w-4" /> {t("addShift")}
+							</Button>
+						</DialogTrigger>
 						<DialogContent className="px-0">
 							<DialogHeader className="px-6">
 								<DialogTitle>{t("addShiftTitle")}</DialogTitle>

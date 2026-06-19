@@ -59,7 +59,7 @@ export default function Header() {
 					</BreadcrumbList>
 				</Breadcrumb>
 			</div>
-			<div className="flex items-center gap-4">
+			<div className="flex items-center gap-2 sm:gap-4">
 				<SessionSwitcher />
 				<Separator orientation="vertical" className="my-auto h-4" />
 				<LanguageSwitcher />
@@ -68,4 +68,3 @@ export default function Header() {
 		</header>
 	);
 }
-

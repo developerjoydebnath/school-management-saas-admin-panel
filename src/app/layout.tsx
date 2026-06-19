@@ -44,7 +44,7 @@ export default async function RootLayout({
 				inter.variable
 			)}
 		>
-			<body suppressHydrationWarning className="flex min-h-full flex-col">
+			<body suppressHydrationWarning className="@container/body flex min-h-full flex-col">
 				<NextIntlClientProvider messages={messages} locale={locale}>
 					<Provider>{children}</Provider>
 				</NextIntlClientProvider>

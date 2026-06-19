@@ -4,6 +4,39 @@ export const PATHS = {
 		FORGOT_PASSWORD: "/forgot-password",
 	},
 	DASHBOARD: "/dashboard",
+	SCHOOLS_MANAGEMENT: {
+		ROOT: "/schools-management",
+		SCHOOLS: {
+			ROOT: "/schools-management/schools",
+			CREATE: "/schools-management/schools/create",
+			EDIT: (id: number | string) => `/schools-management/schools/${id}/edit`,
+			DETAILS: (id: number | string) => `/schools-management/schools/${id}/details`,
+		},
+		SUBSCRIPTION_PLANS: {
+			ROOT: "/schools-management/subscription-plans",
+			CREATE: "/schools-management/subscription-plans/create",
+			EDIT: (id: number | string) => `/schools-management/subscription-plans/${id}/edit`,
+			DETAILS: (id: number | string) => `/schools-management/subscription-plans/${id}/details`,
+		},
+		VOUCHERS: {
+			ROOT: "/schools-management/vouchers",
+			CREATE: "/schools-management/vouchers/create",
+			EDIT: (id: number | string) => `/schools-management/vouchers/${id}/edit`,
+			DETAILS: (id: number | string) => `/schools-management/vouchers/${id}/details`,
+		},
+		SCHOOL_SUBSCRIPTIONS: {
+			ROOT: "/schools-management/school-subscriptions",
+			CREATE: "/schools-management/school-subscriptions/create",
+			EDIT: (id: number | string) => `/schools-management/school-subscriptions/${id}/edit`,
+			DETAILS: (id: number | string) => `/schools-management/school-subscriptions/${id}/details`,
+		},
+		BANK_ACCOUNTS: {
+			ROOT: "/schools-management/bank-accounts",
+			CREATE: "/schools-management/bank-accounts/create",
+			EDIT: (id: number | string) => `/schools-management/bank-accounts/${id}/edit`,
+			DETAILS: (id: number | string) => `/schools-management/bank-accounts/${id}/details`,
+		},
+	},
 	ACADEMICS: {
 		ROOT: "/academics",
 		CLASSES: {

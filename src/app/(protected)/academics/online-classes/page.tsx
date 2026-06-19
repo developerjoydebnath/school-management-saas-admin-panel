@@ -29,7 +29,7 @@ export default function OnlineClassesPage() {
 		<div className="space-y-6">
 			<PageHeading routeName="OnlineClasses">
 				<Dialog open={isCreateOpen} onOpenChange={setIsCreateOpen}>
-					<DialogTrigger render={<Button />}>
+					<DialogTrigger asChild><Button />
 						<Plus className="mr-2 h-4 w-4" />
 						{t("addOnlineClass")}
 					</DialogTrigger>

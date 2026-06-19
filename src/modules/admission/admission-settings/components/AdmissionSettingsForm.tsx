@@ -82,19 +82,16 @@ export default function AdmissionSettingsForm() {
 							confirmText={tForms("confirm")}
 							cancelText={tForms("cancel")}
 						>
-							<AlertDialogTrigger
-								nativeButton={false}
-								render={
-									<div
-										className={`cursor-pointer rounded-lg border-2 p-4 transition-all ${admissionMode === "fast" ? "border-primary bg-primary/5" : "hover:border-primary/50 border-border"}`}
-									>
-										<div className="font-semibold">{t("fastMode")}</div>
-										<div className="text-muted-foreground text-sm">
-											{t("fastModeDesc")}
-										</div>
+							<AlertDialogTrigger asChild>
+								<div
+									className={`cursor-pointer rounded-lg border-2 p-4 transition-all ${admissionMode === "fast" ? "border-primary bg-primary/5" : "hover:border-primary/50 border-border"}`}
+								>
+									<div className="font-semibold">{t("fastMode")}</div>
+									<div className="text-muted-foreground text-sm">
+										{t("fastModeDesc")}
 									</div>
-								}
-							/>
+								</div>
+							</AlertDialogTrigger>
 						</ConfirmationModal>
 
 						<ConfirmationModal
@@ -104,19 +101,16 @@ export default function AdmissionSettingsForm() {
 							confirmText={tForms("confirm")}
 							cancelText={tForms("cancel")}
 						>
-							<AlertDialogTrigger
-								nativeButton={false}
-								render={
-									<div
-										className={`cursor-pointer rounded-lg border-2 p-4 transition-all ${admissionMode === "full" ? "border-primary bg-primary/5" : "hover:border-primary/50 border-border"}`}
-									>
-										<div className="font-semibold">{t("fullMode")}</div>
-										<div className="text-muted-foreground text-sm">
-											{t("fullModeDesc")}
-										</div>
+							<AlertDialogTrigger asChild>
+								<div
+									className={`cursor-pointer rounded-lg border-2 p-4 transition-all ${admissionMode === "full" ? "border-primary bg-primary/5" : "hover:border-primary/50 border-border"}`}
+								>
+									<div className="font-semibold">{t("fullMode")}</div>
+									<div className="text-muted-foreground text-sm">
+										{t("fullModeDesc")}
 									</div>
-								}
-							/>
+								</div>
+							</AlertDialogTrigger>
 						</ConfirmationModal>
 					</div>
 				</CardContent>
@@ -135,14 +129,12 @@ export default function AdmissionSettingsForm() {
 						title={t("resetConfirmTitle")}
 						description={t("resetConfirmDesc")}
 					>
-						<AlertDialogTrigger
-							render={
-								<Button variant="destructive">
-									<RotateCcw className="h-4 w-4" />
-									{t("resetAll")}
-								</Button>
-							}
-						/>
+						<AlertDialogTrigger asChild>
+							<Button variant="destructive">
+								<RotateCcw className="h-4 w-4" />
+								{t("resetAll")}
+							</Button>
+						</AlertDialogTrigger>
 					</ConfirmationModal>
 
 					<AddCustomFieldDialog />
@@ -263,17 +255,15 @@ export default function AdmissionSettingsForm() {
 															confirmText={t("remove")}
 															variant="destructive"
 														>
-															<AlertDialogTrigger
-																render={
-																	<Button
-																		variant="ghost"
-																		size="icon"
-																		className="h-8 w-8 text-red-500 hover:bg-red-50 hover:text-red-600"
-																	>
-																		<Trash2 className="h-4 w-4" />
-																	</Button>
-																}
-															/>
+															<AlertDialogTrigger asChild>
+																<Button
+																	variant="ghost"
+																	size="icon"
+																	className="h-8 w-8 text-red-500 hover:bg-red-50 hover:text-red-600"
+																>
+																	<Trash2 className="h-4 w-4" />
+																</Button>
+															</AlertDialogTrigger>
 														</ConfirmationModal>
 													)}
 												</TableCell>

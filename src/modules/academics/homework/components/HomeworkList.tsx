@@ -2,7 +2,6 @@
 
 import ConfirmationModal from "@/shared/components/custom/ConfirmationModal";
 import PermissionGuard from "@/shared/components/custom/PermissionGuard";
-import { TOption } from "@/shared/components/form/FilterButton";
 import DataTable from "@/shared/components/table/DataTable";
 import TableFilter from "@/shared/components/table/TableFilter";
 import { AlertDialogTrigger } from "@/shared/components/ui/alert-dialog";
@@ -24,7 +23,7 @@ import HomeworkForm from "./HomeworkForm";
 
 export type HomeworkFilter = {
 	search: string;
-	status: TOption[];
+	status: string[];
 };
 
 const initialFilters: HomeworkFilter = { search: "", status: [] };
@@ -156,13 +155,9 @@ export default function HomeworkList() {
 							variant="destructive"
 							isLoading={isDeleting && homeworkToDelete === hm.id}
 						>
-							<AlertDialogTrigger
-								render={
-									<Button variant="destructive" size="icon-sm">
+							<AlertDialogTrigger asChild><Button variant="destructive" size="icon-sm">
 										<Trash2 className="h-4 w-4" />
-									</Button>
-								}
-							/>
+									</Button></AlertDialogTrigger>
 						</ConfirmationModal>
 					</div>
 				);

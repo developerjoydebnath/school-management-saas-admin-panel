@@ -9,17 +9,23 @@ import {
 } from "@/shared/components/ui/select";
 import { Skeleton } from "@/shared/components/ui/skeleton";
 import { useSWR } from "@/shared/hooks/use-swr";
+import { SessionModel } from "@/shared/models/session.model";
 import { useSessionStore } from "@/shared/stores/session-store";
-import { CalendarDays } from "lucide-react";
-import React from "react";
+import React, { useMemo } from "react";
 
 export function SessionSwitcher() {
-	const { data: sessions, isLoading } = useSWR("/sessions");
+	const { data: rawSessions, isLoading } = useSWR("/sessions/active-list");
 	const { selectedSessionId, setSelectedSessionId } = useSessionStore();
 
+	const sessions: SessionModel[] = useMemo(() => {
+		return Array.isArray(rawSessions?.data)
+			? rawSessions.data.map((s: any) => new SessionModel(s))
+			: [];
+	}, [rawSessions]);
+
 	React.useEffect(() => {
-		if (sessions && sessions.length > 0 && !selectedSessionId) {
-			const activeSession = sessions.find((s: any) => s.status === "ACTIVE") || sessions[0];
+		if (sessions.length > 0 && !selectedSessionId) {
+			const activeSession = sessions.find((s) => s.status === "ACTIVE") || sessions[0];
 			if (activeSession) {
 				setSelectedSessionId(activeSession.id);
 			}
@@ -40,20 +46,24 @@ export function SessionSwitcher() {
 
 	return (
 		<div className="flex items-center gap-2 select-none">
-			<div className="bg-primary/10 text-primary flex size-7 items-center justify-center rounded-lg transition-all duration-200 hover:scale-105 hover:bg-primary/20">
-				<CalendarDays className="size-4" />
-			</div>
 			<div className="flex flex-col items-start leading-none">
 				<Select
 					value={selectedSessionId || ""}
 					onValueChange={(val) => setSelectedSessionId(val || null)}
+					disabled={isLoading || sessions.length === 0}
 				>
-					<SelectTrigger className="h-5 border-none bg-transparent text-sm font-semibold text-foreground transition-colors hover:text-primary focus:ring-0 focus-visible:ring-0 shadow-none *:data-[slot=select-value]:flex *:data-[slot=select-value]:items-center [&_svg]:ml-1">
-						<SelectValue placeholder="Select Session" />
+					<SelectTrigger className="text-foreground hover:text-primary h-5 border-none bg-transparent text-sm font-semibold shadow-none transition-colors focus:ring-0 focus-visible:ring-0 *:data-[slot=select-value]:flex *:data-[slot=select-value]:items-center [&_svg]:ml-1">
+						<SelectValue placeholder="Select Session">
+							{sessions.find((s) => s.id === selectedSessionId)?.name}
+						</SelectValue>
 					</SelectTrigger>
 					<SelectContent align="start">
-						{sessions?.map((session: any) => (
-							<SelectItem key={session.id} value={session.id} className="font-medium cursor-pointer">
+						{sessions.map((session) => (
+							<SelectItem
+								key={session.id}
+								value={session.id}
+								className="cursor-pointer font-medium"
+							>
 								{session.name}
 							</SelectItem>
 						))}

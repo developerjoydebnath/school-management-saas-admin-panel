@@ -1,5 +1,4 @@
-import { mergeProps } from "@base-ui/react/merge-props"
-import { useRender } from "@base-ui/react/use-render"
+import { Slot } from "@radix-ui/react-slot"
 import { cva, type VariantProps } from "class-variance-authority"
 import { cn } from "@/shared/lib/tiptap-utils"
 import { Separator } from "@/shared/components/form/rich-editor/tiptap-ui-primitive/separator"
@@ -35,18 +34,17 @@ function ButtonGroup({
 
 function ButtonGroupText({
   className,
-  render,
+  asChild = false,
   ...props
-}: useRender.ComponentProps<"div">) {
-  return useRender({
-    defaultTagName: "div",
-    props: mergeProps<"div">(
-      { className: cn("tiptap-button-group-text", className) },
-      props
-    ),
-    render,
-    state: { slot: "tiptap-button-group-text" },
-  })
+}: React.ComponentProps<"div"> & { asChild?: boolean }) {
+  const Comp = asChild ? Slot : "div";
+  return (
+    <Comp
+        data-slot="tiptap-button-group-text"
+        className={cn("tiptap-button-group-text", className)}
+        {...props}
+    />
+  )
 }
 
 function ButtonGroupSeparator({

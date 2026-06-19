@@ -1,7 +1,6 @@
 "use client";
 
 import ConfirmationModal from "@/shared/components/custom/ConfirmationModal";
-import { TOption } from "@/shared/components/form/FilterButton";
 import DataTable from "@/shared/components/table/DataTable";
 import TableFilter from "@/shared/components/table/TableFilter";
 import { AlertDialogTrigger } from "@/shared/components/ui/alert-dialog";
@@ -23,8 +22,8 @@ import OnlineClassForm from "./OnlineClassForm";
 
 export type OnlineClassFilter = {
 	search: string;
-	status: TOption[];
-	platform: TOption[];
+	status: string[];
+	platform: string[];
 };
 
 const initialFilters: OnlineClassFilter = { search: "", status: [], platform: [] };
@@ -140,20 +139,15 @@ export default function OnlineClassList() {
 						{cls.meetingLink &&
 							cls.status !== "Completed" &&
 							cls.status !== "Cancelled" && (
-								<Button
-									variant="default"
-									size="icon-sm"
-									nativeButton={false}
-									render={
-										<Link
-											href={cls.meetingLink}
-											target="_blank"
-											rel="noopener noreferrer"
-										>
-											<Video className="h-4 w-4" />
-										</Link>
-									}
-								/>
+								<Button asChild variant="default" size="icon-sm">
+									<Link
+										href={cls.meetingLink}
+										target="_blank"
+										rel="noopener noreferrer"
+									>
+										<Video className="h-4 w-4" />
+									</Link>
+								</Button>
 							)}
 
 						<Button
@@ -180,13 +174,9 @@ export default function OnlineClassList() {
 							variant="destructive"
 							isLoading={isDeleting && classToDelete === cls.id}
 						>
-							<AlertDialogTrigger
-								render={
-									<Button variant="destructive" size="icon-sm">
+							<AlertDialogTrigger asChild><Button variant="destructive" size="icon-sm">
 										<Trash2 className="h-4 w-4" />
-									</Button>
-								}
-							/>
+									</Button></AlertDialogTrigger>
 						</ConfirmationModal>
 					</div>
 				);

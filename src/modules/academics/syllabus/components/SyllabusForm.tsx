@@ -29,7 +29,7 @@ export default function SyllabusForm({ initialData, onSuccess, onCancel }: Sylla
 	const tf = useTranslations("Forms");
 
 	const form = useForm<SyllabusFormValues>({
-		resolver: zodResolver(syllabusSchema),
+		resolver: zodResolver(syllabusSchema as any),
 		defaultValues: {
 			subject: initialData?.subject || "",
 			term: initialData?.term || "",

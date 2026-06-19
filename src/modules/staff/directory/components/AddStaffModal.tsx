@@ -24,7 +24,7 @@ export default function AddStaffModal({ onSuccess, initialData }: AddStaffModalP
 	const t = useTranslations("StaffDirectory");
 
 	const form = useForm<StaffFormValues>({
-		resolver: zodResolver(staffSchema),
+		resolver: zodResolver(staffSchema as any),
 		defaultValues: {
 			name: {
 				en: typeof initialData?.name === "object" ? initialData?.name?.en : initialData?.name || "",

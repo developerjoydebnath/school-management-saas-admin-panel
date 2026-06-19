@@ -131,7 +131,7 @@ export default function NewAdmissionForm({
 	}, [admissionFields, fieldRequired, initialData]);
 
 	const form = useForm({
-		resolver: zodResolver(schema),
+		resolver: zodResolver(schema as any),
 		defaultValues,
 		mode: "onChange",
 	});

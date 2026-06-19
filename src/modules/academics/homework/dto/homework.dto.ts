@@ -19,7 +19,7 @@ export const homeworkSchema = z.object({
 	classId: z.string().min(1, "Class is required"),
 	assignedDate: z.string().min(1, "Assigned Date is required"),
 	dueDate: z.string().min(1, "Due Date is required"),
-	status: z.enum(["Active", "Completed", "Past Due"]).default("Active"),
+	status: z.enum(["Active", "Completed", "Past Due"]),
 	description: z.string().optional(),
 });
 

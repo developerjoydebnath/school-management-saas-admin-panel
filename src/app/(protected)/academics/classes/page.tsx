@@ -36,13 +36,11 @@ export default function ClassesPage() {
 		<div className="space-y-6">
 			<PageHeading routeName="Classes">
 				<Dialog open={isCreateOpen} onOpenChange={setIsCreateOpen}>
-					<DialogTrigger
-						render={
-							<Button title={t("addClassTitle")}>
-								<Plus className="h-4 w-4" /> {t("addClass")}
-							</Button>
-						}
-					></DialogTrigger>
+					<DialogTrigger asChild>
+						<Button title={t("addClassTitle")}>
+							<Plus className="h-4 w-4" /> {t("addClass")}
+						</Button>
+					</DialogTrigger>
 					<DialogContent className="px-2">
 						<DialogHeader className="px-4">
 							<DialogTitle>{t("addClassTitle")}</DialogTitle>

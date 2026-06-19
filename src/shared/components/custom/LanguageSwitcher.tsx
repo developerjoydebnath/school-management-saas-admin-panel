@@ -26,14 +26,12 @@ export function LanguageSwitcher() {
 
 	return (
 		<DropdownMenu>
-			<DropdownMenuTrigger
-				render={
-					<Button variant="ghost" size="icon" disabled={isPending}>
-						<Languages className="h-5 w-5" />
-						<span className="sr-only">Toggle language</span>
-					</Button>
-				}
-			/>
+			<DropdownMenuTrigger asChild>
+				<Button variant="ghost" size="icon" disabled={isPending}>
+					<Languages className="h-5 w-5" />
+					<span className="sr-only">Toggle language</span>
+				</Button>
+			</DropdownMenuTrigger>
 
 			<DropdownMenuContent align="end">
 				<DropdownMenuItem

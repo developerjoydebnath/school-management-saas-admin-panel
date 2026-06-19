@@ -185,10 +185,9 @@ export default function SubjectList() {
 							variant="default"
 							isLoading={isChangingStatus && subjectToChangeStatus?.id === sub.id}
 						>
-							<AlertDialogTrigger
-								nativeButton={false}
-								render={<Switch checked={sub.status === StatusEnum.ACTIVE} />}
-							/>
+							<AlertDialogTrigger asChild>
+								<Switch checked={sub.status === StatusEnum.ACTIVE} />
+							</AlertDialogTrigger>
 						</ConfirmationModal>
 						<div
 							className={`w-fit rounded-full px-2.5 py-1 text-xs font-medium ${
@@ -248,13 +247,11 @@ export default function SubjectList() {
 								variant="destructive"
 								isLoading={isDeleting && subjectToDelete === sub.id}
 							>
-								<AlertDialogTrigger
-									render={
-										<Button variant="destructive" size="icon-sm">
-											<Trash2 className="h-4 w-4" />
-										</Button>
-									}
-								/>
+								<AlertDialogTrigger asChild>
+									<Button variant="destructive" size="icon-sm">
+										<Trash2 className="h-4 w-4" />
+									</Button>
+								</AlertDialogTrigger>
 							</ConfirmationModal>
 						</PermissionGuard>
 					</div>

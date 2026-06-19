@@ -25,8 +25,7 @@ export default function DateRangePicker({
 }) {
   return (
     <Popover>
-      <PopoverTrigger className="w-full"
-        render={
+      <PopoverTrigger asChild>
           <Button
             size="lg"
             className={cn(
@@ -48,8 +47,7 @@ export default function DateRangePicker({
               <span>Pick a date</span>
             )}
           </Button>
-        }
-      />
+      </PopoverTrigger>
       <PopoverContent
         align={align}
         className="min-w-fit rounded-[10px] p-1 leading-6"

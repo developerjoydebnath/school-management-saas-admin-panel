@@ -23,7 +23,7 @@ export default function TeacherForm({ onSuccess, initialData }: TeacherFormProps
 	const ft = useTranslations("Forms");
 
 	const form = useForm<TeacherFormValues>({
-		resolver: zodResolver(teacherSchema),
+		resolver: zodResolver(teacherSchema as any),
 		defaultValues: {
 			name: {
 				en:

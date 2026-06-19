@@ -34,7 +34,7 @@ export function FeeSessionSelector({ session, onSessionChange }: FeeSessionSelec
 					<Skeleton className="h-10 w-[180px]" />
 				) : (
 					<Select
-						value={session || null}
+						value={session || undefined}
 						onValueChange={(value) => value && onSessionChange(value)}
 					>
 						<SelectTrigger className="w-[180px]">

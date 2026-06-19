@@ -45,7 +45,7 @@ export default function OnlineClassForm({ onSuccess, initialData }: OnlineClassF
 		})) || [];
 
 	const form = useForm<OnlineClassFormValues>({
-		resolver: zodResolver(onlineClassSchema),
+		resolver: zodResolver(onlineClassSchema as any),
 		defaultValues: {
 			title: initialData?.title || "",
 			classId: initialData?.classId || "",

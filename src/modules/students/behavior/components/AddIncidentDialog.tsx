@@ -20,14 +20,12 @@ export function AddIncidentDialog() {
 
 	return (
 		<Dialog open={isOpen} onOpenChange={setIsOpen}>
-			<DialogTrigger
-				render={
-					<Button>
-						<PlusCircle className="mr-2 h-4 w-4" />
-						{t("dialog.title")}
-					</Button>
-				}
-			></DialogTrigger>
+			<DialogTrigger asChild>
+				<Button>
+					<PlusCircle className="mr-2 h-4 w-4" />
+					{t("dialog.title")}
+				</Button>
+			</DialogTrigger>
 			<DialogContent className="sm:max-w-[500px]">
 				<DialogHeader>
 					<DialogTitle>{t("dialog.title")}</DialogTitle>

@@ -1,6 +1,6 @@
 "use client";
 
-import FilterButton from "@/shared/components/form/FilterButton";
+import FilterButton, { TOption } from "@/shared/components/form/FilterButton";
 import { useTranslations } from "next-intl";
 import { SubjectFilter } from "./SubjectList";
 
@@ -39,10 +39,10 @@ export default function SubjectFilterBar({ filter, setFilter }: Props) {
 				<FilterButton
 					key={field.title}
 					title={field.title}
-					selected={field.selected}
+					selected={field.selected as any}
 					onSelect={field.onSelect}
 					clearFilter={field.clearFilter}
-					options={field.options}
+					options={field.options as TOption[]}
 				/>
 			))}
 		</div>

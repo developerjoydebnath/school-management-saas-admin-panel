@@ -63,8 +63,8 @@ export default function OrderFilterBar({
           <FilterButton
             key={field.title}
             title={field.title}
-            selected={field.selected as TOption[]}
-            onSelect={field.onSelect as (opt: TOption[]) => void}
+            selected={field.selected as unknown as string[]}
+            onSelect={field.onSelect as unknown as (opt: string[]) => void}
             clearFilter={field.clearFilter}
             options={field.options}
           />
@@ -105,8 +105,8 @@ export default function OrderFilterBar({
         <FilterContent>
           <FilterButton
             title="Status"
-            selected={filter.status}
-            onSelect={(opt) => setFilter({ ...filter, status: opt })}
+            selected={filter.status as unknown as string[]}
+            onSelect={(opt) => setFilter({ ...filter, status: opt as unknown as any[] })}
             clearFilter={() => setFilter({ ...filter, status: [] })}
             options={
               type === "HISTORY"
@@ -135,8 +135,8 @@ export default function OrderFilterBar({
 
           <FilterButton
             title="Order Type"
-            selected={filter.orderType}
-            onSelect={(opt) => setFilter({ ...filter, orderType: opt })}
+            selected={filter.orderType as unknown as string[]}
+            onSelect={(opt) => setFilter({ ...filter, orderType: opt as unknown as any[] })}
             clearFilter={() => setFilter({ ...filter, orderType: [] })}
             options={[
               { label: "Dine-in", value: 'dine_in' },

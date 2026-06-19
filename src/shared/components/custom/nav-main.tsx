@@ -82,23 +82,21 @@ function RecursiveMenuItem({ item, level }: { item: SidebarMenuType; level: numb
 				className="group/collapsible"
 			>
 				<SidebarMenuItem>
-					<CollapsibleTrigger
-						render={
-							<SidebarMenuButton
-								tooltip={t(item.name)}
-								isActive={isActive}
-								className={`h-auto rounded-none border-l-4 px-4 py-2.5 ${isActive ? "border-primary bg-sidebar-accent" : "border-transparent"}`}
-							>
-								{item.icon && <item.icon className="size-3.5!" />}
-								<span className="text-xs font-medium tracking-wide">
-									{t(item.name)}
-								</span>
-								<ChevronRight
-									className={`ml-auto transition-transform duration-200 ${isOpen ? "rotate-90" : ""}`}
-								/>
-							</SidebarMenuButton>
-						}
-					/>
+					<CollapsibleTrigger asChild>
+						<SidebarMenuButton
+							tooltip={t(item.name)}
+							isActive={isActive}
+							className={`h-auto rounded-none border-l-4 px-4 py-2.5 ${isActive ? "border-primary bg-sidebar-accent" : "border-transparent"}`}
+						>
+							{item.icon && <item.icon className="size-3.5!" />}
+							<span className="text-xs font-medium tracking-wide">
+								{t(item.name)}
+							</span>
+							<ChevronRight
+								className={`ml-auto transition-transform duration-200 ${isOpen ? "rotate-90" : ""}`}
+							/>
+						</SidebarMenuButton>
+					</CollapsibleTrigger>
 					<CollapsibleContent>
 						<SidebarMenuSub className="mr-0 border-none pr-0">
 							{item.children!.map((subItem) => (
@@ -123,11 +121,13 @@ function RecursiveMenuItem({ item, level }: { item: SidebarMenuType; level: numb
 					tooltip={t(item.name)}
 					isActive={isActive}
 					onClick={handleNavigate}
-					render={<Link href={item.path} onClick={(e) => e.preventDefault()} />}
+					asChild
 					className={`h-auto rounded-none border-l-4 px-4 py-2.5 ${isActive ? "border-primary bg-sidebar-accent" : "border-transparent"}`}
 				>
-					{item.icon && <item.icon className="size-3.5!" />}
-					<span className="text-xs font-medium tracking-wide">{t(item.name)}</span>
+					<Link href={item.path} onClick={(e) => e.preventDefault()}>
+						{item.icon && <item.icon className="size-3.5!" />}
+						<span className="text-xs font-medium tracking-wide">{t(item.name)}</span>
+					</Link>
 				</SidebarMenuButton>
 			</SidebarMenuItem>
 		);
@@ -139,11 +139,13 @@ function RecursiveMenuItem({ item, level }: { item: SidebarMenuType; level: numb
 			<SidebarMenuSubButton
 				isActive={isActive}
 				onClick={handleNavigate}
-				render={<Link href={item.path} onClick={(e) => e.preventDefault()} />}
+				asChild
 				className={`h-auto rounded-none border-l-4 px-4 py-2.5 ${isActive ? "border-primary bg-sidebar-accent" : "border-transparent"}`}
 			>
-				{item.icon && <item.icon className="size-3.5! scale-90" />}
-				<span className="text-xs tracking-wide">{t(item.name)}</span>
+				<Link href={item.path} onClick={(e) => e.preventDefault()}>
+					{item.icon && <item.icon className="size-3.5! scale-90" />}
+					<span className="text-xs tracking-wide">{t(item.name)}</span>
+				</Link>
 			</SidebarMenuSubButton>
 		</SidebarMenuSubItem>
 	);

@@ -38,7 +38,7 @@ export default function HomeworkForm({ onSuccess, initialData }: HomeworkFormPro
 		})) || [];
 
 	const form = useForm<HomeworkFormValues>({
-		resolver: zodResolver(homeworkSchema),
+		resolver: zodResolver(homeworkSchema as any),
 		defaultValues: {
 			title: initialData?.title || "",
 			subjectId: initialData?.subjectId || "",

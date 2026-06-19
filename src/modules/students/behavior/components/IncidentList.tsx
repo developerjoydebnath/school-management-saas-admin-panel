@@ -19,9 +19,9 @@ import IncidentForm from "./IncidentForm";
 
 export type IncidentFilter = {
 	search: string;
-	type: TOption[];
-	status: TOption[];
-	category: TOption[];
+	type: string[];
+	status: string[];
+	category: string[];
 };
 
 const initialFilters: IncidentFilter = { search: "", type: [], status: [], category: [] };
@@ -45,13 +45,13 @@ export function IncidentList() {
 		if (!rawIncidents) return [];
 		return rawIncidents.filter((incident: any) => {
 			const matchesType =
-				filter.type.length === 0 || filter.type.some((f) => f.value === incident.type);
+				filter.type.length === 0 || filter.type.includes(incident.type);
 			const matchesStatus =
 				filter.status.length === 0 ||
-				filter.status.some((f) => f.value === incident.status);
+				filter.status.includes(incident.status);
 			const matchesCategory =
 				filter.category.length === 0 ||
-				filter.category.some((f) => f.value === incident.category);
+				filter.category.includes(incident.category);
 			const matchesSearch =
 				!filter.search ||
 				incident.studentName?.toLowerCase().includes(filter.search.toLowerCase()) ||

@@ -36,13 +36,11 @@ export default function SubjectsPage() {
 		<div className="space-y-6">
 			<PageHeading routeName="Subjects">
 				<Dialog open={isCreateOpen} onOpenChange={setIsCreateOpen}>
-					<DialogTrigger
-						render={
-							<Button>
-								<Plus className="h-4 w-4" /> {t("addSubject")}
-							</Button>
-						}
-					></DialogTrigger>
+					<DialogTrigger asChild>
+						<Button>
+							<Plus className="h-4 w-4" /> {t("addSubject")}
+						</Button>
+					</DialogTrigger>
 					<DialogContent>
 						<DialogHeader>
 							<DialogTitle>{t("addSubjectTitle")}</DialogTitle>

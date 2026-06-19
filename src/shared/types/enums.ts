@@ -7,6 +7,7 @@ export enum SubjectTypeEnum {
 export enum StatusEnum {
 	ACTIVE = "ACTIVE",
 	INACTIVE = "INACTIVE",
+	PENDING = "PENDING",
 }
 
 export enum BaseRoleEnum {
@@ -16,4 +17,6 @@ export enum BaseRoleEnum {
 	TEACHER = "TEACHER",
 	STUDENT = "STUDENT",
 	PARENT = "PARENT",
+	USER = "USER",
 }
+

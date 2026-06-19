@@ -172,17 +172,15 @@ export function AssignPeriodDialog({
 							confirmText={t("clear")}
 							variant="destructive"
 						>
-							<AlertDialogTrigger
-								render={
-									<Button
-										variant="ghost"
-										size="sm"
-										className="text-red-500 hover:bg-red-50 hover:text-red-600"
-									>
-										<Trash2 className="mr-2 size-4" /> {t("clearSlot")}
-									</Button>
-								}
-							/>
+							<AlertDialogTrigger asChild>
+								<Button
+									variant="ghost"
+									size="sm"
+									className="text-red-500 hover:bg-red-50 hover:text-red-600"
+								>
+									<Trash2 className="mr-2 size-4" /> {t("clearSlot")}
+								</Button>
+							</AlertDialogTrigger>
 						</ConfirmationModal>
 					)}
 					<div className="ml-auto flex gap-2">

@@ -22,7 +22,7 @@ export default function IncidentForm({ onSuccess, initialData }: IncidentFormPro
 	const ft = useTranslations("Forms");
 
 	const form = useForm<IncidentFormValues>({
-		resolver: zodResolver(incidentSchema),
+		resolver: zodResolver(incidentSchema as any),
 		defaultValues: {
 			studentId: initialData?.studentId || "",
 			type: initialData?.type || "negative",
