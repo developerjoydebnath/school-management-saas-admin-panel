@@ -17,13 +17,11 @@ import Link from "next/link";
 import { useState } from "react";
 import { toast } from "sonner";
 import { useSWRConfig } from "swr";
-import { useVouchers } from "../hooks/use-vouchers";
 import { VoucherModel } from "../../models/voucher.model";
-import {
-	deleteVoucher,
-	updateVoucherStatus,
-} from "../hooks/use-voucher-mutations";
+import { deleteVoucher, updateVoucherStatus } from "../hooks/use-voucher-mutations";
+import { useVouchers } from "../hooks/use-vouchers";
 import { VoucherCreateButton } from "./VoucherCreateButton";
+import { VoucherDetailsDialog } from "./VoucherDetailsDialog";
 import VoucherFilterBar from "./VoucherFilterBar";
 
 export type VoucherFilter = {
@@ -68,10 +66,7 @@ export function VoucherList() {
 		try {
 			await deleteVoucher(id);
 			toast.success(t("deleteSuccess"));
-			mutate(
-				(key: any) =>
-					typeof key === "string" && key.startsWith("/superadmin/vouchers")
-			);
+			mutate((key: any) => typeof key === "string" && key.startsWith("/vouchers"));
 		} catch {
 			// Global axios interceptor auto-toasts errors
 		} finally {
@@ -85,10 +80,7 @@ export function VoucherList() {
 		try {
 			await updateVoucherStatus(id, newStatus);
 			toast.success(t("statusUpdateSuccess") || "Status updated successfully");
-			mutate(
-				(key: any) =>
-					typeof key === "string" && key.startsWith("/superadmin/vouchers")
-			);
+			mutate((key: any) => typeof key === "string" && key.startsWith("/vouchers"));
 		} catch {
 			// Global interceptor handles error toast
 		}
@@ -112,8 +104,8 @@ export function VoucherList() {
 			header: t("discount"),
 			cell: ({ row }) => (
 				<div>
-					{row.original.discountType === "percentage" 
-						? `${row.original.discountValue}%` 
+					{row.original.discountType === "percentage"
+						? `${row.original.discountValue}%`
 						: `BDT ${row.original.discountValue.toLocaleString()}`}
 				</div>
 			),
@@ -136,7 +128,9 @@ export function VoucherList() {
 					<ConfirmationModal
 						onConfirm={() => handleStatusToggle(row.original.id, row.original.isActive)}
 						title={t("confirmStatusChange")}
-						description={isActive ? tc("changeToInactiveDesc") : tc("changeToActiveDesc")}
+						description={
+							isActive ? tc("changeToInactiveDesc") : tc("changeToActiveDesc")
+						}
 						confirmText={tc("changeStatus")}
 						variant="default"
 					>
@@ -144,7 +138,7 @@ export function VoucherList() {
 							<div className="group flex w-fit cursor-pointer items-center gap-2">
 								<Switch checked={isActive} className="pointer-events-none" />
 								<span className="text-sm capitalize">
-									{isActive ? tf("active") : tf("inactive")}
+									{isActive ? "Active" : "Inactive"}
 								</span>
 							</div>
 						</AlertDialogTrigger>
@@ -159,13 +153,12 @@ export function VoucherList() {
 				const voucher = row.original;
 				return (
 					<div className="flex items-center gap-2">
+						<VoucherDetailsDialog voucherId={voucher.id} />
 						<PermissionGuard
 							permissions={[PERMISSIONS.SCHOOLS_MANAGEMENT.VOUCHERS.EDIT]}
 						>
 							<Button asChild variant="outline" size="icon">
-								<Link
-									href={PATHS.SCHOOLS_MANAGEMENT.VOUCHERS.EDIT(voucher.id)}
-								>
+								<Link href={PATHS.SCHOOLS_MANAGEMENT.VOUCHERS.EDIT(voucher.id)}>
 									<Edit2 className="text-muted-foreground hover:text-foreground h-4 w-4" />
 								</Link>
 							</Button>

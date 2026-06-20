@@ -12,7 +12,8 @@ export class Teacher {
         this._mobileNumber = data.mobile || data.contact || "";
     }
 }
-const teacher = new Teacher(apiResponseData);
+// When data comes from useSWR, extract the nested payload:
+const teacher = rawData?.data ? new Teacher(rawData.data) : null;
 
 // ❌ Wrong
 interface Teacher {

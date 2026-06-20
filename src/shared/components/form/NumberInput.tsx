@@ -11,16 +11,18 @@ type NumberInputProps = ComponentProps<typeof Input> & {
 export default function NumberInput({
   className,
   onChange,
+  value,
   ...props
 }: NumberInputProps) {
   return (
     <Input
       type="number"
       {...(props.min ? { min: props.min } : { min: 1 })}
-      {...(props.max ? { min: props.max } : {})}
+      {...(props.max ? { max: props.max } : {})}
       onChange={(e) =>
         onChange(Math.max(+e.target.value, Number(props.min || 0)))
       }
+      value={value ?? ""}
       className={cn(
         "focus:border-primary focus:ring-primary w-full rounded-md px-3 py-2 h-10",
         className,

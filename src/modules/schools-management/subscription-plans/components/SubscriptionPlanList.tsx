@@ -25,6 +25,7 @@ import {
 	updateSubscriptionPlanStatus,
 } from "../hooks/use-subscription-plan-mutations";
 import { SubscriptionPlanCreate } from "./SubscriptionPlanCreateButton";
+import { SubscriptionPlanDetailsDialog } from "./SubscriptionPlanDetailsDialog";
 import SubscriptionPlanFilterBar from "./SubscriptionPlanFilterBar";
 
 export type SubscriptionPlanFilter = {
@@ -174,6 +175,7 @@ export function SubscriptionPlanList() {
 				const plan = row.original;
 				return (
 					<div className="flex items-center gap-2">
+						<SubscriptionPlanDetailsDialog planId={plan.id} />
 						<PermissionGuard
 							permissions={[PERMISSIONS.SCHOOLS_MANAGEMENT.SUBSCRIPTION_PLANS.EDIT]}
 						>

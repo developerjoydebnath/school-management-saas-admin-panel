@@ -22,7 +22,7 @@ export function useRole(id: string | null) {
 	const url = id ? `/roles/${id}` : null;
 	const { data, isLoading, isError, mutate } = useSWR(url);
 
-	const role = data ? new RoleModel(data) : null;
+	const role = data?.data ? new RoleModel(data.data) : null;
 
 	return {
 		data: role,

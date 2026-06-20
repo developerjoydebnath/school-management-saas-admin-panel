@@ -51,7 +51,12 @@ export function VoucherEditForm({ voucher }: { voucher: VoucherModel }) {
 	const onSubmit = async (data: VoucherFormValues) => {
 		setIsSubmitting(true);
 		try {
-			await updateVoucher(voucher.id, data);
+			const payload = {
+				...data,
+				validFrom: data.validFrom ? new Date(data.validFrom).toISOString() : data.validFrom,
+				expiresAt: data.expiresAt ? new Date(data.expiresAt).toISOString() : data.expiresAt,
+			};
+			await updateVoucher(voucher.id, payload);
 			toast.success(t("updateSuccess") || "Voucher updated successfully");
 			router.push(PATHS.SCHOOLS_MANAGEMENT.VOUCHERS.ROOT);
 		} catch (error: any) {

@@ -19,6 +19,7 @@ import { toast } from "sonner";
 import { deleteRole } from "../hooks/use-role-mutations";
 import { useRoles } from "../hooks/use-roles";
 import { RoleCreate } from "./RoleCreate";
+import { RoleDetailsDialog } from "./RoleDetailsDialog";
 import RoleFilterBar from "./RoleFilterBar";
 import { RoleForm } from "./RoleForm";
 
@@ -120,6 +121,7 @@ export function RoleList() {
 				const role = row.original;
 				return (
 					<div className="flex items-center gap-2">
+						<RoleDetailsDialog roleId={role.id} />
 						<PermissionGuard permissions={[PERMISSIONS.ROLES.MANAGEMENT.EDIT]}>
 							<Button
 								variant="outline"

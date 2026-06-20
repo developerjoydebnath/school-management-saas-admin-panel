@@ -425,7 +425,8 @@
 		"createRole": "Create Role",
 		"updateRole": "Update Role",
 		"cancel": "Cancel",
-		"saving": "Saving..."
+		"saving": "Saving...",
+		"roleDetails": "Role Details"
 	},
 	"PermissionsPage": {
 		"title": "Permission Matrix",
@@ -444,7 +445,8 @@
 		"createPermission": "Create Permission",
 		"updatePermission": "Update Permission",
 		"cancel": "Cancel",
-		"saving": "Saving..."
+		"saving": "Saving...",
+		"permissionDetails": "Permission Details"
 	},
 	"AdmissionSettings": {
 		"title": "Field Configuration",
@@ -942,7 +944,8 @@
 		"sectionDiscount": "Discount Config",
 		"sectionLimits": "Limits & Duration",
 		"sectionSettings": "Settings",
-		"confirmStatusChange": "Change Status?"
+		"confirmStatusChange": "Change Status?",
+		"voucherDetails": "Voucher Details"
 	},
 	"VoucherCreatePage": {
 		"title": "Create Voucher",

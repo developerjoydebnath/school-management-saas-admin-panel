@@ -5,14 +5,13 @@ import { Button } from "@/shared/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/shared/components/ui/card";
 import { Separator } from "@/shared/components/ui/separator";
 import { PATHS } from "@/shared/configs/paths.config";
-import { useSWR } from "@/shared/hooks/use-swr";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useTranslations } from "next-intl";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
-import { SubscriptionPlanModel } from "../../models/subscription-plan.model";
+import { useSubscriptionPlan } from "../../hooks/use-subscription-plan";
 import { SubscriptionPlanFormValues, subscriptionPlanSchema } from "../dto/subscription-plan.dto";
 import { updateSubscriptionPlan } from "../hooks/use-subscription-plan-mutations";
 import { SubscriptionPlanFormSkeleton } from "./SubscriptionPlanFormSkeleton";
@@ -36,8 +35,7 @@ export function SubscriptionPlanEditForm({ id }: Props) {
 	const t = useTranslations("SubscriptionPlansPage");
 
 	// Fetch plan details by ID
-	const { data: rawData, isLoading } = useSWR(`/superadmin/subscription-plans/${id}`);
-	const plan = rawData?.data ? new SubscriptionPlanModel(rawData.data) : null;
+	const { data: plan, isLoading } = useSubscriptionPlan(id);
 
 	const form = useForm<SubscriptionPlanFormValues>({
 		resolver: zodResolver(subscriptionPlanSchema as any),

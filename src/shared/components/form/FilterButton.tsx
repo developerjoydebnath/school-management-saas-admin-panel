@@ -103,13 +103,13 @@ export default function FilterButton({
 					</div>
 
 					<Separator orientation="vertical" />
-					<Badge variant="secondary" className="bg-gray-50 px-1.5 text-gray-700">
+					<Badge variant="outline" className="bg-gray-50 px-1.5 text-gray-700">
 						{selected.length}
 					</Badge>
 					<Badge
 						onClick={resetFilter}
-						variant="secondary"
-						className="aspect-square cursor-pointer rounded-full bg-gray-50 p-1 text-gray-700 hover:bg-gray-200 active:bg-gray-100"
+						variant="outline"
+						className="hover:bg-muted hover:text-muted-foreground aspect-square cursor-pointer rounded-full bg-gray-50 p-1 text-gray-700 dark:hover:bg-gray-100 dark:hover:text-black"
 					>
 						<IconX size={12} />
 					</Badge>
@@ -119,11 +119,11 @@ export default function FilterButton({
 				{open && (
 					<>
 						{/* Invisible overlay to close on outside click */}
-						<div className="fixed inset-0 z-[99]" onClick={() => setOpen(false)} />
+						<div className="fixed inset-0 z-99" onClick={() => setOpen(false)} />
 
 						<div
 							className={cn(
-								"border-border bg-popover absolute left-0 z-[100] w-full overflow-hidden rounded-md border shadow-md",
+								"border-border bg-popover absolute left-0 z-100 w-full overflow-hidden rounded-md border shadow-sm",
 								dropUp ? "bottom-full mb-1" : "top-full mt-1"
 							)}
 						>

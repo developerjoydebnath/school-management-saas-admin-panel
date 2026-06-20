@@ -10,7 +10,7 @@ type UseVouchersParams = {
 };
 
 export function useVouchers(params?: UseVouchersParams) {
-	const { data, meta, isLoading, isError, mutate } = useTableData("/superadmin/vouchers", params);
+	const { data, meta, isLoading, isError, mutate } = useTableData("/vouchers", params);
 
 	const vouchers = data?.map((item: any) => new VoucherModel(item)) || [];
 

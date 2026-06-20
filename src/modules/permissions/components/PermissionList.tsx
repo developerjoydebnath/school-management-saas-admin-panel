@@ -19,6 +19,7 @@ import { useSWRConfig } from "swr";
 import { deletePermission } from "../hooks/use-permission-mutations";
 import { usePermissions } from "../hooks/use-permissions";
 import { PermissionCreate } from "./PermissionCreate";
+import { PermissionDetailsDialog } from "./PermissionDetailsDialog";
 import PermissionFilterBar from "./PermissionFilterBar";
 import { PermissionForm } from "./PermissionForm";
 
@@ -115,6 +116,7 @@ export function PermissionList() {
 				const permission = row.original;
 				return (
 					<div className="flex items-center gap-2">
+						<PermissionDetailsDialog permissionId={permission.id} />
 						<PermissionGuard permissions={[PERMISSIONS.ROLES.MATRIX.EDIT]}>
 							<Button
 								variant="outline"

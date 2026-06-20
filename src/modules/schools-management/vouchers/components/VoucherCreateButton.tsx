@@ -14,7 +14,7 @@ export function VoucherCreateButton() {
 		<PermissionGuard permissions={[PERMISSIONS.SCHOOLS_MANAGEMENT.VOUCHERS.CREATE]}>
 			<Button asChild>
 				<Link href={PATHS.SCHOOLS_MANAGEMENT.VOUCHERS.CREATE}>
-					<Plus className="size-4 mr-2" />
+					<Plus className="size-4" />
 					{t("addVoucher")}
 				</Link>
 			</Button>

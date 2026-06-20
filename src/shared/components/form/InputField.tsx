@@ -272,19 +272,31 @@ export default function InputField({
 				))
 
 				// native type
-				.with("text", "email", "date", "tel", "url", "search", "color", "time", () => (
-					<Input
-						id={field.name}
-						type={props.type}
-						placeholder={props.placeholder}
-						{...field}
-						className={cn(
-							fieldState.error ? "border-red-500 focus:ring-red-500" : "",
-							"focus:border-primary focus:ring-primary h-10 rounded-md shadow-none",
-							className
-						)}
-					/>
-				))
+				.with(
+					"text",
+					"email",
+					"date",
+					"tel",
+					"url",
+					"search",
+					"color",
+					"time",
+					"datetime-local",
+					() => (
+						<Input
+							id={field.name}
+							type={props.type}
+							placeholder={props.placeholder}
+							{...field}
+							value={field.value ?? ""}
+							className={cn(
+								fieldState.error ? "border-red-500 focus:ring-red-500" : "",
+								"focus:border-primary focus:ring-primary h-10 rounded-md shadow-none",
+								className
+							)}
+						/>
+					)
+				)
 				.otherwise(() => null)}
 
 			{helperText && (

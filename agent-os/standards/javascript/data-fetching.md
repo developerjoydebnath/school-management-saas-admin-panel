@@ -30,7 +30,7 @@ const { data, isError, isLoading } = useSWR("/students", { page: 1, limit: 10 })
 ```
 
 - Pass `url` as the first arg, query params as the second (automatically serialized)
-- Returns `data` already unwrapped from `response.data` — do not re-access `.data`
+- Returns `data` already unwrapped from Axios's `response.data`, but since the backend wraps payloads in `{ success: true, data: { ... } }`, you must access `data.data` to get the actual payload.
 - Defaults: `shouldRetryOnError: false`, `revalidateOnFocus: false` (override via third `options` arg if needed)
 - Pass `null` as url to conditionally disable fetching
 - **Multi-Option Filters**: When building the query parameters object, if a filter accepts multiple values (e.g., an array of `billingCycle`), always join the array into a comma-separated string (`.join(',')`) before sending it to the backend. Do not send raw arrays directly, as URL serialization may behave inconsistently.

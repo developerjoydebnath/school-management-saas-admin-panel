@@ -419,7 +419,8 @@
 		"createRole": "রোল তৈরি করুন",
 		"updateRole": "রোল আপডেট করুন",
 		"cancel": "বাতিল করুন",
-		"saving": "সংরক্ষণ করা হচ্ছে..."
+		"saving": "সংরক্ষণ করা হচ্ছে...",
+		"roleDetails": "রোলের বিস্তারিত"
 	},
 	"PermissionsPage": {
 		"title": "পারমিশন ম্যাট্রিক্স",
@@ -438,7 +439,8 @@
 		"createPermission": "পারমিশন তৈরি করুন",
 		"updatePermission": "পারমিশন আপডেট করুন",
 		"cancel": "বাতিল করুন",
-		"saving": "সংরক্ষণ করা হচ্ছে..."
+		"saving": "সংরক্ষণ করা হচ্ছে...",
+		"permissionDetails": "পারমিশনের বিস্তারিত"
 	},
 	"AdmissionSettings": {
 		"title": "ফিল্ড কনফিগারেশন",
@@ -936,7 +938,8 @@
 		"sectionDiscount": "ডিসকাউন্ট কনফিগারেশন",
 		"sectionLimits": "সীমা এবং সময়কাল",
 		"sectionSettings": "সেটিংস",
-		"confirmStatusChange": "স্ট্যাটাস পরিবর্তন করবেন?"
+		"confirmStatusChange": "স্ট্যাটাস পরিবর্তন করবেন?",
+		"voucherDetails": "ভাউচারের বিবরণ"
 	},
 	"VoucherCreatePage": {
 		"title": "ভাউচার তৈরি করুন",

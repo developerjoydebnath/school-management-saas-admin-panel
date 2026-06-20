@@ -1,20 +1,11 @@
-import axios from "@/shared/lib/axios";
-import useSWR from "swr";
+import { useSWR } from "@/shared/hooks/use-swr";
 import { VoucherModel } from "../../models/voucher.model";
 
-const fetcher = async (url: string) => {
-	const response = await axios.get(url);
-	return new VoucherModel(response.data.data);
-};
-
 export function useVoucher(id: string | null) {
-	const { data, error, isLoading, mutate } = useSWR<VoucherModel>(
-		id ? `/superadmin/vouchers/${id}` : null,
-		fetcher
-	);
+	const { data, error, isLoading, mutate } = useSWR(id ? `/vouchers/${id}` : null);
 
 	return {
-		data,
+		data: data?.data ? new VoucherModel(data.data) : undefined,
 		isLoading,
 		error,
 		mutate,

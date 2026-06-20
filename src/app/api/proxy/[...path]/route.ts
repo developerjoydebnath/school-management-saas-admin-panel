@@ -58,7 +58,7 @@ export async function refreshAuthTokens(): Promise<RefreshTokenResponse | null> 
 
 		if (access_token && refresh_token) {
 			await setAuthCookies(access_token, refresh_token);
-			return response.data;
+			return { access_token, refresh_token };
 		}
 	} catch (error) {
 		console.error("Token refresh failed:", error);
@@ -143,12 +143,7 @@ async function handleApiRequest(
 					const retryResponse = await axios(requestConfig);
 					const apiResponse = await handleResponse(retryResponse);
 
-					// Re-attach cookies manually to the proxy response
-					const setCookieHeader = clearAuthCookies();
-					apiResponse.headers.append(
-						"Set-Cookie",
-						setCookieHeader.get("Set-Cookie") as string
-					);
+					// Cookies are already set by setAuthCookies() in refreshAuthTokens()
 
 					return apiResponse;
 				} catch (retryError) {

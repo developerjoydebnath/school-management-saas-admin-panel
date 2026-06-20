@@ -50,7 +50,12 @@ export function VoucherCreateForm() {
 	const onSubmit = async (data: VoucherFormValues) => {
 		setIsSubmitting(true);
 		try {
-			await createVoucher(data);
+			const payload = {
+				...data,
+				validFrom: data.validFrom ? new Date(data.validFrom).toISOString() : data.validFrom,
+				expiresAt: data.expiresAt ? new Date(data.expiresAt).toISOString() : data.expiresAt,
+			};
+			await createVoucher(payload);
 			toast.success(t("createSuccess") || "Voucher created successfully");
 			router.push(PATHS.SCHOOLS_MANAGEMENT.VOUCHERS.ROOT);
 		} catch (error: any) {
@@ -118,7 +123,7 @@ export function VoucherCreateForm() {
 					</CardTitle>
 				</CardHeader>
 				<CardContent className="space-y-4">
-					<div className="grid grid-cols-1 gap-4 @2xl/page:grid-cols-3">
+					<div className="grid grid-cols-1 gap-4 @2xl/page:grid-cols-2">
 						<InputField
 							control={form.control}
 							name="discountType"
@@ -142,8 +147,6 @@ export function VoucherCreateForm() {
 							type="number"
 							placeholder="No Limit"
 						/>
-					</div>
-					<div className="grid grid-cols-1 gap-4 @2xl/page:grid-cols-2">
 						<InputField
 							control={form.control}
 							name="minimumBillBdt"
