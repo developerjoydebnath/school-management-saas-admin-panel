@@ -33,6 +33,8 @@ export type SubscriptionPlanFilter = {
 	isActive: string[];
 	isPublic: string[];
 	billingCycle: string[];
+	createdFrom: string;
+	createdTo: string;
 };
 
 const initialFilters: SubscriptionPlanFilter = {
@@ -40,6 +42,8 @@ const initialFilters: SubscriptionPlanFilter = {
 	isActive: [],
 	isPublic: [],
 	billingCycle: [],
+	createdFrom: "",
+	createdTo: "",
 };
 
 export function SubscriptionPlanList() {
@@ -61,6 +65,8 @@ export function SubscriptionPlanList() {
 		isActive: filter.isActive,
 		isPublic: filter.isPublic,
 		billingCycle: filter.billingCycle,
+		createdFrom: filter.createdFrom,
+		createdTo: filter.createdTo,
 	});
 
 	const [planToDelete, setPlanToDelete] = useState<string | null>(null);
@@ -149,22 +155,30 @@ export function SubscriptionPlanList() {
 			cell: ({ row }) => {
 				const isActive = row.original.status === "active";
 				return (
-					<ConfirmationModal
-						onConfirm={() => handleStatusToggle(row.original.id, row.original.status)}
-						title={t("confirmStatusChange")}
-						description={isActive ? tc("changeToInactiveDesc") : tc("changeToActiveDesc")}
-						confirmText={tc("changeStatus")}
-						variant="default"
+					<PermissionGuard
+						permissions={[
+							PERMISSIONS.SCHOOLS_MANAGEMENT.ALL,
+							PERMISSIONS.SCHOOLS_MANAGEMENT.SUBSCRIPTION_PLANS.ALL,
+							PERMISSIONS.SCHOOLS_MANAGEMENT.SUBSCRIPTION_PLANS.EDIT,
+						]}
 					>
-						<AlertDialogTrigger asChild>
-							<div className="group flex w-fit cursor-pointer items-center gap-2">
-								<Switch checked={isActive} className="pointer-events-none" />
-								<span className="text-sm capitalize">
-									{isActive ? "Active" : "Inactive"}
-								</span>
-							</div>
-						</AlertDialogTrigger>
-					</ConfirmationModal>
+						<ConfirmationModal
+							onConfirm={() => handleStatusToggle(row.original.id, row.original.status)}
+							title={t("confirmStatusChange")}
+							description={isActive ? tc("changeToInactiveDesc") : tc("changeToActiveDesc")}
+							confirmText={tc("changeStatus")}
+							variant="default"
+						>
+							<AlertDialogTrigger asChild>
+								<div className="group flex w-fit cursor-pointer items-center gap-2">
+									<Switch checked={isActive} className="pointer-events-none" />
+									<span className="text-sm capitalize">
+										{isActive ? "Active" : "Inactive"}
+									</span>
+								</div>
+							</AlertDialogTrigger>
+						</ConfirmationModal>
+					</PermissionGuard>
 				);
 			},
 		},
@@ -177,7 +191,11 @@ export function SubscriptionPlanList() {
 					<div className="flex items-center gap-2">
 						<SubscriptionPlanDetailsDialog planId={plan.id} />
 						<PermissionGuard
-							permissions={[PERMISSIONS.SCHOOLS_MANAGEMENT.SUBSCRIPTION_PLANS.EDIT]}
+							permissions={[
+								PERMISSIONS.SCHOOLS_MANAGEMENT.ALL,
+								PERMISSIONS.SCHOOLS_MANAGEMENT.SUBSCRIPTION_PLANS.ALL,
+								PERMISSIONS.SCHOOLS_MANAGEMENT.SUBSCRIPTION_PLANS.EDIT,
+							]}
 						>
 							<Button asChild variant="outline" size="icon">
 								<Link
@@ -188,7 +206,11 @@ export function SubscriptionPlanList() {
 							</Button>
 						</PermissionGuard>
 						<PermissionGuard
-							permissions={[PERMISSIONS.SCHOOLS_MANAGEMENT.SUBSCRIPTION_PLANS.DELETE]}
+							permissions={[
+								PERMISSIONS.SCHOOLS_MANAGEMENT.ALL,
+								PERMISSIONS.SCHOOLS_MANAGEMENT.SUBSCRIPTION_PLANS.ALL,
+								PERMISSIONS.SCHOOLS_MANAGEMENT.SUBSCRIPTION_PLANS.DELETE,
+							]}
 						>
 							<ConfirmationModal
 								onConfirm={() => confirmDelete(plan.id)}

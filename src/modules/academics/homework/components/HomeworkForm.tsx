@@ -22,12 +22,13 @@ export default function HomeworkForm({ onSuccess, initialData }: HomeworkFormPro
 	const t = useTranslations("Homework");
 	const ft = useTranslations("Forms");
 
-	const { data: subjectsData } = useSWR("/subjects");
+	const { data: subjectResponse } = useSWR("/subjects/active-list");
 	const { data: classesData } = useSWR("/classes");
+	const subjectsData = Array.isArray(subjectResponse?.data) ? subjectResponse.data : subjectResponse || [];
 
 	const subjectOptions =
 		(subjectsData as any[])?.map((s) => ({
-			label: s.name?.en || s.name,
+			label: s.enName || s.name?.en || s.name,
 			value: s.id,
 		})) || [];
 

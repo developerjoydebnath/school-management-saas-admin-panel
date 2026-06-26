@@ -3,7 +3,7 @@ import { Skeleton } from "@/shared/components/ui/skeleton";
 
 export function VoucherFormSkeleton() {
 	return (
-		<div className="mx-auto max-w-5xl space-y-6">
+		<div className="mx-auto max-w-7xl space-y-6">
 			{/* Basic Information Skeleton */}
 			<Card className="gap-0 shadow-none ring-0">
 				<CardHeader className="pb-4">

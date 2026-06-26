@@ -62,7 +62,7 @@ export function FeeSessionSelector({ session, onSessionChange }: FeeSessionSelec
 			</div>
 
 			<Button variant="outline" size="sm" className="h-8">
-				<Copy className="mr-2 h-4 w-4" />
+				<Copy className="h-4 w-4" />
 				{t("feeCopyPrevSession")}
 			</Button>
 		</div>

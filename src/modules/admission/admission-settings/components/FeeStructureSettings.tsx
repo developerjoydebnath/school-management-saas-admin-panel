@@ -79,11 +79,11 @@ export default function FeeStructureSettings() {
 				</div>
 				<div className="flex gap-2">
 					<Button variant="destructive" onClick={handleReset}>
-						<RotateCcw className="mr-2 h-4 w-4" />
+						<RotateCcw className="h-4 w-4" />
 						{t("feeResetAll")}
 					</Button>
 					<Button onClick={handleSave}>
-						<Save className="mr-2 h-4 w-4" />
+						<Save className="h-4 w-4" />
 						{t("feeSaveConfiguration")}
 					</Button>
 				</div>

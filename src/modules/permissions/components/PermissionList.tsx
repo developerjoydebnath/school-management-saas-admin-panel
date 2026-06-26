@@ -117,7 +117,13 @@ export function PermissionList() {
 				return (
 					<div className="flex items-center gap-2">
 						<PermissionDetailsDialog permissionId={permission.id} />
-						<PermissionGuard permissions={[PERMISSIONS.ROLES.MATRIX.EDIT]}>
+						<PermissionGuard
+							permissions={[
+								PERMISSIONS.ROLES.ALL,
+								PERMISSIONS.ROLES.MATRIX.ALL,
+								PERMISSIONS.ROLES.MATRIX.EDIT,
+							]}
+						>
 							<Button
 								variant="outline"
 								size="icon"
@@ -129,7 +135,13 @@ export function PermissionList() {
 								<Edit2 className="text-muted-foreground hover:text-foreground h-4 w-4" />
 							</Button>
 						</PermissionGuard>
-						<PermissionGuard permissions={[PERMISSIONS.ROLES.MATRIX.DELETE]}>
+						<PermissionGuard
+							permissions={[
+								PERMISSIONS.ROLES.ALL,
+								PERMISSIONS.ROLES.MATRIX.ALL,
+								PERMISSIONS.ROLES.MATRIX.DELETE,
+							]}
+						>
 							<ConfirmationModal
 								onConfirm={() => confirmDelete(permission.id)}
 								title={t("deletePermissionTitle")}

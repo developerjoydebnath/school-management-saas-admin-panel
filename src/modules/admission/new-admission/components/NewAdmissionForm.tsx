@@ -328,7 +328,7 @@ export default function NewAdmissionForm({
 									className="h-12 flex-1 text-base font-semibold"
 								>
 									Next Step
-									<ArrowRight className="ml-2 h-5 w-5" />
+									<ArrowRight className="h-5 w-5" />
 								</Button>
 							) : (
 								<Button
@@ -342,7 +342,7 @@ export default function NewAdmissionForm({
 								>
 									{loading ? (
 										<>
-											<Loader2 className="mr-2 h-5 w-5 animate-spin" />
+											<Loader2 className="h-5 w-5 animate-spin" />
 											{t("processingAdmission")}
 										</>
 									) : admissionMode === "full" ? (
@@ -350,7 +350,7 @@ export default function NewAdmissionForm({
 									) : (
 										<>
 											{t("completeAdmission")}
-											<ArrowRight className="ml-2 h-5 w-5" />
+											<ArrowRight className="h-5 w-5" />
 										</>
 									)}
 								</Button>

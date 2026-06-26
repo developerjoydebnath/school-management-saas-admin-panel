@@ -10,9 +10,10 @@ import { Button } from "@/shared/components/ui/button";
 import { Card, CardContent, CardHeader } from "@/shared/components/ui/card";
 import { PATHS } from "@/shared/configs/paths.config";
 import { PERMISSIONS } from "@/shared/configs/permissions.config";
+import { SchoolModel } from "@/shared/models/school.model";
 import { ColumnDef } from "@tanstack/react-table";
 import { format } from "date-fns";
-import { Edit2, Eye, Plus, Trash2 } from "lucide-react";
+import { CreditCard, Edit2, Eye, Landmark, Trash2 } from "lucide-react";
 import { useTranslations } from "next-intl";
 import Link from "next/link";
 import { useState } from "react";
@@ -20,19 +21,35 @@ import { toast } from "sonner";
 import { useSWRConfig } from "swr";
 import { deleteSchool } from "../../hooks/use-school-mutations";
 import { useSchools } from "../../hooks/use-schools";
-import { SchoolModel } from "../../models/school.model";
+import { SchoolCreate } from "./SchoolCreateButton";
 import SchoolFilterBar from "./SchoolFilterBar";
 
 export type SchoolFilter = {
 	search: string;
-	status: string;
-	schoolType: string;
+	status: string[];
+	schoolType: string[];
+	divisionId: string[];
+	districtId: string[];
+	upazilaId: string[];
+	affiliationBoard: string[];
+	medium: string[];
+	shift: string[];
+	createdFrom: string;
+	createdTo: string;
 };
 
 const initialFilters: SchoolFilter = {
 	search: "",
-	status: "",
-	schoolType: "",
+	status: [],
+	schoolType: [],
+	divisionId: [],
+	districtId: [],
+	upazilaId: [],
+	affiliationBoard: [],
+	medium: [],
+	shift: [],
+	createdFrom: "",
+	createdTo: "",
 };
 
 export function SchoolList() {
@@ -51,8 +68,16 @@ export function SchoolList() {
 		page,
 		limit,
 		search: filter.search,
-		status: filter.status,
-		schoolType: filter.schoolType,
+		status: filter.status.join(","),
+		schoolType: filter.schoolType.join(","),
+		divisionId: filter.divisionId.join(","),
+		districtId: filter.districtId.join(","),
+		upazilaId: filter.upazilaId.join(","),
+		affiliationBoard: filter.affiliationBoard.join(","),
+		medium: filter.medium.join(","),
+		shift: filter.shift.join(","),
+		createdFrom: filter.createdFrom,
+		createdTo: filter.createdTo,
 	});
 
 	const [schoolToDelete, setSchoolToDelete] = useState<string | null>(null);
@@ -65,7 +90,7 @@ export function SchoolList() {
 			await deleteSchool(id);
 			toast.success("School deleted successfully");
 			mutate((key: any) => typeof key === "string" && key.startsWith("/superadmin/schools"));
-		} catch (error: any) {
+		} catch {
 			// Toast is handled automatically by axios singleton
 		} finally {
 			setIsDeleting(false);
@@ -77,10 +102,10 @@ export function SchoolList() {
 		{
 			id: "schoolName",
 			accessorKey: "schoolName",
-			header: "School Name",
+			header: t("schoolName"),
 			cell: ({ row }) => (
 				<div>
-					<div className="font-medium text-primary">{row.original.schoolName}</div>
+					<div className="text-primary font-medium">{row.original.schoolName}</div>
 					<div className="text-muted-foreground text-xs">{row.original.contactEmail}</div>
 				</div>
 			),
@@ -88,13 +113,15 @@ export function SchoolList() {
 		{
 			id: "type",
 			accessorKey: "schoolType",
-			header: "Type",
-			cell: ({ row }) => <span className="capitalize">{row.original.schoolType.replace("_", " ")}</span>,
+			header: t("type"),
+			cell: ({ row }) => (
+				<span className="capitalize">{row.original.schoolType.replace("_", " ")}</span>
+			),
 		},
 		{
 			id: "status",
 			accessorKey: "status",
-			header: "Status",
+			header: t("status"),
 			cell: ({ row }) => {
 				const status = row.original.status;
 				return (
@@ -118,7 +145,7 @@ export function SchoolList() {
 		{
 			id: "contactPerson",
 			accessorKey: "contactPersonName",
-			header: "Contact Person",
+			header: t("contactPerson"),
 			cell: ({ row }) => (
 				<div>
 					<div>{row.original.contactPersonName || "N/A"}</div>
@@ -129,10 +156,12 @@ export function SchoolList() {
 		{
 			id: "createdAt",
 			accessorKey: "createdAt",
-			header: "Created",
+			header: t("created"),
 			cell: ({ row }) => (
 				<span className="text-muted-foreground text-sm">
-					{row.original.createdAt ? format(new Date(row.original.createdAt), "MMM d, yyyy") : "N/A"}
+					{row.original.createdAt
+						? format(new Date(row.original.createdAt), "MMM d, yyyy")
+						: "N/A"}
 				</span>
 			),
 		},
@@ -143,32 +172,82 @@ export function SchoolList() {
 				const school = row.original;
 				return (
 					<div className="flex items-center gap-2">
-						<PermissionGuard permissions={[PERMISSIONS.SCHOOLS_MANAGEMENT.SCHOOLS.VIEW]}>
+						<PermissionGuard
+							permissions={[
+								PERMISSIONS.SCHOOLS_MANAGEMENT.ALL,
+								PERMISSIONS.SCHOOLS_MANAGEMENT.SCHOOLS.ALL,
+								PERMISSIONS.SCHOOLS_MANAGEMENT.SCHOOLS.VIEW,
+							]}
+						>
 							<Button asChild variant="outline" size="icon">
-	<Link href={PATHS.SCHOOLS_MANAGEMENT.SCHOOLS.DETAILS(school.id)} >
-		<Eye className="text-muted-foreground hover:text-foreground h-4 w-4" />
-	</Link>
-</Button>
+								<Link href={PATHS.SCHOOLS_MANAGEMENT.SCHOOLS.DETAILS(school.id)}>
+									<Eye className="text-muted-foreground hover:text-foreground h-4 w-4" />
+								</Link>
+							</Button>
 						</PermissionGuard>
-						<PermissionGuard permissions={[PERMISSIONS.SCHOOLS_MANAGEMENT.SCHOOLS.EDIT]}>
+						<PermissionGuard
+							permissions={[
+								PERMISSIONS.SCHOOLS_MANAGEMENT.ALL,
+								PERMISSIONS.SCHOOLS_MANAGEMENT.SCHOOLS.ALL,
+								PERMISSIONS.SCHOOLS_MANAGEMENT.SCHOOLS.EDIT,
+							]}
+						>
 							<Button asChild variant="outline" size="icon">
-	<Link href={PATHS.SCHOOLS_MANAGEMENT.SCHOOLS.EDIT(school.id)} >
-		<Edit2 className="text-muted-foreground hover:text-foreground h-4 w-4" />
-	</Link>
-</Button>
+								<Link href={PATHS.SCHOOLS_MANAGEMENT.SCHOOLS.EDIT(school.id)}>
+									<Edit2 className="text-muted-foreground hover:text-foreground h-4 w-4" />
+								</Link>
+							</Button>
 						</PermissionGuard>
-						<PermissionGuard permissions={[PERMISSIONS.SCHOOLS_MANAGEMENT.SCHOOLS.DELETE]}>
+						<PermissionGuard
+							permissions={[
+								PERMISSIONS.SCHOOLS_MANAGEMENT.ALL,
+								PERMISSIONS.SCHOOLS_MANAGEMENT.BANK_ACCOUNTS.ALL,
+								PERMISSIONS.SCHOOLS_MANAGEMENT.BANK_ACCOUNTS.CREATE,
+							]}
+						>
+							<Button asChild variant="outline" size="icon">
+								<Link
+									href={`${PATHS.SCHOOLS_MANAGEMENT.BANK_ACCOUNTS.CREATE}?schoolId=${school.id}`}
+								>
+									<Landmark className="text-muted-foreground hover:text-foreground h-4 w-4" />
+								</Link>
+							</Button>
+						</PermissionGuard>
+						<PermissionGuard
+							permissions={[
+								PERMISSIONS.SCHOOLS_MANAGEMENT.ALL,
+								PERMISSIONS.SCHOOLS_MANAGEMENT.PAYMENTS.ALL,
+								PERMISSIONS.SCHOOLS_MANAGEMENT.PAYMENTS.CREATE,
+							]}
+						>
+							<Button asChild variant="outline" size="icon">
+								<Link
+									href={`${PATHS.SCHOOLS_MANAGEMENT.PAYMENTS.CREATE}?schoolId=${school.id}`}
+								>
+									<CreditCard className="text-muted-foreground hover:text-foreground h-4 w-4" />
+								</Link>
+							</Button>
+						</PermissionGuard>
+						<PermissionGuard
+							permissions={[
+								PERMISSIONS.SCHOOLS_MANAGEMENT.ALL,
+								PERMISSIONS.SCHOOLS_MANAGEMENT.SCHOOLS.ALL,
+								PERMISSIONS.SCHOOLS_MANAGEMENT.SCHOOLS.DELETE,
+							]}
+						>
 							<ConfirmationModal
 								onConfirm={() => confirmDelete(school.id)}
-								title="Delete School"
-								description="Are you sure you want to delete this school? This action cannot be undone."
+								title={t("deleteSchoolTitle")}
+								description={t("deleteSchoolDescription")}
 								confirmText={tc("delete")}
 								variant="destructive"
 								isLoading={isDeleting && schoolToDelete === school.id}
 							>
-								<AlertDialogTrigger asChild><Button variant="outline" size="icon">
-											<Trash2 className="h-4 w-4 text-red-500 hover:text-red-600" />
-										</Button></AlertDialogTrigger>
+								<AlertDialogTrigger asChild>
+									<Button variant="outline" size="icon">
+										<Trash2 className="h-4 w-4 text-red-500 hover:text-red-600" />
+									</Button>
+								</AlertDialogTrigger>
 							</ConfirmationModal>
 						</PermissionGuard>
 					</div>
@@ -187,14 +266,7 @@ export function SchoolList() {
 		<Card className="p-6 shadow-none ring-0">
 			<CardHeader className="p-0">
 				<SchoolFilterBar filter={filter} setFilter={setFilter}>
-					<PermissionGuard permissions={[PERMISSIONS.SCHOOLS_MANAGEMENT.SCHOOLS.CREATE]}>
-						<Button asChild >
-	<Link href={PATHS.SCHOOLS_MANAGEMENT.SCHOOLS.CREATE} >
-		<Plus className="size-4" />
-							Add School
-	</Link>
-</Button>
-					</PermissionGuard>
+					<SchoolCreate />
 				</SchoolFilterBar>
 			</CardHeader>
 

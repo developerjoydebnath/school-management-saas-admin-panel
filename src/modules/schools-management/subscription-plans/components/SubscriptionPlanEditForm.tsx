@@ -3,7 +3,6 @@
 import InputField from "@/shared/components/form/InputField";
 import { Button } from "@/shared/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/shared/components/ui/card";
-import { Separator } from "@/shared/components/ui/separator";
 import { PATHS } from "@/shared/configs/paths.config";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useTranslations } from "next-intl";
@@ -12,7 +11,11 @@ import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
 import { useSubscriptionPlan } from "../../hooks/use-subscription-plan";
-import { SubscriptionPlanFormValues, subscriptionPlanSchema } from "../dto/subscription-plan.dto";
+import {
+	billingCycleEnum,
+	SubscriptionPlanFormValues,
+	subscriptionPlanSchema,
+} from "../dto/subscription-plan.dto";
 import { updateSubscriptionPlan } from "../hooks/use-subscription-plan-mutations";
 import { SubscriptionPlanFormSkeleton } from "./SubscriptionPlanFormSkeleton";
 
@@ -44,7 +47,7 @@ export function SubscriptionPlanEditForm({ id }: Props) {
 			tagline: "",
 			description: "",
 			priceBdt: 0,
-			billingCycle: "monthly",
+			billingCycle: billingCycleEnum.MONTHLY,
 			setupFeeBdt: 0,
 			trialDays: 0,
 			gracePeriodDays: 7,
@@ -83,7 +86,7 @@ export function SubscriptionPlanEditForm({ id }: Props) {
 				tagline: raw.tagline || "",
 				description: raw.description || "",
 				priceBdt: raw.priceBdt ?? 0,
-				billingCycle: raw.billingCycle || "monthly",
+				billingCycle: (raw.billingCycle || billingCycleEnum.MONTHLY) as billingCycleEnum,
 				setupFeeBdt: raw.setupFeeBdt ?? 0,
 				trialDays: raw.trialDays ?? 0,
 				gracePeriodDays: raw.gracePeriodDays ?? 7,
@@ -145,7 +148,7 @@ export function SubscriptionPlanEditForm({ id }: Props) {
 	}
 
 	return (
-		<form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+		<form onSubmit={form.handleSubmit(onSubmit)} className="mx-auto max-w-7xl space-y-6">
 			{/* Basic Information */}
 			<Card className="gap-0 shadow-none ring-0">
 				<CardHeader className="pb-4">
@@ -198,7 +201,7 @@ export function SubscriptionPlanEditForm({ id }: Props) {
 							control={form.control}
 							name="billingCycle"
 							label="Billing Cycle"
-							type="native_select"
+							type="select"
 							options={BILLING_CYCLE_OPTIONS}
 							required
 						/>
@@ -414,10 +417,8 @@ export function SubscriptionPlanEditForm({ id }: Props) {
 				</CardContent>
 			</Card>
 
-			<Separator />
-
 			{/* Form Actions */}
-			<div className="flex justify-end gap-3">
+			<div className="bg-background/80 sticky bottom-4 z-10 flex items-center justify-end gap-3 rounded-lg border p-4 shadow-sm backdrop-blur-md">
 				<Button
 					variant="outline"
 					type="button"

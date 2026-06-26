@@ -36,7 +36,6 @@ export default async function RootLayout({
 			lang={locale}
 			suppressHydrationWarning
 			className={cn(
-				"h-full",
 				"antialiased",
 				geistSans.variable,
 				geistMono.variable,
@@ -44,7 +43,10 @@ export default async function RootLayout({
 				inter.variable
 			)}
 		>
-			<body suppressHydrationWarning className="@container/body flex min-h-full flex-col">
+			<body
+				suppressHydrationWarning
+				className="@container/body flex h-screen flex-col overflow-hidden"
+			>
 				<NextIntlClientProvider messages={messages} locale={locale}>
 					<Provider>{children}</Provider>
 				</NextIntlClientProvider>

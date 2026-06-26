@@ -20,3 +20,5 @@ javascript:
     description: "Feature module structure conventions: domain-driven folders, feature encapsulation, and separation from Next.js routing"
   permissions:
     description: "Permissions and authorization patterns: PermissionGuard component, centralized hasAccess utility, and Zustand auth sync"
+  media-and-images:
+    description: "Media and image handling patterns: ProgressiveImage component, automatic backend URL prefixing, FormData uploads, and Next.js remotePatterns without custom loaderFile"

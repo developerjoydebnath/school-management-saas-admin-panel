@@ -34,6 +34,98 @@ When building forms with `react-hook-form`, do not use the standard, verbose `sh
 
 ---
 
+## Select Field Rule
+
+When rendering dropdown fields through `InputField`, always use `type="select"`. Do not use `type="native_select"` in forms.
+
+```tsx
+// ✅ Correct
+<InputField
+	control={form.control}
+	name="status"
+	label="Status"
+	type="select"
+	options={statusOptions}
+/>
+
+// ❌ Wrong
+<InputField
+	control={form.control}
+	name="status"
+	label="Status"
+	type="native_select"
+	options={statusOptions}
+/>
+```
+
+**Why:** The app uses the shared styled select for consistent behavior, theme, spacing, and interaction across create/update forms.
+
+## Placeholder Rule
+
+Every form field rendered through `InputField` must include a meaningful `placeholder` prop. Use concrete examples for text/number fields and clear action text for select fields.
+
+```tsx
+// ✅ Correct
+<InputField
+	control={form.control}
+	name="roomNo"
+	label="Room No"
+	type="text"
+	placeholder="e.g. 301"
+	required
+/>
+
+<InputField
+	control={form.control}
+	name="status"
+	label="Status"
+	type="select"
+	placeholder="Select status"
+	options={statusOptions}
+	required
+/>
+
+// ❌ Wrong
+<InputField control={form.control} name="roomNo" label="Room No" type="text" />
+```
+
+**Why:** Placeholders make forms faster to understand, clarify expected formats, and keep create/update pages consistent.
+
+## Page Form Width Rule
+
+Dedicated create/update page forms must be centered and capped at `max-w-7xl`.
+
+```tsx
+// ✅ Correct
+<form onSubmit={form.handleSubmit(onSubmit)} className="mx-auto max-w-7xl space-y-6">
+	{/* fields */}
+</form>
+```
+
+Do not use narrower page-form caps such as `max-w-5xl` unless the user explicitly asks for a smaller form. Dialog forms may rely on the dialog width, but page-level forms must use `mx-auto max-w-7xl`.
+
+**Why:** Large school-management forms need enough horizontal room for container-query grids while staying centered on wide screens.
+
+### Server-Backed Select Fields
+
+Do not call option-list APIs directly inside form components when the data is only used to fill a select box. Create a reusable select component in `src/shared/components/form`, make that component fetch its own options, and expose it through `InputField` as a custom field type.
+
+```tsx
+<InputField
+	control={form.control}
+	name="planId"
+	label="Subscription Plan"
+	type="subscriptionPlanSelect"
+	placeholder="Select subscription plan"
+/>
+```
+
+Examples include `sessionSelect`, `schoolSelect`, and `subscriptionPlanSelect`.
+
+**Why:** Forms stay focused on submit logic and validation, while server-backed select options become reusable across create/update pages and other modules.
+
+---
+
 ## Generic DataTable Wrapper
 
 When displaying lists of data, use the shared `<DataTable<T>>` component rather than writing raw table logic or iterating over rows manually.
@@ -632,6 +724,77 @@ export const entitySchema = z.object({
 export type EntityFormValues = z.infer<typeof entitySchema>;
 ```
 
+### Enum Validation Fields
+
+For enum-like form values, define and export a TypeScript enum first, then validate with `z.enum(enumName)`. Do not keep reusable enum values as inline string arrays inside the schema.
+
+```ts
+export enum subscriptionStatusEnum {
+	TRIAL = "trial",
+	ACTIVE = "active",
+	CANCELED = "cancelled",
+	EXPIRED = "expired",
+	PAST_DUE = "past_due",
+	SUSPENDED = "suspended",
+}
+
+export const schoolSubscriptionSchema = z.object({
+	status: z.enum(subscriptionStatusEnum),
+});
+```
+
+**Why:** The same enum can be reused by create pages, edit pages, select options, default values, and model mapping without duplicating raw strings.
+
+### Dedicated Create/Edit Page Form Flow
+
+For complex page forms, keep the create/edit pages responsible for page concerns and initial value preparation. The shared form component should receive `id`, `defaultValues`, and `isEdit`, then only own validation, fields, submit state, and create/update submit branching.
+
+```tsx
+// create/page.tsx
+const defaultValues = {
+	name: "",
+	status: entityStatusEnum.ACTIVE,
+};
+
+<EntityForm id={undefined} defaultValues={defaultValues} />;
+
+// [id]/edit/page.tsx
+const { data: entity, isLoading } = useEntity(id);
+const defaultValues = {
+	name: entity?.name || "",
+	status: entity?.status || entityStatusEnum.ACTIVE,
+};
+
+<EntityForm id={entity.id} defaultValues={defaultValues} isEdit />;
+```
+
+```tsx
+// EntityForm.tsx
+type Props = {
+	id?: string;
+	defaultValues: EntityFormValues;
+	isEdit?: boolean;
+};
+
+export function EntityForm({ id, defaultValues, isEdit = false }: Props) {
+	const form = useForm<EntityFormValues>({
+		resolver: zodResolver(entitySchema),
+		shouldFocusError: false,
+		defaultValues,
+	});
+
+	const onSubmit = async (data: EntityFormValues) => {
+		if (isEdit && id) {
+			await updateEntity(id, data);
+		} else {
+			await createEntity(data);
+		}
+	};
+}
+```
+
+Do not fetch detail data inside the shared form. Do not use `initialData` plus `form.reset` for complex dedicated page forms when the create/edit page can prepare stable `defaultValues`.
+
 ---
 
 ## Mutation Hooks Standard
@@ -689,6 +852,36 @@ Do not use `overflow-y-auto` with native scrollbars. Wrap the dialog content in 
         {/* Content */}
     </ScrollArea>
 </DialogContent>
+```
+
+## Compact Sheet Details Pattern
+
+When showing entity details in a right-side sheet, use a compact, quiet layout.
+
+- On small screens, the sheet must be full width.
+- Use small text and normal font weight for titles, section headings, values, chips, and table rows.
+- Do not use large display text, bold section headers, or oversized statistic cards inside details sheets.
+- Put related summary fields into two-column sections when there is enough room.
+- Keep section spacing tight (`p-4`, `space-y-4`, small table rows) while preserving readable labels and values.
+- Localize the sheet title, description, and section titles only. Do not localize backend data values or field labels unless the task explicitly asks for it.
+
+```tsx
+<SheetContent className="w-full gap-0 p-0 sm:max-w-none @3xl/body:w-[64vw]">
+	<SheetHeader className="border-b p-4">
+		<SheetTitle className="text-base font-normal leading-6">{t("detailsTitle")}</SheetTitle>
+		<SheetDescription className="text-xs">{t("detailsDescription")}</SheetDescription>
+	</SheetHeader>
+	<ScrollArea className="h-[calc(100vh-73px)]">
+		<div className="space-y-4 p-4">
+			<section className="rounded-md border p-4">
+				<h3 className="text-sm font-normal">{t("sectionTitle")}</h3>
+				<div className="mt-3 grid grid-cols-1 gap-x-4 gap-y-3 @xl/body:grid-cols-2">
+					{/* compact label/value pairs */}
+				</div>
+			</section>
+		</div>
+	</ScrollArea>
+</SheetContent>
 ```
 
 ---

@@ -1,48 +1,77 @@
 "use client";
 
 import ConfirmationModal from "@/shared/components/custom/ConfirmationModal";
+import PermissionGuard from "@/shared/components/custom/PermissionGuard";
+import DataTable from "@/shared/components/table/DataTable";
+import TableFilter from "@/shared/components/table/TableFilter";
 import { AlertDialogTrigger } from "@/shared/components/ui/alert-dialog";
 import { Badge } from "@/shared/components/ui/badge";
 import { Button } from "@/shared/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/shared/components/ui/card";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/shared/components/ui/dialog";
-import { ScrollArea } from "@/shared/components/ui/scroll-area";
-import { Skeleton } from "@/shared/components/ui/skeleton";
+import { Card, CardContent, CardHeader } from "@/shared/components/ui/card";
+import { Sheet, SheetTrigger } from "@/shared/components/ui/sheet";
 import { Switch } from "@/shared/components/ui/switch";
-import { useSWR } from "@/shared/hooks/use-swr";
-import axios from "@/shared/lib/axios";
+import { PATHS } from "@/shared/configs/paths.config";
+import { PERMISSIONS } from "@/shared/configs/permissions.config";
 import { ClassModel } from "@/shared/models/class.model";
+import { useAuthStore } from "@/shared/stores/authStore";
 import { StatusEnum } from "@/shared/types/enums";
 import { getLocalizedName } from "@/shared/utils/localization";
-import { Pencil, Trash2 } from "lucide-react";
+import { hasAccess } from "@/shared/utils/permission";
+import { ColumnDef } from "@tanstack/react-table";
+import { Eye, Pencil, Trash2 } from "lucide-react";
 import { useLocale, useTranslations } from "next-intl";
+import Link from "next/link";
 import { useState } from "react";
 import { toast } from "sonner";
-import ClassForm from "./ClassForm";
+import { deleteClass, updateClass } from "../hooks/use-class-mutations";
+import { useClasses } from "../hooks/use-classes";
+import { ClassCreate } from "./ClassCreate";
+import { ClassDetailsSheet } from "./ClassDetailsSheet";
+import ClassFilterBar from "./ClassFilterBar";
+
+export type ClassFilter = {
+	search: string;
+	status: string[];
+	shiftId: string[];
+	classRoomId: string[];
+};
+
+const initialFilters: ClassFilter = {
+	search: "",
+	status: [],
+	shiftId: [],
+	classRoomId: [],
+};
 
 export default function ClassList() {
-	const { data: classes, isLoading, mutate } = useSWR("/classes");
-	const [editingClass, setEditingClass] = useState<ClassModel | null>(null);
+	const [filter, setFilter] = useState<ClassFilter>(initialFilters);
+	const [page, setPage] = useState(1);
+	const [limit, setLimit] = useState(10);
 	const [classToDelete, setClassToDelete] = useState<string | null>(null);
 	const [isDeleting, setIsDeleting] = useState(false);
+	const [classToChangeStatus, setClassToChangeStatus] = useState<ClassModel | null>(null);
+	const [isChangingStatus, setIsChangingStatus] = useState(false);
 	const t = useTranslations("Classes");
 	const tc = useTranslations("Common");
 	const locale = useLocale();
+	const { user } = useAuthStore((state) => state.auth);
 
-	const [classToChangeStatus, setClassToChangeStatus] = useState<ClassModel | null>(null);
-	const [isChangingStatus, setIsChangingStatus] = useState(false);
-
-	// serialize the data
-	const serializedClasses = classes?.map((cls: any) => new ClassModel(cls));
+	const { data: classes, meta, isLoading } = useClasses({
+		page,
+		limit,
+		search: filter.search,
+		status: filter.status,
+		shiftId: filter.shiftId,
+		classRoomId: filter.classRoomId,
+	});
 
 	const confirmDelete = async (id: string) => {
 		setClassToDelete(id);
 		setIsDeleting(true);
 		try {
-			await axios.delete(`/classes/${id}`);
+			await deleteClass(id);
 			toast.success("Class deleted successfully");
-			mutate();
-		} catch (err: any) {
+		} catch {
 			toast.error("Failed to delete the class. Please try again.");
 		} finally {
 			setIsDeleting(false);
@@ -54,11 +83,10 @@ export default function ClassList() {
 		setClassToChangeStatus(cls);
 		setIsChangingStatus(true);
 		try {
-			const status = newStatus ? "Active" : "Inactive";
-			await axios.patch(`/classes/${cls.id}`, { status });
+			const status = newStatus ? StatusEnum.ACTIVE : StatusEnum.INACTIVE;
+			await updateClass(cls.id, { status });
 			toast.success(`Status updated to ${status}`);
-			mutate();
-		} catch (err: any) {
+		} catch {
 			toast.error("Failed to update status.");
 		} finally {
 			setIsChangingStatus(false);
@@ -66,178 +94,235 @@ export default function ClassList() {
 		}
 	};
 
-	return (
-		<>
-			<Card className="w-full shadow-none ring-0">
-				<CardHeader>
-					<CardTitle className="text-lg">{t("classList")}</CardTitle>
-				</CardHeader>
-				<CardContent>
-					{isLoading ? (
-						<div className="space-y-4">
-							<Skeleton className="h-[88px] w-full" />
-							<Skeleton className="h-[88px] w-full" />
-							<Skeleton className="h-[88px] w-full" />
-						</div>
-					) : !serializedClasses || serializedClasses.length === 0 ? (
-						<p className="text-muted-foreground text-sm">{t("noClassesFound")}</p>
-					) : (
-						<div className="space-y-4">
-							{serializedClasses.map((cls: ClassModel) => (
-								<div
-									key={cls.id}
-									className="bg-card group flex items-center justify-between rounded-md border p-4"
-								>
-									<div className="space-y-1.5">
-										<p className="flex items-center gap-2 text-lg font-medium">
-											{getLocalizedName(cls.name, locale)}
-											{cls.sections && cls.sections.length > 0 && (
-												<span className="flex items-center gap-1">
-													{cls.sections.map((sec) => (
-														<Badge
-															key={sec.name}
-															variant="outline"
-															className="bg-accent h-5 rounded-sm px-1.5 py-0 text-xs font-normal"
-														>
-															{sec.name}
-														</Badge>
-													))}
-												</span>
-											)}
-										</p>
-										<div className="text-muted-foreground space-y-1 text-sm">
-											{cls.sections && cls.sections.length > 0 ? (
-												cls.sections.map((sec) => (
-													<div
-														key={sec.name}
-														className="flex items-center gap-2"
-													>
-														<span className="text-foreground font-medium">
-															Section {sec.name}:
-														</span>
-														<span>Room {sec.roomNumber}</span>
-														<span>|</span>
-														<span>{sec.capacity} students</span>
-														<span>|</span>
-														<Badge
-															variant="secondary"
-															className="h-5 py-0 text-[10px] font-bold uppercase"
-														>
-															{sec.shift}
-														</Badge>
-													</div>
-												))
-											) : (
-												<div className="flex items-center gap-2">
-													<span>Room {cls.roomNumber}</span>
-													<span>|</span>
-													<span>{cls.capacity} students</span>
-													<span>|</span>
-													{cls.shift && (
-														<Badge
-															variant="secondary"
-															className="h-5 py-0 text-[10px] font-bold uppercase"
-														>
-															{cls.shift}
-														</Badge>
-													)}
-												</div>
-											)}
-										</div>
-									</div>
-									<div className="flex items-center gap-6">
-										<div className="flex items-center gap-2">
-											<ConfirmationModal
-												onConfirm={() =>
-													confirmStatusChange(
-														cls,
-														cls.status !== StatusEnum.ACTIVE
-													)
-												}
-												title={t("statusChangeTitle")}
-												description={
-													cls.status === StatusEnum.ACTIVE
-														? tc("changeToInactiveDesc")
-														: tc("changeToActiveDesc")
-												}
-												confirmText={tc("changeStatus")}
-												variant="default"
-												isLoading={
-													isChangingStatus &&
-													classToChangeStatus?.id === cls.id
-												}
-											>
-												<AlertDialogTrigger asChild>
-													<Switch
-														checked={
-															cls.status === StatusEnum.ACTIVE
-														}
-													/>
-												</AlertDialogTrigger>
-											</ConfirmationModal>
-											<div
-												className={`rounded-full px-2.5 py-1 text-xs font-medium ${
-													cls.status === StatusEnum.ACTIVE
-														? "bg-green-100 text-green-800"
-														: "bg-red-100 text-red-800"
-												}`}
-											>
-												{cls.status === StatusEnum.ACTIVE
-													? "Active"
-													: "Inactive"}
-											</div>
-										</div>
-										<div className="flex items-center gap-2">
-											<Button
-												title={t("editClassTitle")}
-												variant="outline"
-												size="icon"
-												onClick={() => setEditingClass(cls)}
-											>
-												<Pencil className="text-muted-foreground hover:text-foreground h-4 w-4" />
-											</Button>
-											<ConfirmationModal
-												onConfirm={() => confirmDelete(cls.id)}
-												title={t("deleteClassTitle")}
-												description={t("deleteClassDescription")}
-												confirmText={tc("delete")}
-												variant="destructive"
-												isLoading={isDeleting && classToDelete === cls.id}
-											>
-												<AlertDialogTrigger asChild>
-													<Button
-														title={t("deleteClassTitle")}
-														variant="outline"
-														size="icon"
-													>
-														<Trash2 className="h-4 w-4 text-red-500 hover:text-red-600" />
-													</Button>
-												</AlertDialogTrigger>
-											</ConfirmationModal>
-										</div>
-									</div>
-								</div>
+	const columns: ColumnDef<ClassModel>[] = [
+		{
+			id: "name",
+			header: t("className"),
+			cell: ({ row }) => (
+				<div className="font-medium">{getLocalizedName(row.original.name, "en")}</div>
+			),
+		},
+		{
+			id: "sections",
+			header: t("sections"),
+			cell: ({ row }) => {
+				const sections = row.original.sections || [];
+				if (!sections.length) {
+					return <span className="text-muted-foreground text-sm">-</span>;
+				}
+				return (
+					<div className="flex flex-wrap gap-1">
+						{sections.map((section: any) => (
+							<Badge key={section.id || section.name} variant="outline">
+								{section.name}
+							</Badge>
+						))}
+					</div>
+				);
+			},
+		},
+		{
+			id: "classRoom",
+			header: t("classRoom"),
+			cell: ({ row }) => {
+				const sections = row.original.sections || [];
+				if (sections.length) {
+					return (
+						<div className="flex flex-wrap gap-1">
+							{sections.map((section: any) => (
+								<Badge key={section.id || section.name} variant="secondary">
+									{section.name}: {section.classRoom?.roomNo || "-"}
+								</Badge>
 							))}
 						</div>
-					)}
-				</CardContent>
-			</Card>
+					);
+				}
+				const room = row.original.classRoom;
+				return <span className="font-medium">{room?.roomNo || "-"}</span>;
+			},
+		},
+		{
+			id: "capacity",
+			header: t("capacity"),
+			cell: ({ row }) => {
+				const sections = row.original.sections || [];
+				const totalCapacity = sections.length
+					? sections.reduce(
+							(sum, section: any) => sum + Number(section.classRoom?.capacity || 0),
+							0
+						)
+					: row.original.classRoom?.capacity;
+				return <span className="font-medium">{totalCapacity || "-"}</span>;
+			},
+		},
+		{
+			id: "shift",
+			header: t("shift"),
+			cell: ({ row }) => {
+				const sections = row.original.sections || [];
+				if (sections.length) {
+					return (
+						<div className="flex flex-wrap gap-1">
+							{sections.map((section: any) => (
+								<Badge key={section.id || section.name} variant="secondary">
+									{section.shift?.name || section.shift || "-"}
+								</Badge>
+							))}
+						</div>
+					);
+				}
+				return <span className="font-medium">{row.original.shift || "-"}</span>;
+			},
+		},
+		{
+			id: "status",
+			header: t("status"),
+			cell: ({ row }) => {
+				const cls = row.original;
+				const isActive = cls.status === StatusEnum.ACTIVE;
+				return (
+					<PermissionGuard
+						permissions={[
+							PERMISSIONS.ACADEMICS.CLASSES.EDIT,
+							PERMISSIONS.ACADEMICS.CLASSES.ALL,
+							PERMISSIONS.ACADEMICS.ALL,
+						]}
+					>
+						<ConfirmationModal
+							onConfirm={() => confirmStatusChange(cls, !isActive)}
+							title={t("statusChangeTitle")}
+							description={
+								isActive ? tc("changeToInactiveDesc") : tc("changeToActiveDesc")
+							}
+							confirmText={tc("changeStatus")}
+							variant="default"
+							isLoading={isChangingStatus && classToChangeStatus?.id === cls.id}
+						>
+							<AlertDialogTrigger asChild>
+								<div className="group flex w-fit cursor-pointer items-center gap-2">
+									<Switch checked={isActive} className="pointer-events-none" />
+									<span className="text-sm">{isActive ? "Active" : "Inactive"}</span>
+								</div>
+							</AlertDialogTrigger>
+						</ConfirmationModal>
+					</PermissionGuard>
+				);
+			},
+		},
+		{
+			id: "actions",
+			header: t("actions"),
+			cell: ({ row }) => {
+				const cls = row.original;
+				return (
+					<div className="flex items-center gap-2">
+						<PermissionGuard
+							permissions={[
+								PERMISSIONS.ACADEMICS.CLASSES.EDIT,
+								PERMISSIONS.ACADEMICS.CLASSES.ALL,
+								PERMISSIONS.ACADEMICS.ALL,
+							]}
+						>
+							<Sheet>
+								<SheetTrigger asChild>
+									<Button title={t("viewDetails")} variant="outline" size="icon-sm">
+										<Eye className="text-muted-foreground hover:text-foreground h-4 w-4" />
+									</Button>
+								</SheetTrigger>
+								<ClassDetailsSheet cls={cls} />
+							</Sheet>
+						</PermissionGuard>
+						<PermissionGuard
+							permissions={[
+								PERMISSIONS.ACADEMICS.CLASSES.EDIT,
+								PERMISSIONS.ACADEMICS.CLASSES.ALL,
+								PERMISSIONS.ACADEMICS.ALL,
+							]}
+						>
+							<Button
+								asChild
+								title={t("editClassTitle")}
+								variant="outline"
+								size="icon-sm"
+							>
+								<Link href={PATHS.ACADEMICS.CLASSES.EDIT(cls.id)}>
+									<Pencil className="text-muted-foreground hover:text-foreground h-4 w-4" />
+								</Link>
+							</Button>
+						</PermissionGuard>
+						<PermissionGuard
+							permissions={[
+								PERMISSIONS.ACADEMICS.CLASSES.DELETE,
+								PERMISSIONS.ACADEMICS.CLASSES.ALL,
+								PERMISSIONS.ACADEMICS.ALL,
+							]}
+						>
+							<ConfirmationModal
+								onConfirm={() => confirmDelete(cls.id)}
+								title={t("deleteClassTitle")}
+								description={t("deleteClassDescription")}
+								confirmText={tc("delete")}
+								variant="destructive"
+								isLoading={isDeleting && classToDelete === cls.id}
+							>
+								<AlertDialogTrigger asChild>
+									<Button title={t("deleteClassTitle")} variant="destructive" size="icon-sm">
+										<Trash2 />
+									</Button>
+								</AlertDialogTrigger>
+							</ConfirmationModal>
+						</PermissionGuard>
+					</div>
+				);
+			},
+		},
+	];
 
-			<Dialog open={!!editingClass} onOpenChange={(open) => !open && setEditingClass(null)}>
-				<DialogContent className="px-0">
-					<DialogHeader className="px-6">
-						<DialogTitle>{t("editClassTitle")}</DialogTitle>
-					</DialogHeader>
-					<ScrollArea className="max-h-[80vh] px-4">
-						{editingClass && (
-							<ClassForm
-								initialData={editingClass}
-								onSuccess={() => setEditingClass(null)}
-							/>
-						)}
-					</ScrollArea>
-				</DialogContent>
-			</Dialog>
-		</>
+	const resetFilters = () => {
+		setFilter(initialFilters);
+		setPage(1);
+		setLimit(10);
+	};
+
+	return (
+		<Card className="p-6 shadow-none ring-0">
+			<CardHeader className="p-0">
+				<ClassFilterBar filter={filter} setFilter={setFilter}>
+					<ClassCreate />
+				</ClassFilterBar>
+			</CardHeader>
+			<CardContent className="space-y-4 p-0">
+				<TableFilter
+					filter={filter}
+					setFilter={setFilter}
+					resetFilters={resetFilters}
+					hideExport={
+						!hasAccess(user, [
+							PERMISSIONS.ACADEMICS.CLASSES.ALL,
+							PERMISSIONS.ACADEMICS.ALL,
+						])
+					}
+				/>
+
+				<DataTable
+					columns={columns}
+					data={classes || []}
+					isLoading={isLoading}
+					pagination={
+						meta
+							? {
+									page: meta.page,
+									limit: meta.limit,
+									total: meta.total,
+									totalPages: meta.totalPages,
+									onPageChange: setPage,
+									onLimitChange: setLimit,
+								}
+							: undefined
+					}
+				/>
+			</CardContent>
+
+		</Card>
 	);
 }

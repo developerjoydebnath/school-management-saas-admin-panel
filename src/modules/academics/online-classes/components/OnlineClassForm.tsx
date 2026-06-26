@@ -22,13 +22,14 @@ export default function OnlineClassForm({ onSuccess, initialData }: OnlineClassF
 	const t = useTranslations("OnlineClasses");
 	const ft = useTranslations("Forms");
 
-	const { data: subjectsData } = useSWR("/subjects");
+	const { data: subjectResponse } = useSWR("/subjects/active-list");
 	const { data: classesData } = useSWR("/classes");
 	const { data: teachersData } = useSWR("/teachers");
+	const subjectsData = Array.isArray(subjectResponse?.data) ? subjectResponse.data : subjectResponse || [];
 
 	const subjectOptions =
 		(subjectsData as any[])?.map((s) => ({
-			label: s.name?.en || s.name,
+			label: s.enName || s.name?.en || s.name,
 			value: s.id,
 		})) || [];
 

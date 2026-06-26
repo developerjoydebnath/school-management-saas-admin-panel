@@ -10,13 +10,15 @@ import { getLocalizedName } from "@/shared/utils/localization";
 interface ClassSelectionProps {
   value: string[];
   onChange: (value: string[]) => void;
+  placeholder?: string;
   className?: string;
 }
 
-export default function ClassSelection({ value = [], onChange, className }: ClassSelectionProps) {
-  const { data: classes, isLoading } = useSWR("/classes");
+export default function ClassSelection({ value = [], onChange, placeholder, className }: ClassSelectionProps) {
+  const { data: classResponse, isLoading } = useSWR("/classes/active-list");
   const locale = useLocale();
 
+  const classes = Array.isArray(classResponse?.data) ? classResponse.data : classResponse || [];
   const serializedClasses = classes?.map((cls: any) => new ClassModel(cls));
 
   const toggleClass = (id: string) => {
@@ -38,7 +40,11 @@ export default function ClassSelection({ value = [], onChange, className }: Clas
       ) : !serializedClasses || serializedClasses.length === 0 ? (
         <p className="text-sm text-muted-foreground">No classes available.</p>
       ) : (
-        <div className="flex flex-wrap gap-2">
+        <div className="space-y-2">
+          {placeholder && value.length === 0 && (
+            <p className="text-sm text-muted-foreground">{placeholder}</p>
+          )}
+          <div className="flex flex-wrap gap-2">
           {serializedClasses.map((cls: ClassModel) => {
             const isSelected = value?.includes(cls.id);
             return (
@@ -56,6 +62,7 @@ export default function ClassSelection({ value = [], onChange, className }: Clas
               </Badge>
             );
           })}
+          </div>
         </div>
       )}
     </div>

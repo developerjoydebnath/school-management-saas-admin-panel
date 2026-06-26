@@ -1,5 +1,5 @@
 import { useTableData } from "@/shared/hooks/use-table-data";
-import { SchoolModel } from "../models/school.model";
+import { SchoolModel } from "@/shared/models/school.model";
 
 type UseSchoolsParams = {
 	page?: number;
@@ -7,6 +7,14 @@ type UseSchoolsParams = {
 	search?: string;
 	status?: string;
 	schoolType?: string;
+	divisionId?: string;
+	districtId?: string;
+	upazilaId?: string;
+	affiliationBoard?: string;
+	medium?: string;
+	shift?: string;
+	createdFrom?: string;
+	createdTo?: string;
 };
 
 export function useSchools(params?: UseSchoolsParams) {

@@ -12,12 +12,12 @@ export function SubscriptionPlanCreate() {
 	const t = useTranslations("SubscriptionPlansPage");
 	return (
 		<PermissionGuard permissions={[PERMISSIONS.SCHOOLS_MANAGEMENT.SUBSCRIPTION_PLANS.CREATE]}>
-			<Button asChild >
-	<Link href={PATHS.SCHOOLS_MANAGEMENT.SUBSCRIPTION_PLANS.CREATE} >
-		<Plus className="size-4" />
-				{t("addPlan")}
-	</Link>
-</Button>
+			<Button asChild>
+				<Link href={PATHS.SCHOOLS_MANAGEMENT.SUBSCRIPTION_PLANS.CREATE}>
+					<Plus className="size-4" />
+					{t("addPlan")}
+				</Link>
+			</Button>
 		</PermissionGuard>
 	);
 }

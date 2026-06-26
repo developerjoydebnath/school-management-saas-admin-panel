@@ -11,7 +11,13 @@ import Link from "next/link";
 export function VoucherCreateButton() {
 	const t = useTranslations("VouchersPage");
 	return (
-		<PermissionGuard permissions={[PERMISSIONS.SCHOOLS_MANAGEMENT.VOUCHERS.CREATE]}>
+		<PermissionGuard
+			permissions={[
+				PERMISSIONS.SCHOOLS_MANAGEMENT.ALL,
+				PERMISSIONS.SCHOOLS_MANAGEMENT.VOUCHERS.ALL,
+				PERMISSIONS.SCHOOLS_MANAGEMENT.VOUCHERS.CREATE,
+			]}
+		>
 			<Button asChild>
 				<Link href={PATHS.SCHOOLS_MANAGEMENT.VOUCHERS.CREATE}>
 					<Plus className="size-4" />

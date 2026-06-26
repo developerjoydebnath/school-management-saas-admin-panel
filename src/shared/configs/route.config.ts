@@ -117,6 +117,14 @@ export const SidebarMenu: SidebarMenuType[] = [
 				permissions: [PERMISSIONS.SCHOOLS_MANAGEMENT.BANK_ACCOUNTS.VIEW],
 				matchPaths: [PATHS.SCHOOLS_MANAGEMENT.BANK_ACCOUNTS.ROOT],
 			},
+			{
+				id: "schools_management_payments",
+				name: "schools_management_payments",
+				path: PATHS.SCHOOLS_MANAGEMENT.PAYMENTS.ROOT,
+				icon: Banknote,
+				permissions: [PERMISSIONS.SCHOOLS_MANAGEMENT.PAYMENTS.VIEW],
+				matchPaths: [PATHS.SCHOOLS_MANAGEMENT.PAYMENTS.ROOT],
+			},
 		],
 	},
 	{
@@ -134,6 +142,14 @@ export const SidebarMenu: SidebarMenuType[] = [
 				icon: Building2,
 				permissions: [PERMISSIONS.ACADEMICS.CLASSES.VIEW],
 				matchPaths: [PATHS.ACADEMICS.CLASSES.ROOT],
+			},
+			{
+				id: "academics_class_rooms",
+				name: "academics_class_rooms",
+				path: PATHS.ACADEMICS.CLASS_ROOMS.ROOT,
+				icon: DoorOpen,
+				permissions: [PERMISSIONS.ACADEMICS.CLASS_ROOMS.VIEW],
+				matchPaths: [PATHS.ACADEMICS.CLASS_ROOMS.ROOT],
 			},
 			{
 				id: "academics_subjects",

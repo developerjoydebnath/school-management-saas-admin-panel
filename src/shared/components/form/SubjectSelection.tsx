@@ -13,20 +13,23 @@ import { XIcon } from "lucide-react";
 interface SubjectSelectionProps {
 	value: string[];
 	onChange: (value: string[]) => void;
+	placeholder?: string;
 	className?: string;
 }
 
 export default function SubjectSelection({
 	value = [],
 	onChange,
+	placeholder = "Select subjects...",
 	className,
 }: SubjectSelectionProps) {
-	const { data: subjects, isLoading } = useSWR("/subjects");
+	const { data: subjectResponse, isLoading } = useSWR("/subjects/active-list");
 	const [open, setOpen] = React.useState(false);
 	const [inputValue, setInputValue] = React.useState("");
 	const locale = useLocale();
 	const inputRef = React.useRef<HTMLInputElement>(null);
 
+	const subjects = Array.isArray(subjectResponse?.data) ? subjectResponse.data : subjectResponse || [];
 	const serializedSubjects = subjects?.map((s: any) => new Subject(s)) || [];
 
 	const handleUnselect = (subjectId: string) => {
@@ -87,7 +90,7 @@ export default function SubjectSelection({
 									}
 								}}
 								className="flex-1 bg-transparent outline-none placeholder:text-muted-foreground min-w-[120px]"
-								placeholder={value.length === 0 ? "Select subjects..." : ""}
+								placeholder={value.length === 0 ? placeholder : ""}
 							/>
 						</div>
 					</PopoverTrigger>

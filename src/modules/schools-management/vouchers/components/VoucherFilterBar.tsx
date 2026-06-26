@@ -7,9 +7,9 @@ import {
 	FilterMobileWrapper,
 	FilterTriggerButton,
 } from "@/shared/components/custom/Filter";
+import DateRangeFilter from "@/shared/components/form/DateRangeFilter";
 import FilterButton from "@/shared/components/form/FilterButton";
 import { IconFilter } from "@tabler/icons-react";
-import { useTranslations } from "next-intl";
 import React from "react";
 import { VoucherFilter } from "./VoucherList";
 
@@ -20,8 +20,6 @@ type Props = {
 };
 
 export default function VoucherFilterBar({ children, filter, setFilter }: Props) {
-	const t = useTranslations("VouchersPage");
-
 	const statusOptions = [
 		{ label: "Active", value: "true" },
 		{ label: "Inactive", value: "false" },
@@ -48,6 +46,14 @@ export default function VoucherFilterBar({ children, filter, setFilter }: Props)
 				clearFilter={() => setFilter({ ...filter, discountType: [] })}
 				options={discountTypeOptions}
 			/>
+			<DateRangeFilter
+				title="Created Date"
+				from={filter.createdFrom}
+				to={filter.createdTo}
+				onChange={(value) =>
+					setFilter({ ...filter, createdFrom: value.from, createdTo: value.to })
+				}
+			/>
 		</>
 	);
 
@@ -62,7 +68,7 @@ export default function VoucherFilterBar({ children, filter, setFilter }: Props)
 					<FilterTriggerButton className="w-fit">
 						<span className="flex items-center gap-2">
 							<IconFilter strokeWidth={1.5} className="size-4" />
-							<span>{t("filter")}</span>
+							<span>Filter</span>
 						</span>
 					</FilterTriggerButton>
 

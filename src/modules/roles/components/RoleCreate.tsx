@@ -14,7 +14,13 @@ export function RoleCreate() {
 
 	return (
 		<>
-			<PermissionGuard permissions={[PERMISSIONS.ROLES.MANAGEMENT.CREATE]}>
+			<PermissionGuard
+				permissions={[
+					PERMISSIONS.ROLES.ALL,
+					PERMISSIONS.ROLES.MANAGEMENT.ALL,
+					PERMISSIONS.ROLES.MANAGEMENT.CREATE,
+				]}
+			>
 				<Button onClick={() => setIsCreateOpen(true)}>
 					<Plus className="size-4" />
 					{t("addRole")}

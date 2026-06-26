@@ -70,6 +70,8 @@ const { data, meta, size, setSize, isLoading } = useSWRInfinite("/feed", { limit
 
 After any POST / PATCH / DELETE, call `mutate(endpoint)` to invalidate the SWR cache for that endpoint.
 
+When one mutation affects multiple related endpoints, invalidate the full cache family from the mutation hook. For example, session create/update/status/delete must refresh both paginated `/sessions...` keys and `/sessions/active-list`, so use a predicate like `key.startsWith("/sessions")` instead of only calling a local bound `mutate()`.
+
 ```ts
 import { mutate } from "swr";
 import axios from "@/shared/lib/axios";

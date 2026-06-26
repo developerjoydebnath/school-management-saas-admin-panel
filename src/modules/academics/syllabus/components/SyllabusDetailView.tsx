@@ -85,7 +85,7 @@ export default function SyllabusDetailView({ classId }: SyllabusDetailViewProps)
 			<div className="flex justify-end">
 				<Dialog open={isCreateOpen} onOpenChange={setIsCreateOpen}>
 					<DialogTrigger asChild><Button />
-						<Plus className="mr-2 h-4 w-4" />
+						<Plus className="h-4 w-4" />
 						{t("addSyllabus")}
 					</DialogTrigger>
 					<DialogContent>

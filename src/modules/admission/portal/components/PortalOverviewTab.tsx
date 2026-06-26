@@ -85,7 +85,7 @@ export default function PortalOverviewTab({ config, onUpdate }: PortalOverviewTa
 						<div className="flex space-x-2">
 							<Input readOnly value="https://school.edu.bd/apply" />
 							<Button variant="secondary" onClick={copyLink}>
-								<Copy className="mr-2 h-4 w-4" />
+								<Copy className="h-4 w-4" />
 								Copy
 							</Button>
 						</div>

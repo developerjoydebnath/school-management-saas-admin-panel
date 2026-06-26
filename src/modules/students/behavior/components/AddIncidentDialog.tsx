@@ -22,7 +22,7 @@ export function AddIncidentDialog() {
 		<Dialog open={isOpen} onOpenChange={setIsOpen}>
 			<DialogTrigger asChild>
 				<Button>
-					<PlusCircle className="mr-2 h-4 w-4" />
+					<PlusCircle className="h-4 w-4" />
 					{t("dialog.title")}
 				</Button>
 			</DialogTrigger>

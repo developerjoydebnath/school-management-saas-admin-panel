@@ -7,7 +7,7 @@ export default function ProtectedLayout({ children }: { children: React.ReactNod
   return (
     <SidebarProvider>
       <AppSidebar />
-      <SidebarInset>
+      <SidebarInset className="overflow-y-auto">
         <Header />
         <div className='flex-1 bg-accent relative sm:p-6 p-4'>
           {children}

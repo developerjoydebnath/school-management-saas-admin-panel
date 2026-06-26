@@ -3,7 +3,6 @@
 import InputField from "@/shared/components/form/InputField";
 import { Button } from "@/shared/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/shared/components/ui/card";
-import { Separator } from "@/shared/components/ui/separator";
 import { PATHS } from "@/shared/configs/paths.config";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useTranslations } from "next-intl";
@@ -11,7 +10,7 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
-import { VoucherFormValues, voucherSchema } from "../dto/voucher.dto";
+import { discountTypeEnum, VoucherFormValues, voucherSchema } from "../dto/voucher.dto";
 import { createVoucher } from "../hooks/use-voucher-mutations";
 
 const DISCOUNT_TYPE_OPTIONS = [
@@ -32,7 +31,7 @@ export function VoucherCreateForm() {
 			code: "",
 			name: "",
 			description: "",
-			discountType: "percentage",
+			discountType: discountTypeEnum.PERCENTAGE,
 			discountValue: 0,
 			maxDiscountBdt: null,
 			maxRedemptions: null,
@@ -78,7 +77,7 @@ export function VoucherCreateForm() {
 	};
 
 	return (
-		<form onSubmit={form.handleSubmit(onSubmit)} className="mx-auto max-w-5xl space-y-6">
+		<form onSubmit={form.handleSubmit(onSubmit)} className="mx-auto max-w-7xl space-y-6">
 			{/* Basic Information */}
 			<Card className="gap-0 shadow-none ring-0">
 				<CardHeader className="pb-4">
@@ -128,7 +127,7 @@ export function VoucherCreateForm() {
 							control={form.control}
 							name="discountType"
 							label="Discount Type"
-							type="native_select"
+							type="select"
 							options={DISCOUNT_TYPE_OPTIONS}
 							required
 						/>
@@ -233,10 +232,8 @@ export function VoucherCreateForm() {
 				</CardContent>
 			</Card>
 
-			<Separator />
-
 			{/* Form Actions */}
-			<div className="flex justify-end gap-3">
+			<div className="bg-background/80 sticky bottom-4 z-10 flex items-center justify-end gap-3 rounded-lg border p-4 shadow-sm backdrop-blur-md">
 				<Button
 					variant="outline"
 					type="button"

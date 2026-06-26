@@ -3,6 +3,7 @@
 		"dashboard": "ড্যাশবোর্ড",
 		"academics": "একাডেমিক",
 		"academics_classes": "ক্লাস ও শাখা",
+		"academics_class_rooms": "শ্রেণীকক্ষ",
 		"academics_subjects": "বিষয়সমূহ",
 		"academics_syllabus": "সিলেবাস",
 		"academics_timetable": "ক্লাস রুটিন",
@@ -97,8 +98,47 @@
 		"schools_management_vouchers": "ভাউচার",
 		"schools_management_school_subscriptions": "স্কুল সাবস্ক্রিপশন",
 		"schools_management_bank_accounts": "ব্যাংক অ্যাকাউন্ট",
+		"schools_management_payments": "পেমেন্ট",
 		"create": "তৈরি করুন",
-		"edit": "সম্পাদনা করুন"
+		"edit": "সম্পাদনা",
+		"details": "বিস্তারিত"
+	},
+	"ClassRooms": {
+		"title": "শ্রেণীকক্ষসমূহ",
+		"description": "শ্রেণীকক্ষের ধারণক্ষমতা, আসবাবপত্র, এবং কক্ষ বরাদ্দ পরিচালনা করুন।",
+		"addClassRoom": "কক্ষ যোগ করুন",
+		"createTitle": "শ্রেণীকক্ষ তৈরি করুন",
+		"createDescription": "নতুন শ্রেণীকক্ষের কক্ষের তথ্য, ধারণক্ষমতা, আসবাবপত্র, এবং সুবিধা যোগ করুন।",
+		"editTitle": "শ্রেণীকক্ষ সম্পাদনা করুন",
+		"editDescription": "শ্রেণীকক্ষের কক্ষের তথ্য, ধারণক্ষমতা, আসবাবপত্র, এবং সুবিধা আপডেট করুন।",
+		"deleteTitle": "শ্রেণীকক্ষ মুছুন",
+		"deleteDescription": "আপনি কি নিশ্চিত যে আপনি এই শ্রেণীকক্ষটি মুছতে চান? এই কাজটি অপরিবর্তনীয়।",
+		"detailsTitle": "শ্রেণীকক্ষের বিস্তারিত",
+		"detailsDescription": "শ্রেণীকক্ষের বিস্তারিত তথ্যের দৃশ্য।",
+		"detailsSheetTitle": "বিস্তারিত",
+		"detailsSheetDescription": "কক্ষের ধারণক্ষমতা, অবস্থান এবং আসবাবপত্র সেটআপ দেখুন।",
+		"roomInformation": "কক্ষের তথ্য",
+		"furnitureFacilities": "আসবাবপত্র ও সুবিধা",
+		"sectionBasicTitle": "প্রাথমিক তথ্য",
+		"sectionBasicDescription": "শ্রেণীকক্ষ সম্পর্কে সাধারণ তথ্য।",
+		"sectionFurnitureTitle": "আসবাবপত্র ও সুবিধা",
+		"sectionFurnitureDescription": "কক্ষে উপলব্ধ আসবাবপত্র এবং সুবিধা।",
+		"highBench": "উঁচু বেঞ্চ",
+		"lowBench": "নিচু বেঞ্চ",
+		"chair": "চেয়ার",
+		"table": "টেবিল",
+		"board": "বোর্ড",
+		"viewDetails": "বিস্তারিত দেখুন",
+		"roomName": "কক্ষের নাম",
+		"roomNo": "কক্ষ নং",
+		"capacity": "ধারণক্ষমতা",
+		"building": "ভবন",
+		"floor": "তলা",
+		"furniture": "আসবাবপত্র",
+		"facilities": "সুবিধাসমূহ",
+		"status": "অবস্থা",
+		"actions": "অ্যাকশন",
+		"statusChangeTitle": "কক্ষের অবস্থা পরিবর্তন করুন"
 	},
 	"Classes": {
 		"title": "শ্রেণী",
@@ -111,6 +151,25 @@
 		"classList": "শ্রেণী তালিকা",
 		"addSection": "নতুন শাখা",
 		"sections": "শাখা",
+		"className": "শ্রেণীর নাম",
+		"capacity": "ধারণক্ষমতা",
+		"roomNumber": "কক্ষ",
+		"classRoom": "শ্রেণীকক্ষ",
+		"shift": "শিফট",
+		"status": "অবস্থা",
+		"actions": "অ্যাকশন",
+		"detailsTitle": "শ্রেণীর বিস্তারিত",
+		"detailsDescription": "শ্রেণী সম্পর্কে সাধারণ তথ্য",
+		"detailsSheetTitle": "বিস্তারিত",
+		"detailsSheetDescription": "শ্রেণীর সেটআপ, কক্ষ বরাদ্দ এবং শাখা দেখুন।",
+		"classInformation": "শ্রেণীর তথ্য",
+		"roomAndShift": "কক্ষ ও শিফট",
+		"sectionAssignments": "শাখা বরাদ্দ",
+		"sectionBasicTitle": "প্রাথমিক তথ্য",
+		"sectionBasicDescription": "শ্রেণী সম্পর্কে সাধারণ তথ্য।",
+		"viewDetails": "বিস্তারিত দেখুন",
+		"sectionCardTitle": "শাখা — {name}",
+		"sectionCardDescription": "{name} শাখার কক্ষ ও শিফটের তথ্য।",
 		"noClassesFound": "কোন শ্রেণী পাওয়া যায়নি",
 		"statusChangeTitle": "শ্রেণী পরিবর্তন করুন"
 	},
@@ -133,23 +192,38 @@
 		"statusChangeTitle": "শিফট পরিবর্তন করুন"
 	},
 	"Subjects": {
-		"title": "বিষয়সমূহ",
-		"description": "পাঠ্যক্রম অনুযায়ী বিষয়গুলো পরিচালনা করুন।",
-		"addSubject": "বিষয় যোগ করুন",
-		"updateSubject": "বিষয় আপডেট করুন",
-		"addSubjectTitle": "নতুন বিষয় যোগ করুন",
-		"editSubjectTitle": "বিষয় পরিবর্তন করুন",
-		"deleteSubjectTitle": "বিষয় মুছুন",
-		"deleteSubjectDesc": "আপনি কি নিশ্চিত যে আপনি এই বিষয়টি মুছতে চান? এই কাজটি অপরিবর্তনীয়।",
-		"subjectName": "বিষয়ের নাম",
-		"subjectCode": "কোড",
-		"subjectType": "ধরণ",
-		"subjectDetails": "বিষয়ের তথ্য",
-		"assignedClasses": "বরাদ্দকৃত ক্লাসসমূহ",
-		"noSubjectsFound": "কোন বিষয় পাওয়া যায়নি।",
-		"actions": "অ্যাকশনসমূহ",
+		"title": "বিষয়সমূহ",
+		"description": "একাডেমিক বিষয়, ধরণ এবং শ্রেণী বরাদ্দ পরিচালনা করুন।",
+		"addSubject": "বিষয় যোগ করুন",
+		"updateSubject": "বিষয় আপডেট করুন",
+		"createTitle": "বিষয় তৈরি করুন",
+		"createDescription": "সিস্টেমে নতুন একাডেমিক বিষয় যোগ করুন।",
+		"editTitle": "বিষয় সম্পাদনা করুন",
+		"editDescription": "বিষয়ের তথ্য আপডেট করুন।",
+		"detailsTitle": "বিষয়ের বিস্তারিত",
+		"detailsDescription": "বিষয়ের সেটআপ, নম্বর এবং শ্রেণী বরাদ্দ দেখুন।",
+		"deleteSubjectTitle": "বিষয় মুছুন",
+		"deleteSubjectDesc": "আপনি কি নিশ্চিত যে আপনি এই বিষয়টি মুছতে চান? এই কাজটি অপরিবর্তনীয়।",
+		"subjectName": "বিষয়ের নাম",
+		"code": "কোড",
+		"type": "ধরণ",
+		"group": "গ্রুপ",
+		"classes": "শ্রেণী",
+		"marks": "পাস / পূর্ণ",
+		"marksDescription": "পূর্ণ নম্বর, পাস নম্বর, থিওরি নম্বর এবং প্র্যাকটিক্যাল নম্বর সেট করুন।",
+		"subjectDetails": "বিষয়ের বিস্তারিত",
+		"detailsSheetTitle": "বিস্তারিত",
+		"detailsSheetDescription": "বিষয়ের সেটআপ, নম্বর এবং শ্রেণী বরাদ্দ দেখুন।",
+		"subjectInformation": "বিষয়ের তথ্য",
+		"markDivisions": "নম্বর বিভাজন",
+		"assignedClasses": "বরাদ্দকৃত শ্রেণী",
+		"actions": "অ্যাকশন",
 		"status": "অবস্থা",
-		"statusChangeTitle": "বিষয় পরিবর্তন করুন"
+		"noSubjectsFound": "কোন বিষয় পাওয়া যায়নি।",
+		"statusChangeTitle": "বিষয়ের অবস্থা পরিবর্তন করুন",
+		"classAssignmentTitle": "শ্রেণী বরাদ্দ",
+		"classAssignmentDescription": "এই বিষয়টি কোন কোন শ্রেণীতে পড়ানো হবে তা নির্বাচন করুন।",
+		"descriptionTitle": "অতিরিক্ত নোট"
 	},
 	"Syllabus": {
 		"title": "সিলেবাস",
@@ -370,6 +444,7 @@
 		"changeToInactiveDesc": "আপনি কি নিশ্চিত যে আপনি এটা নিষ্ক্রিয় করতে চান?",
 		"changeStatus": "পরিবর্তন করুন",
 		"edit": "সম্পাদনা করুন",
+		"cancel": "বাতিল",
 		"actions": "অ্যাকশন"
 	},
 	"AdmissionNew": {
@@ -395,6 +470,7 @@
 		"title": "একাডেমিক সেশন",
 		"description": "স্কুলের জন্য একাডেমিক সেশন পরিচালনা করুন",
 		"sessionName": "সেশনের নাম",
+		"sessionYear": "সেশন বছর",
 		"status": "স্ট্যাটাস",
 		"actions": "অ্যাকশন",
 		"addSession": "সেশন যোগ করুন",
@@ -906,15 +982,200 @@
 	},
 	"SchoolsManagement": {
 		"title": "স্কুল ম্যানেজমেন্ট",
-		"description": "স্কুল, পরিকল্পনা, ভাউচার এবং সাবস্ক্রিপশন পরিচালনা করুন।"
+		"description": "স্কুল, পরিকল্পনা, ভাউচার এবং সাবস্ক্রিপশন পরিচালনা করুন।",
+		"addSchool": "স্কুল যোগ করুন",
+		"schoolName": "স্কুলের নাম",
+		"type": "ধরন",
+		"status": "অবস্থা",
+		"contactPerson": "যোগাযোগ ব্যক্তি",
+		"created": "তৈরির তারিখ",
+		"deleteSchoolTitle": "স্কুল মুছুন",
+		"deleteSchoolDescription": "আপনি কি নিশ্চিত যে আপনি এই স্কুলটি মুছতে চান? এই কাজটি পূর্বাবস্থায় ফেরানো যাবে না।",
+		"editProfile": "প্রোফাইল সম্পাদনা",
+		"tabOverview": "সারাংশ",
+		"tabContact": "যোগাযোগ ও অবস্থান",
+		"tabOfficial": "অফিসিয়াল ও সরকারি",
+		"tabAcademic": "একাডেমিক",
+		"tabSubscription": "সাবস্ক্রিপশন",
+		"tabPayment": "পেমেন্ট",
+		"tabBankAccounts": "ব্যাংক অ্যাকাউন্ট",
+		"systemDetails": "সিস্টেম বিবরণ",
+		"socialPublicLinks": "সোশ্যাল ও পাবলিক লিংক",
+		"contactInformation": "যোগাযোগের তথ্য",
+		"locationDetails": "অবস্থানের বিবরণ",
+		"registrationIds": "নিবন্ধন ও আইডি",
+		"governanceRecognition": "গভর্ন্যান্স ও স্বীকৃতি",
+		"academicStructure": "একাডেমিক কাঠামো",
+		"subscriptionInformation": "সাবস্ক্রিপশন তথ্য",
+		"subscriptionInformationDescription": "বর্তমান সক্রিয় প্যাকেজ এবং আগের সাবস্ক্রিপশন।",
+		"paymentHistory": "পেমেন্ট ইতিহাস",
+		"paymentHistoryDescription": "এই স্কুলের ইনভয়েস এবং পেমেন্ট রেকর্ড।",
+		"date": "তারিখ",
+		"plan": "প্ল্যান",
+		"amount": "পরিমাণ",
+		"trxId": "TRX আইডি",
+		"invId": "INV আইডি",
+		"actions": "অ্যাকশন",
+		"bankAccounts": "ব্যাংক অ্যাকাউন্ট",
+		"bankAccountsDescription": "এই স্কুলের ব্যাংক ও মোবাইল ব্যাংকিং তথ্য।",
+		"accountLabel": "অ্যাকাউন্ট লেবেল",
+		"bankInformation": "ব্যাংকের তথ্য",
+		"accountDetails": "অ্যাকাউন্টের বিবরণ",
+		"mobileBanking": "মোবাইল ব্যাংকিং",
+		"active": "সক্রিয়",
+		"inactive": "নিষ্ক্রিয়",
+		"primary": "প্রাথমিক",
+		"noBankAccounts": "কোনো ব্যাংক অ্যাকাউন্ট পাওয়া যায়নি।"
+	},
+	"SchoolsManagementSchools": {
+		"title": "স্কুল",
+		"description": "সিস্টেমে নিবন্ধিত সমস্ত স্কুল পরিচালনা করুন।"
+	},
+	"SchoolsManagementSchoolsDetails": {
+		"title": "স্কুলের বিবরণ",
+		"description": "একটি স্কুলের বিস্তারিত তথ্য দেখুন।"
+	},
+	"SchoolsManagementSchoolsCreate": {
+		"title": "স্কুল তৈরি করুন",
+		"description": "প্ল্যাটফর্মে একটি নতুন স্কুল যোগ করুন।"
+	},
+	"SchoolsManagementSchoolsEdit": {
+		"title": "স্কুল সম্পাদনা",
+		"description": "বিদ্যমান একটি স্কুলের তথ্য পরিবর্তন করুন।"
 	},
 	"SubscriptionPlanCreatePage": {
 		"title": "সাবস্ক্রিপশন প্ল্যান তৈরি করুন",
-		"description": "স্কুলগুলোর জন্য নতুন সাবস্ক্রিপশন প্ল্যান যোগ করুন।"
+		"description": "সিস্টেমে একটি নতুন সাবস্ক্রিপশন প্ল্যান যুক্ত করুন"
 	},
 	"SubscriptionPlanEditPage": {
-		"title": "সাবস্ক্রিপশন প্ল্যান সম্পাদনা",
-		"description": "বিদ্যমান সাবস্ক্রিপশন প্ল্যানের বিবরণ পরিবর্তন করুন।"
+		"title": "সাবস্ক্রিপশন প্ল্যান সম্পাদনা করুন",
+		"description": "বিদ্যমান সাবস্ক্রিপশন প্ল্যানের বিবরণ আপডেট করুন"
+	},
+	"SchoolsManagementBankAccounts": {
+		"title": "ব্যাংক অ্যাকাউন্ট",
+		"description": "স্কুলের ব্যাংক এবং মোবাইল ব্যাংকিং অ্যাকাউন্ট পরিচালনা করুন।",
+		"addAccount": "অ্যাকাউন্ট যোগ করুন",
+		"createAccount": "অ্যাকাউন্ট তৈরি করুন",
+		"updateAccount": "অ্যাকাউন্ট আপডেট করুন",
+		"saving": "সংরক্ষণ হচ্ছে...",
+		"cancel": "বাতিল",
+		"createSuccess": "ব্যাংক অ্যাকাউন্ট সফলভাবে তৈরি হয়েছে।",
+		"updateSuccess": "ব্যাংক অ্যাকাউন্ট সফলভাবে আপডেট হয়েছে।",
+		"deleteSuccess": "ব্যাংক অ্যাকাউন্ট সফলভাবে মুছে ফেলা হয়েছে।",
+		"deleteTitle": "ব্যাংক অ্যাকাউন্ট মুছুন",
+		"deleteDescription": "আপনি কি নিশ্চিত যে আপনি এই ব্যাংক অ্যাকাউন্টটি মুছতে চান? এই কাজটি অপরিবর্তনীয়।",
+		"filter": "ফিল্টার",
+		"school": "স্কুল",
+		"account": "অ্যাকাউন্ট",
+		"bank": "ব্যাংক",
+		"accountDetails": "অ্যাকাউন্টের বিবরণ",
+		"status": "অবস্থা",
+		"accountPurpose": "অ্যাকাউন্টের উদ্দেশ্য",
+		"detailsTitle": "ব্যাংক অ্যাকাউন্টের বিবরণ",
+		"detailsDescription": "এই স্কুলের ব্যাংক এবং মোবাইল ব্যাংকিং অ্যাকাউন্ট তথ্য দেখুন।",
+		"sectionAssignmentTitle": "অ্যাসাইনমেন্ট",
+		"sectionAssignmentDescription": "স্কুল এবং অ্যাকাউন্টের উদ্দেশ্য নির্বাচন করুন।",
+		"sectionBankTitle": "ব্যাংকের তথ্য",
+		"sectionBankDescription": "ব্যাংক শাখা, রাউটিং এবং অ্যাকাউন্ট তথ্য সংরক্ষণ করুন।",
+		"sectionMobileTitle": "মোবাইল ব্যাংকিং",
+		"sectionMobileDescription": "ঐচ্ছিক মোবাইল ব্যাংকিং তথ্য যোগ করুন।",
+		"sectionStatusTitle": "অবস্থা সেটিংস",
+		"sectionStatusDescription": "অ্যাকাউন্ট দৃশ্যমানতা এবং প্রাথমিক অ্যাকাউন্ট আচরণ নিয়ন্ত্রণ করুন।"
+	},
+	"SchoolsManagementBankAccountsCreate": {
+		"title": "ব্যাংক অ্যাকাউন্ট তৈরি করুন",
+		"description": "একটি স্কুলের জন্য ব্যাংক বা মোবাইল ব্যাংকিং অ্যাকাউন্ট যোগ করুন।"
+	},
+	"SchoolsManagementBankAccountsEdit": {
+		"title": "ব্যাংক অ্যাকাউন্ট সম্পাদনা করুন",
+		"description": "ব্যাংক, মোবাইল ব্যাংকিং এবং অবস্থার তথ্য আপডেট করুন।"
+	},
+	"SchoolsManagementBankAccountsDetails": {
+		"title": "ব্যাংক অ্যাকাউন্টের বিবরণ",
+		"description": "সম্পূর্ণ ব্যাংক অ্যাকাউন্ট রেকর্ড দেখুন।"
+	},
+	"SchoolsManagementSchoolSubscriptions": {
+		"title": "স্কুল সাবস্ক্রিপশন",
+		"description": "স্কুলের প্ল্যান, সাবস্ক্রিপশন সময়কাল এবং বিলিং স্ন্যাপশট পরিচালনা করুন।",
+		"addSubscription": "সাবস্ক্রিপশন যোগ করুন",
+		"createSubscription": "সাবস্ক্রিপশন তৈরি করুন",
+		"updateSubscription": "সাবস্ক্রিপশন আপডেট করুন",
+		"saving": "সংরক্ষণ হচ্ছে...",
+		"cancel": "বাতিল",
+		"createSuccess": "স্কুল সাবস্ক্রিপশন সফলভাবে তৈরি হয়েছে।",
+		"updateSuccess": "স্কুল সাবস্ক্রিপশন সফলভাবে আপডেট হয়েছে।",
+		"deleteSuccess": "স্কুল সাবস্ক্রিপশন সফলভাবে মুছে ফেলা হয়েছে।",
+		"deleteTitle": "সাবস্ক্রিপশন মুছুন",
+		"deleteDescription": "আপনি কি নিশ্চিত যে আপনি এই সাবস্ক্রিপশনটি মুছতে চান? এই কাজটি পূর্বাবস্থায় ফেরানো যাবে না।",
+		"school": "স্কুল",
+		"plan": "প্ল্যান",
+		"price": "মূল্য",
+		"validity": "মেয়াদ",
+		"status": "অবস্থা",
+		"detailsTitle": "সাবস্ক্রিপশন বিবরণ",
+		"detailsDescription": "নির্বাচিত স্কুলের সাবস্ক্রিপশন স্ন্যাপশট দেখুন।",
+		"sectionAssignmentTitle": "অ্যাসাইনমেন্ট",
+		"sectionAssignmentDescription": "স্কুল, প্ল্যান এবং বর্তমান অবস্থা নির্বাচন করুন।",
+		"sectionPeriodTitle": "সাবস্ক্রিপশন সময়কাল",
+		"sectionPeriodDescription": "শুরু, মেয়াদ শেষ, ট্রায়াল এবং গ্রেস পিরিয়ড সেট করুন।",
+		"sectionPricingTitle": "প্রাইসিং স্ন্যাপশট",
+		"sectionPricingDescription": "সম্মত মূল্য, বিলিং চক্র, সেটআপ ফি এবং ডিসকাউন্ট সংরক্ষণ করুন।",
+		"sectionLimitsTitle": "ব্যবহারের সীমা",
+		"sectionLimitsDescription": "এই সাবস্ক্রিপশন সময়কালের কার্যকর সীমা পরিবর্তন করুন।",
+		"sectionFeaturesTitle": "ফিচার অ্যাক্সেস",
+		"sectionFeaturesDescription": "এই সাবস্ক্রিপশনের জন্য সক্রিয় মডিউল নিয়ন্ত্রণ করুন।",
+		"sectionNotesTitle": "অভ্যন্তরীণ নোট",
+		"sectionNotesDescription": "সুপার অ্যাডমিন রিভিউর জন্য ব্যক্তিগত নোট রাখুন।"
+	},
+	"SchoolsManagementSchoolSubscriptionsCreate": {
+		"title": "স্কুল সাবস্ক্রিপশন তৈরি করুন",
+		"description": "একটি স্কুলে সাবস্ক্রিপশন প্ল্যান বরাদ্দ করুন।"
+	},
+	"SchoolsManagementSchoolSubscriptionsEdit": {
+		"title": "স্কুল সাবস্ক্রিপশন সম্পাদনা করুন",
+		"description": "সাবস্ক্রিপশন অবস্থা, সময়কাল, মূল্য, সীমা এবং ফিচার আপডেট করুন।"
+	},
+	"SchoolsManagementSchoolSubscriptionsDetails": {
+		"title": "স্কুল সাবস্ক্রিপশন বিবরণ",
+		"description": "একটি স্কুলের সম্পূর্ণ সাবস্ক্রিপশন স্ন্যাপশট দেখুন।"
+	},
+	"SchoolsManagementPayments": {
+		"title": "পেমেন্ট",
+		"description": "স্কুল সাবস্ক্রিপশন পেমেন্ট এবং ইনভয়েস পরিচালনা করুন।",
+		"addPayment": "পেমেন্ট যোগ করুন",
+		"createPayment": "পেমেন্ট তৈরি করুন",
+		"updatePayment": "পেমেন্ট আপডেট করুন",
+		"saving": "সংরক্ষণ হচ্ছে...",
+		"cancel": "বাতিল",
+		"createSuccess": "পেমেন্ট সফলভাবে তৈরি হয়েছে।",
+		"updateSuccess": "পেমেন্ট সফলভাবে আপডেট হয়েছে।",
+		"school": "স্কুল",
+		"subscription": "সাবস্ক্রিপশন",
+		"amount": "পরিমাণ",
+		"method": "মেথড",
+		"status": "অবস্থা",
+		"paidAt": "পেমেন্ট তারিখ",
+		"references": "রেফারেন্স",
+		"detailsTitle": "পেমেন্ট বিবরণ",
+		"detailsDescription": "এই পেমেন্ট, ইনভয়েস এবং সাবস্ক্রিপশন রেকর্ড দেখুন।",
+		"sectionAssignmentTitle": "অ্যাসাইনমেন্ট",
+		"sectionAssignmentDescription": "স্কুল এবং সংশ্লিষ্ট সাবস্ক্রিপশন নির্বাচন করুন।",
+		"sectionPaymentTitle": "পেমেন্ট স্ন্যাপশট",
+		"sectionPaymentDescription": "পরিমাণ, অবস্থা, মেথড এবং পেমেন্ট তারিখ সংরক্ষণ করুন।",
+		"sectionReferenceTitle": "রেফারেন্স",
+		"sectionReferenceDescription": "ট্রানজ্যাকশন, ইনভয়েস এবং অভ্যন্তরীণ নোট সংরক্ষণ করুন।"
+	},
+	"SchoolsManagementPaymentsCreate": {
+		"title": "পেমেন্ট তৈরি করুন",
+		"description": "স্কুল সাবস্ক্রিপশনের জন্য পেমেন্ট যোগ করুন।"
+	},
+	"SchoolsManagementPaymentsEdit": {
+		"title": "পেমেন্ট সম্পাদনা করুন",
+		"description": "পেমেন্ট অবস্থা, মেথড, পরিমাণ এবং রেফারেন্স আপডেট করুন।"
+	},
+	"SchoolsManagementPaymentsDetails": {
+		"title": "পেমেন্ট বিবরণ",
+		"description": "সম্পূর্ণ পেমেন্ট রেকর্ড দেখুন।"
 	},
 	"VouchersPage": {
 		"title": "ভাউচার",
@@ -1026,14 +1287,6 @@
 		"sectionSettings": "সেটিংস",
 		"confirmStatusChange": "স্ট্যাটাস পরিবর্তন করবেন?"
 	},
-	"SubscriptionPlanCreatePage": {
-		"title": "সাবস্ক্রিপশন প্ল্যান তৈরি করুন",
-		"description": "সিস্টেমে একটি নতুন সাবস্ক্রিপশন প্ল্যান যুক্ত করুন"
-	},
-	"SubscriptionPlanEditPage": {
-		"title": "সাবস্ক্রিপশন প্ল্যান সম্পাদনা করুন",
-		"description": "বিদ্যমান সাবস্ক্রিপশন প্ল্যানের বিবরণ আপডেট করুন"
-	},
 	"StaffDirectory": {
 		"title": "স্টাফ ডিরেক্টরি",
 		"description": "স্কুলের স্টাফ, শিক্ষক এবং তাদের বিবরণ পরিচালনা করুন।",
@@ -1058,5 +1311,37 @@
 		"staffIdPlaceholder": "স্টাফ আইডি লিখুন",
 		"departmentPlaceholder": "বিভাগ লিখুন",
 		"rolePlaceholder": "পদবী লিখুন"
+	},
+	"CreateSchool": {
+		"title": "নতুন স্কুল তৈরি করুন",
+		"description": "প্ল্যাটফর্মে একটি নতুন স্কুল নিবন্ধন করতে নিচের বিবরণ পূরণ করুন।"
+	},
+	"SchoolForm": {
+		"createSchool": "স্কুল তৈরি করুন",
+		"updateSchool": "স্কুল আপডেট করুন",
+		"saving": "সংরক্ষণ হচ্ছে...",
+		"uploadingImages": "ছবি আপলোড হচ্ছে...",
+		"sections": {
+			"basicInfo": {
+				"title": "প্রাথমিক তথ্য",
+				"description": "স্কুলের পরিচয় সম্পর্কে মূল বিবরণ।"
+			},
+			"locationContact": {
+				"title": "অবস্থান ও যোগাযোগ",
+				"description": "ঠিকানা এবং যোগাযোগের বিবরণ।"
+			},
+			"officialInfo": {
+				"title": "দাপ্তরিক তথ্য",
+				"description": "সরকারি ও নিয়ন্ত্রক শনাক্তকারী।"
+			},
+			"academicStructure": {
+				"title": "একাডেমিক কাঠামো",
+				"description": "মাধ্যম, শিফট এবং ধারণক্ষমতা।"
+			},
+			"brandingDigital": {
+				"title": "ব্র্যান্ডিং এবং ডিজিটাল",
+				"description": "লিঙ্ক, ডোমেন এবং সামাজিক উপস্থিতি।"
+			}
+		}
 	}
 }

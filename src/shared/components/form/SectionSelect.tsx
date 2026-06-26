@@ -27,8 +27,9 @@ export default function SectionSelect({
 	placeholder = "Select Section",
 	className,
 }: SectionSelectProps) {
-	const { data: classes, isLoading } = useSWR("/classes");
+	const { data: response, isLoading } = useSWR("/classes/active-list");
 	const locale = useLocale();
+	const classes = response?.data || response || [];
 
 	const sections = useMemo(() => {
 		if (!classId || !classes) return [];

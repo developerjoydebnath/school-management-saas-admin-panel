@@ -45,7 +45,8 @@ export default function TeacherList() {
 	const t = useTranslations("Teachers");
 	const tc = useTranslations("Common");
 	const locale = useLocale();
-	const { data: subjectsData } = useSWR("/subjects");
+	const { data: subjectResponse } = useSWR("/subjects/active-list");
+	const subjectsData = Array.isArray(subjectResponse?.data) ? subjectResponse.data : subjectResponse || [];
 	const [filter, setFilter] = useState<TeacherFilter>(initialFilters);
 	const [page, setPage] = useState(1);
 	const [limit, setLimit] = useState(10);
@@ -134,7 +135,12 @@ export default function TeacherList() {
 									variant="secondary"
 									className="h-5 rounded-sm px-1.5 py-0 text-[10px]"
 								>
-									{subject ? getLocalizedName(subject.name, locale) : subjectId}
+									{subject
+										? getLocalizedName(
+												{ en: subject.enName || "", bn: subject.bnName || "" },
+												locale
+											)
+										: subjectId}
 								</Badge>
 							);
 						})}

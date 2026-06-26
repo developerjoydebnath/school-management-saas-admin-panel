@@ -137,9 +137,9 @@ export default function DataTable<T>({
 													{header.isPlaceholder
 														? null
 														: flexRender(
-																header.column.columnDef.header,
-																header.getContext()
-															)}
+															header.column.columnDef.header,
+															header.getContext()
+														)}
 												</span>
 
 												<span
@@ -152,8 +152,8 @@ export default function DataTable<T>({
 															className="size-4"
 															type={
 																header.column.getIsSorted() as
-																	| "asc"
-																	| "desc"
+																| "asc"
+																| "desc"
 															}
 														/>
 													)}
@@ -167,40 +167,40 @@ export default function DataTable<T>({
 
 						<TableBody className="[&_tr]:even:bg-gray-25 [&_tr]:hover:bg-gray-25 [&_tr]:border-b-border [&_tr]:border-b">
 							{isLoading
-								? Array.from({ length: 10 }).map((_, index) => (
-										<TableRow key={`loadingRow-${index}`}>
-											{columns.map((col) => (
-												<TableCell
-													key={col.id}
-													className={cn(
-														"text-foreground h-14 px-2.5 py-2 text-sm font-normal",
-														classNames?.td
-													)}
-												>
-													<Skeleton className="h-3.5 w-1/2" />
-												</TableCell>
-											))}
-										</TableRow>
-									))
+								? Array.from({ length: 5 }).map((_, index) => (
+									<TableRow key={`loadingRow-${index}`}>
+										{columns.map((col) => (
+											<TableCell
+												key={col.id}
+												className={cn(
+													"text-foreground h-14 px-2.5 py-2 text-sm font-normal",
+													classNames?.td
+												)}
+											>
+												<Skeleton className="h-3.5 w-1/2" />
+											</TableCell>
+										))}
+									</TableRow>
+								))
 								: table.getRowModel().rows.map((row) => (
-										<TableRow key={row.id}>
-											{row.getVisibleCells().map((cell) => (
-												<TableCell
-													key={cell.id}
-													className={cn(
-														"text-foreground h-14 px-2.5 py-2 text-sm font-normal",
-														classNames?.td,
-														cell.column.columnDef.meta?.classNames?.td
-													)}
-												>
-													{flexRender(
-														cell.column.columnDef.cell,
-														cell.getContext()
-													)}
-												</TableCell>
-											))}
-										</TableRow>
-									))}
+									<TableRow key={row.id}>
+										{row.getVisibleCells().map((cell) => (
+											<TableCell
+												key={cell.id}
+												className={cn(
+													"text-foreground h-14 px-2.5 py-2 text-sm font-normal",
+													classNames?.td,
+													cell.column.columnDef.meta?.classNames?.td
+												)}
+											>
+												{flexRender(
+													cell.column.columnDef.cell,
+													cell.getContext()
+												)}
+											</TableCell>
+										))}
+									</TableRow>
+								))}
 						</TableBody>
 					</Table>
 				</div>

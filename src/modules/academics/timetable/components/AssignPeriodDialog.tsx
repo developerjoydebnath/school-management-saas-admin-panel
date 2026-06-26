@@ -178,7 +178,7 @@ export function AssignPeriodDialog({
 									size="sm"
 									className="text-red-500 hover:bg-red-50 hover:text-red-600"
 								>
-									<Trash2 className="mr-2 size-4" /> {t("clearSlot")}
+									<Trash2 className="size-4" /> {t("clearSlot")}
 								</Button>
 							</AlertDialogTrigger>
 						</ConfirmationModal>

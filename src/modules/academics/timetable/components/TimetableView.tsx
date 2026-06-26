@@ -114,7 +114,8 @@ export default function TimetableView() {
 		toast.success("Column deleted");
 	};
 
-	const { data: subjectsData } = useSWR("/subjects");
+	const { data: subjectResponse } = useSWR("/subjects/active-list");
+	const subjectsData = Array.isArray(subjectResponse?.data) ? subjectResponse.data : subjectResponse || [];
 	const { data: teachersData } = useSWR("/teachers");
 
 	const handleAssignPeriod = (data: any[]) => {
@@ -125,7 +126,7 @@ export default function TimetableView() {
 			const teacher = teachersData?.find((t: any) => t.id === item.teacherId);
 			return {
 				...item,
-				subjectName: subject?.name || item.subjectId,
+				subjectName: subject?.enName || subject?.name || item.subjectId,
 				teacherName: teacher?.name || item.teacherId,
 			};
 		});

@@ -3,6 +3,7 @@
 		"dashboard": "Dashboard",
 		"academics": "Academics",
 		"academics_classes": "Classes & Sections",
+		"academics_class_rooms": "Class Rooms",
 		"academics_subjects": "Subjects",
 		"academics_syllabus": "Syllabus",
 		"academics_timetable": "Class Timetable",
@@ -90,8 +91,10 @@
 		"schools_management_vouchers": "Vouchers",
 		"schools_management_school_subscriptions": "School Subscriptions",
 		"schools_management_bank_accounts": "Bank Accounts",
+		"schools_management_payments": "Payments",
 		"create": "Create",
 		"edit": "Edit",
+		"details": "Details",
 		"settings": "Settings",
 		"settings_profile": "School Profile",
 		"settings_users": "User Management",
@@ -99,6 +102,43 @@
 		"settings_localization": "Localization",
 		"settings_backup": "Data & Backup",
 		"settings_audit": "Audit Log"
+	},
+	"ClassRooms": {
+		"title": "Class Rooms",
+		"description": "Manage classroom capacity, furniture, and room assignments.",
+		"addClassRoom": "Add Room",
+		"createTitle": "Create Class Room",
+		"createDescription": "Add a new classroom with room details, capacity, furniture, and facilities.",
+		"editTitle": "Edit Class Room",
+		"editDescription": "Update classroom details, capacity, furniture, and facilities.",
+		"deleteTitle": "Delete Class Room",
+		"deleteDescription": "Are you sure you want to delete this class room? This action cannot be undone.",
+		"detailsTitle": "Class Room Details",
+		"detailsDescription": "Detailed view of class room information.",
+		"detailsSheetTitle": "Details",
+		"detailsSheetDescription": "Review room capacity, location, and furniture setup.",
+		"roomInformation": "Room Information",
+		"furnitureFacilities": "Furniture & Facilities",
+		"sectionBasicTitle": "Basic Information",
+		"sectionBasicDescription": "General details about the class room.",
+		"sectionFurnitureTitle": "Furniture & Facilities",
+		"sectionFurnitureDescription": "Available furniture and facilities in the room.",
+		"highBench": "High Bench",
+		"lowBench": "Low Bench",
+		"chair": "Chair",
+		"table": "Table",
+		"board": "Board",
+		"viewDetails": "View Details",
+		"roomName": "Room Name",
+		"roomNo": "Room No",
+		"capacity": "Capacity",
+		"building": "Building",
+		"floor": "Floor",
+		"furniture": "Furniture",
+		"facilities": "Facilities",
+		"status": "Status",
+		"actions": "Actions",
+		"statusChangeTitle": "Change Room Status"
 	},
 	"Classes": {
 		"title": "Classes",
@@ -111,6 +151,25 @@
 		"classList": "Class List",
 		"addSection": "New Section",
 		"sections": "Sections",
+		"className": "Class Name",
+		"capacity": "Capacity",
+		"roomNumber": "Room",
+		"classRoom": "Class Room",
+		"shift": "Shift",
+		"status": "Status",
+		"actions": "Actions",
+		"detailsTitle": "Class Details",
+		"detailsDescription": "General information about the class",
+		"detailsSheetTitle": "Details",
+		"detailsSheetDescription": "Review class setup, room assignment, and sections.",
+		"classInformation": "Class Information",
+		"roomAndShift": "Room & Shift",
+		"sectionAssignments": "Section Assignments",
+		"sectionBasicTitle": "Basic Information",
+		"sectionBasicDescription": "General information about the class.",
+		"viewDetails": "View Details",
+		"sectionCardTitle": "Section — {name}",
+		"sectionCardDescription": "Room and shift details for section {name}.",
 		"noClassesFound": "No classes found",
 		"statusChangeTitle": "Change Class Status"
 	},
@@ -141,19 +200,34 @@
 		"description": "Manage subjects according to the curriculum.",
 		"addSubject": "Add Subject",
 		"updateSubject": "Update Subject",
-		"addSubjectTitle": "Add New Subject",
-		"editSubjectTitle": "Edit Subject",
+		"createTitle": "Create Subject",
+		"createDescription": "Add a subject with class assignment and marks setup.",
+		"editTitle": "Edit Subject",
+		"editDescription": "Update subject information, marks, and class assignment.",
+		"detailsTitle": "Subject Details",
+		"detailsDescription": "Review subject setup, marks, and assigned classes.",
 		"deleteSubjectTitle": "Delete Subject",
 		"deleteSubjectDesc": "Are you sure you want to delete this subject? This action cannot be undone.",
 		"subjectName": "Subject Name",
-		"subjectCode": "Code",
-		"subjectType": "Type",
+		"code": "Code",
+		"type": "Type",
+		"group": "Group",
+		"classes": "Classes",
+		"marks": "Pass / Full",
+		"marksDescription": "Set full marks, pass marks, theory marks, and practical marks.",
 		"subjectDetails": "Subject Details",
+		"detailsSheetTitle": "Details",
+		"detailsSheetDescription": "Review subject setup, marks, and class assignment.",
+		"subjectInformation": "Subject Information",
+		"markDivisions": "Mark Divisions",
 		"assignedClasses": "Assigned Classes",
 		"noSubjectsFound": "No subjects found.",
 		"actions": "Actions",
 		"status": "Status",
-		"statusChangeTitle": "Change Subject Status"
+		"statusChangeTitle": "Change Subject Status",
+		"classAssignmentTitle": "Class Assignment",
+		"classAssignmentDescription": "Select which classes will study this subject.",
+		"descriptionTitle": "Additional Notes"
 	},
 	"Syllabus": {
 		"title": "Syllabus",
@@ -375,6 +449,7 @@
 		"changeToInactiveDesc": "Are you sure you want to change the status to Inactive?",
 		"changeStatus": "Change Status",
 		"edit": "Edit",
+		"cancel": "Cancel",
 		"actions": "Actions"
 	},
 	"AdmissionNew": {
@@ -912,15 +987,200 @@
 	},
 	"SchoolsManagement": {
 		"title": "Schools Management",
-		"description": "Manage schools, plans, vouchers, and subscriptions."
+		"description": "Manage schools, plans, vouchers, and subscriptions.",
+		"addSchool": "Add School",
+		"schoolName": "School Name",
+		"type": "Type",
+		"status": "Status",
+		"contactPerson": "Contact Person",
+		"created": "Created",
+		"deleteSchoolTitle": "Delete School",
+		"deleteSchoolDescription": "Are you sure you want to delete this school? This action cannot be undone.",
+		"editProfile": "Edit Profile",
+		"tabOverview": "Overview",
+		"tabContact": "Contact & Location",
+		"tabOfficial": "Official & Gov",
+		"tabAcademic": "Academic",
+		"tabSubscription": "Subscription",
+		"tabPayment": "Payment",
+		"tabBankAccounts": "Bank Accounts",
+		"systemDetails": "System Details",
+		"socialPublicLinks": "Social & Public Links",
+		"contactInformation": "Contact Information",
+		"locationDetails": "Location Details",
+		"registrationIds": "Registration & IDs",
+		"governanceRecognition": "Governance & Recognition",
+		"academicStructure": "Academic Structure",
+		"subscriptionInformation": "Subscription Information",
+		"subscriptionInformationDescription": "Current active package and historical subscriptions.",
+		"paymentHistory": "Payment History",
+		"paymentHistoryDescription": "Invoices and payment records for this school.",
+		"date": "Date",
+		"plan": "Plan",
+		"amount": "Amount",
+		"trxId": "TRX ID",
+		"invId": "INV ID",
+		"actions": "Actions",
+		"bankAccounts": "Bank Accounts",
+		"bankAccountsDescription": "Bank and mobile banking information for this school.",
+		"accountLabel": "Account Label",
+		"bankInformation": "Bank Information",
+		"accountDetails": "Account Details",
+		"mobileBanking": "Mobile Banking",
+		"active": "Active",
+		"inactive": "Inactive",
+		"primary": "Primary",
+		"noBankAccounts": "No bank accounts found."
+	},
+	"SchoolsManagementSchools": {
+		"title": "Schools",
+		"description": "Manage all registered schools in the system."
+	},
+	"SchoolsManagementSchoolsDetails": {
+		"title": "School Details",
+		"description": "View detailed information about a school."
+	},
+	"SchoolsManagementSchoolsCreate": {
+		"title": "Create School",
+		"description": "Add a new school to the platform."
+	},
+	"SchoolsManagementSchoolsEdit": {
+		"title": "Edit School",
+		"description": "Modify the information of an existing school."
 	},
 	"SubscriptionPlanCreatePage": {
 		"title": "Create Subscription Plan",
-		"description": "Add a new subscription plan for schools."
+		"description": "Add a new subscription plan to the system"
 	},
 	"SubscriptionPlanEditPage": {
 		"title": "Edit Subscription Plan",
-		"description": "Modify the details of an existing subscription plan."
+		"description": "Update existing subscription plan details"
+	},
+	"SchoolsManagementBankAccounts": {
+		"title": "Bank Accounts",
+		"description": "Manage school bank and mobile banking accounts.",
+		"addAccount": "Add Account",
+		"createAccount": "Create Account",
+		"updateAccount": "Update Account",
+		"saving": "Saving...",
+		"cancel": "Cancel",
+		"createSuccess": "Bank account created successfully.",
+		"updateSuccess": "Bank account updated successfully.",
+		"deleteSuccess": "Bank account deleted successfully.",
+		"deleteTitle": "Delete Bank Account",
+		"deleteDescription": "Are you sure you want to delete this bank account? This action cannot be undone.",
+		"filter": "Filter",
+		"school": "School",
+		"account": "Account",
+		"bank": "Bank",
+		"accountDetails": "Account Details",
+		"status": "Status",
+		"accountPurpose": "Account Purpose",
+		"detailsTitle": "Bank Account Details",
+		"detailsDescription": "Review this school's bank and mobile banking account information.",
+		"sectionAssignmentTitle": "Assignment",
+		"sectionAssignmentDescription": "Choose the school and account purpose.",
+		"sectionBankTitle": "Bank Details",
+		"sectionBankDescription": "Store bank branch, routing, and account information.",
+		"sectionMobileTitle": "Mobile Banking",
+		"sectionMobileDescription": "Add optional mobile banking information.",
+		"sectionStatusTitle": "Status Settings",
+		"sectionStatusDescription": "Control account visibility and primary account behavior."
+	},
+	"SchoolsManagementBankAccountsCreate": {
+		"title": "Create Bank Account",
+		"description": "Add a bank or mobile banking account for a school."
+	},
+	"SchoolsManagementBankAccountsEdit": {
+		"title": "Edit Bank Account",
+		"description": "Update bank, mobile banking, and status information."
+	},
+	"SchoolsManagementBankAccountsDetails": {
+		"title": "Bank Account Details",
+		"description": "View the full bank account record."
+	},
+	"SchoolsManagementSchoolSubscriptions": {
+		"title": "School Subscriptions",
+		"description": "Manage school plan assignments, subscription periods, and billing snapshots.",
+		"addSubscription": "Add Subscription",
+		"createSubscription": "Create Subscription",
+		"updateSubscription": "Update Subscription",
+		"saving": "Saving...",
+		"cancel": "Cancel",
+		"createSuccess": "School subscription created successfully.",
+		"updateSuccess": "School subscription updated successfully.",
+		"deleteSuccess": "School subscription deleted successfully.",
+		"deleteTitle": "Delete Subscription",
+		"deleteDescription": "Are you sure you want to delete this subscription? This action cannot be undone.",
+		"school": "School",
+		"plan": "Plan",
+		"price": "Price",
+		"validity": "Validity",
+		"status": "Status",
+		"detailsTitle": "Subscription Details",
+		"detailsDescription": "Review the selected school's subscription snapshot.",
+		"sectionAssignmentTitle": "Assignment",
+		"sectionAssignmentDescription": "Choose the school, plan, and current status.",
+		"sectionPeriodTitle": "Subscription Period",
+		"sectionPeriodDescription": "Set the start, expiry, trial, and grace period.",
+		"sectionPricingTitle": "Pricing Snapshot",
+		"sectionPricingDescription": "Store the agreed price, billing cycle, setup fee, and discount.",
+		"sectionLimitsTitle": "Usage Limits",
+		"sectionLimitsDescription": "Override the effective limits for this subscription period.",
+		"sectionFeaturesTitle": "Feature Access",
+		"sectionFeaturesDescription": "Control enabled modules for this subscription.",
+		"sectionNotesTitle": "Internal Notes",
+		"sectionNotesDescription": "Keep private notes for super admin review."
+	},
+	"SchoolsManagementSchoolSubscriptionsCreate": {
+		"title": "Create School Subscription",
+		"description": "Assign a subscription plan to a school."
+	},
+	"SchoolsManagementSchoolSubscriptionsEdit": {
+		"title": "Edit School Subscription",
+		"description": "Update subscription status, period, pricing, limits, and features."
+	},
+	"SchoolsManagementSchoolSubscriptionsDetails": {
+		"title": "School Subscription Details",
+		"description": "View the full subscription snapshot for a school."
+	},
+	"SchoolsManagementPayments": {
+		"title": "Payments",
+		"description": "Manage school subscription payments and invoices.",
+		"addPayment": "Add Payment",
+		"createPayment": "Create Payment",
+		"updatePayment": "Update Payment",
+		"saving": "Saving...",
+		"cancel": "Cancel",
+		"createSuccess": "Payment created successfully.",
+		"updateSuccess": "Payment updated successfully.",
+		"school": "School",
+		"subscription": "Subscription",
+		"amount": "Amount",
+		"method": "Method",
+		"status": "Status",
+		"paidAt": "Paid At",
+		"references": "References",
+		"detailsTitle": "Payment Details",
+		"detailsDescription": "Review this payment, invoice, and subscription record.",
+		"sectionAssignmentTitle": "Assignment",
+		"sectionAssignmentDescription": "Choose the school and related subscription.",
+		"sectionPaymentTitle": "Payment Snapshot",
+		"sectionPaymentDescription": "Store amount, status, method, and payment date.",
+		"sectionReferenceTitle": "References",
+		"sectionReferenceDescription": "Store transaction, invoice, and internal notes."
+	},
+	"SchoolsManagementPaymentsCreate": {
+		"title": "Create Payment",
+		"description": "Add a payment for a school subscription."
+	},
+	"SchoolsManagementPaymentsEdit": {
+		"title": "Edit Payment",
+		"description": "Update payment status, method, amount, and references."
+	},
+	"SchoolsManagementPaymentsDetails": {
+		"title": "Payment Details",
+		"description": "View the full payment record."
 	},
 	"VouchersPage": {
 		"title": "Vouchers",
@@ -1032,14 +1292,6 @@
 		"sectionSettings": "Settings",
 		"confirmStatusChange": "Change Status?"
 	},
-	"SubscriptionPlanCreatePage": {
-		"title": "Create Subscription Plan",
-		"description": "Add a new subscription plan to the system"
-	},
-	"SubscriptionPlanEditPage": {
-		"title": "Edit Subscription Plan",
-		"description": "Update existing subscription plan details"
-	},
 	"StaffDirectory": {
 		"title": "Staff Directory",
 		"description": "Manage school staff, teachers, and their details.",
@@ -1064,5 +1316,37 @@
 		"staffIdPlaceholder": "Enter staff ID",
 		"departmentPlaceholder": "Enter department",
 		"rolePlaceholder": "Enter role"
+	},
+	"CreateSchool": {
+		"title": "Create New School",
+		"description": "Fill in the details below to register a new school on the platform."
+	},
+	"SchoolForm": {
+		"createSchool": "Create School",
+		"updateSchool": "Update School",
+		"saving": "Saving...",
+		"uploadingImages": "Uploading Images...",
+		"sections": {
+			"basicInfo": {
+				"title": "Basic Information",
+				"description": "Core details about the school identity."
+			},
+			"locationContact": {
+				"title": "Location & Contact",
+				"description": "Address and communication details."
+			},
+			"officialInfo": {
+				"title": "Official Information",
+				"description": "Government and regulatory identifiers."
+			},
+			"academicStructure": {
+				"title": "Academic Structure",
+				"description": "Mediums, shifts, and capacities."
+			},
+			"brandingDigital": {
+				"title": "Branding & Digital",
+				"description": "Links, domains, and social presence."
+			}
+		}
 	}
 }

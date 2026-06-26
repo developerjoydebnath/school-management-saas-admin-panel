@@ -1,54 +1,56 @@
 "use client";
 
 import { SchoolDetails } from "@/modules/schools-management/schools/components/SchoolDetails";
-import PageHeading from "@/shared/components/custom/PageHeading";
-import { Skeleton } from "@/shared/components/ui/skeleton";
 import { PATHS } from "@/shared/configs/paths.config";
+import { useSWR } from "@/shared/hooks/use-swr";
+import { SchoolModel } from "@/shared/models/school.model";
 import { useBreadcrumbStore } from "@/shared/stores/breadcrumb-store";
-import { useTranslations } from "next-intl";
+import { Loader2 } from "lucide-react";
+import { useLocale, useTranslations } from "next-intl";
 import { useParams } from "next/navigation";
 import { useEffect } from "react";
-import { useSchools } from "@/modules/schools-management/hooks/use-schools";
 
 export default function SchoolDetailsPage() {
 	const params = useParams();
 	const id = params.id as string;
 	const { setBreadcrumbs } = useBreadcrumbStore();
 	const tNav = useTranslations("Navigation");
+	const tDetails = useTranslations("SchoolsManagementSchoolsDetails");
+	const locale = useLocale();
 
-	// In a real app we'd have a useSchool(id) hook, but for now we'll fetch the list and find it or just use the first if we add a dedicated endpoint later.
-	// Since backend doesn't have a specific `findOne` for schools exposed clearly in the prompt, let's just use the list and find.
-	const { data, isLoading } = useSchools();
-	const school = data?.find((s: any) => s.id === id);
+	const { data: response, isLoading } = useSWR(`/superadmin/schools/${id}`);
+	const schoolData = response?.data ? new SchoolModel(response.data) : null;
 
 	useEffect(() => {
 		setBreadcrumbs([
 			{ label: tNav("dashboard"), href: PATHS.DASHBOARD },
-			{ label: "Schools Management", href: PATHS.SCHOOLS_MANAGEMENT.ROOT },
-			{ label: "Schools", href: PATHS.SCHOOLS_MANAGEMENT.SCHOOLS.ROOT },
-			{ label: school?.schoolName || "Details" },
+			{
+				label: tNav("schools_management_schools"),
+				href: PATHS.SCHOOLS_MANAGEMENT.SCHOOLS.ROOT,
+			},
+			{ label: tDetails("title") },
 		]);
-	}, [setBreadcrumbs, tNav, school?.schoolName]);
+	}, [setBreadcrumbs, tNav, tDetails, locale]);
+
+	if (isLoading) {
+		return (
+			<div className="flex h-64 items-center justify-center">
+				<Loader2 className="text-primary h-8 w-8 animate-spin" />
+			</div>
+		);
+	}
+
+	if (!schoolData) {
+		return (
+			<div className="text-muted-foreground flex h-64 items-center justify-center">
+				School not found.
+			</div>
+		);
+	}
 
 	return (
-		<div className="@container/page space-y-6">
-			<PageHeading routeName="SchoolsManagementSchoolsDetails" />
-			{isLoading ? (
-				<div className="space-y-6">
-					<div className="flex items-center gap-4">
-						<Skeleton className="h-16 w-16 rounded-full" />
-						<div className="space-y-2">
-							<Skeleton className="h-6 w-48" />
-							<Skeleton className="h-4 w-32" />
-						</div>
-					</div>
-					<Skeleton className="h-[400px] w-full" />
-				</div>
-			) : school ? (
-				<SchoolDetails school={school} />
-			) : (
-				<div className="text-center text-muted-foreground p-12">School not found.</div>
-			)}
+		<div className="@container/page mx-auto max-w-7xl">
+			<SchoolDetails school={schoolData} />
 		</div>
 	);
 }

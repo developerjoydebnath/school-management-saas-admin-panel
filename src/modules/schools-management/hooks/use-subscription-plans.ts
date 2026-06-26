@@ -8,6 +8,8 @@ type UseSubscriptionPlansParams = {
 	isActive?: string[];
 	isPublic?: string[];
 	billingCycle?: string[];
+	createdFrom?: string;
+	createdTo?: string;
 };
 
 export function useSubscriptionPlans(params?: UseSubscriptionPlansParams) {
@@ -17,6 +19,8 @@ export function useSubscriptionPlans(params?: UseSubscriptionPlansParams) {
 		page: params?.page,
 		limit: params?.limit,
 		search: params?.search || undefined,
+		createdFrom: params?.createdFrom || undefined,
+		createdTo: params?.createdTo || undefined,
 	};
 
 	// Map isActive filter — if exactly one value selected, send it; otherwise omit (backend filters by specific true/false)

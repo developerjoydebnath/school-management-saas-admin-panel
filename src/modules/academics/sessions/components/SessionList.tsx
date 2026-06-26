@@ -6,13 +6,9 @@ import DataTable from "@/shared/components/table/DataTable";
 import TableFilter from "@/shared/components/table/TableFilter";
 import { AlertDialogTrigger } from "@/shared/components/ui/alert-dialog";
 import { Button } from "@/shared/components/ui/button";
-import { Card, CardContent } from "@/shared/components/ui/card";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/shared/components/ui/dialog";
-import { ScrollArea } from "@/shared/components/ui/scroll-area";
+import { Card, CardContent, CardHeader } from "@/shared/components/ui/card";
 import { Switch } from "@/shared/components/ui/switch";
 import { PERMISSIONS } from "@/shared/configs/permissions.config";
-import { useTableData } from "@/shared/hooks/use-table-data";
-import axios from "@/shared/lib/axios";
 import { SessionModel } from "@/shared/models/session.model";
 import { useAuthStore } from "@/shared/stores/authStore";
 import { StatusEnum } from "@/shared/types/enums";
@@ -22,6 +18,10 @@ import { Pencil, Trash2 } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useState } from "react";
 import { toast } from "sonner";
+import { deleteSession, updateSession } from "../hooks/use-session-mutations";
+import { useSessions } from "../hooks/use-sessions";
+import { SessionCreate } from "./SessionCreate";
+import SessionFilterBar from "./SessionFilterBar";
 import SessionForm from "./SessionForm";
 
 export type SessionFilter = {
@@ -34,7 +34,6 @@ export default function SessionList() {
 	const [filter, setFilter] = useState<SessionFilter>(initialFilters);
 	const t = useTranslations("Sessions");
 	const tc = useTranslations("Common");
-	const tf = useTranslations("Forms");
 	const [page, setPage] = useState(1);
 	const [limit, setLimit] = useState(10);
 
@@ -51,22 +50,18 @@ export default function SessionList() {
 		data: sessions,
 		meta,
 		isLoading,
-		mutate,
-	} = useTableData("/sessions", {
+	} = useSessions({
 		page,
 		limit,
 		search: filter.search,
 	});
 
-	const serializedSessions = sessions?.map((session: any) => new SessionModel(session));
-
 	const confirmDelete = async (id: string) => {
 		setSessionToDelete(id);
 		setIsDeleting(true);
 		try {
-			await axios.delete(`/sessions/${id}`);
+			await deleteSession(id);
 			toast.success("Session deleted successfully");
-			mutate();
 		} catch (err: any) {
 			toast.error("Failed to delete the session. Please try again.");
 		} finally {
@@ -80,9 +75,8 @@ export default function SessionList() {
 		setIsChangingStatus(true);
 		try {
 			const status = newStatus ? "ACTIVE" : "INACTIVE";
-			await axios.patch(`/sessions/${session.id}`, { status });
+			await updateSession(session.id, { status });
 			toast.success(`Status updated to ${status}`);
-			mutate();
 		} catch (err: any) {
 			toast.error("Failed to update status.");
 		} finally {
@@ -110,6 +104,7 @@ export default function SessionList() {
 			header: t("status"),
 			cell: ({ row }) => {
 				const session = row.original;
+				const isActive = session.status === StatusEnum.ACTIVE;
 				return (
 					<div className="flex items-center gap-2">
 						<PermissionGuard
@@ -124,12 +119,12 @@ export default function SessionList() {
 								onConfirm={() =>
 									confirmStatusChange(
 										session,
-										session.status !== StatusEnum.ACTIVE
+										!isActive
 									)
 								}
 								title={t("statusChangeTitle")}
 								description={
-									session.status === StatusEnum.ACTIVE
+									isActive
 										? tc("changeToInactiveDesc")
 										: tc("changeToActiveDesc")
 								}
@@ -140,19 +135,15 @@ export default function SessionList() {
 								}
 							>
 								<AlertDialogTrigger asChild>
-									<Switch checked={session.status === StatusEnum.ACTIVE} />
+									<div className="group flex w-fit cursor-pointer items-center gap-2">
+										<Switch checked={isActive} className="pointer-events-none" />
+										<span className="text-sm capitalize">
+											{isActive ? "Active" : "Inactive"}
+										</span>
+									</div>
 								</AlertDialogTrigger>
 							</ConfirmationModal>
 						</PermissionGuard>
-						<div
-							className={`w-fit rounded-full px-2.5 py-1 text-xs font-medium ${
-								session.status === StatusEnum.ACTIVE
-									? "bg-green-100 text-green-800"
-									: "bg-red-100 text-red-800"
-							}`}
-						>
-							{session.status}
-						</div>
 					</div>
 				);
 			},
@@ -196,9 +187,11 @@ export default function SessionList() {
 								variant="destructive"
 								isLoading={isDeleting && sessionToDelete === session.id}
 							>
-								<AlertDialogTrigger asChild><Button variant="destructive" size="icon-sm">
-											<Trash2 />
-										</Button></AlertDialogTrigger>
+								<AlertDialogTrigger asChild>
+									<Button variant="destructive" size="icon-sm">
+										<Trash2 />
+									</Button>
+								</AlertDialogTrigger>
 							</ConfirmationModal>
 						</PermissionGuard>
 					</div>
@@ -214,55 +207,50 @@ export default function SessionList() {
 	};
 
 	return (
-		<>
-			<Card className="p-6 shadow-none ring-0">
-				<CardContent className="space-y-4 p-0">
-					<TableFilter
-						filter={filter}
-						setFilter={setFilter}
-						resetFilters={resetFilters}
-						hideExport={
-							!hasAccess(user, [
-								PERMISSIONS.ACADEMICS.SESSIONS.EXPORT,
-								PERMISSIONS.ACADEMICS.ALL,
-							])
-						}
-					/>
+		<Card className="p-6 shadow-none ring-0">
+			<CardHeader className="p-0">
+				<SessionFilterBar filter={filter} setFilter={setFilter}>
+					<SessionCreate />
+				</SessionFilterBar>
+			</CardHeader>
 
-					<DataTable<SessionModel>
-						data={serializedSessions || []}
-						isLoading={isLoading}
-						pagination={{
-							page: meta.page,
-							limit: meta.limit,
-							total: meta.total,
-							totalPages: meta.totalPages,
-							onPageChange: setPage,
-							onLimitChange: setLimit,
-						}}
-						columns={columns}
-					/>
-				</CardContent>
-			</Card>
+			<CardContent className="space-y-4 p-0">
+				<TableFilter
+					filter={filter}
+					setFilter={setFilter}
+					resetFilters={resetFilters}
+					hideExport={
+						!hasAccess(user, [
+							PERMISSIONS.ACADEMICS.SESSIONS.EXPORT,
+							PERMISSIONS.ACADEMICS.ALL,
+						])
+					}
+				/>
 
-			<Dialog
-				open={!!editingSession}
-				onOpenChange={(open) => !open && setEditingSession(null)}
-			>
-				<DialogContent className="px-0">
-					<DialogHeader className="px-6">
-						<DialogTitle>{t("editSession")}</DialogTitle>
-					</DialogHeader>
-					<ScrollArea className="max-h-[80vh] px-4">
-						{editingSession && (
-							<SessionForm
-								initialData={editingSession as any}
-								onSuccess={() => setEditingSession(null)}
-							/>
-						)}
-					</ScrollArea>
-				</DialogContent>
-			</Dialog>
-		</>
+				<DataTable<SessionModel>
+					data={sessions || []}
+					isLoading={isLoading}
+					pagination={
+						meta
+							? {
+									page: meta.page,
+									limit: meta.limit,
+									total: meta.total,
+									totalPages: meta.totalPages,
+									onPageChange: setPage,
+									onLimitChange: setLimit,
+								}
+							: undefined
+					}
+					columns={columns}
+				/>
+			</CardContent>
+
+			<SessionForm
+				isOpen={!!editingSession}
+				initialData={editingSession}
+				onClose={() => setEditingSession(null)}
+			/>
+		</Card>
 	);
 }

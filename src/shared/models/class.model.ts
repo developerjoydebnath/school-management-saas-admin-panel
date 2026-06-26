@@ -1,18 +1,19 @@
 import { StatusEnum } from "../types/enums";
 
 export interface Section {
+	id?: string;
 	name: string;
-	capacity: number;
-	roomNumber: string;
-	shift: string;
+	classRoomId?: string;
+	classRoom?: any;
+	shiftId?: string;
+	shift?: string | { id: string; name: string };
 }
 
 export class ClassModel {
 	private _id: string;
 	private _name: string | { en: string; bn: string };
 	private _sections: Section[];
-	private _capacity?: number;
-	private _roomNumber?: string;
+	private _classRoom?: any;
 	private _shift?: string;
 	private _status: StatusEnum;
 	private _createdAt: Date;
@@ -21,11 +22,15 @@ export class ClassModel {
 
 	constructor(data: any = {}) {
 		this._id = data.id || "";
-		this._name = data.name || "";
+		this._name =
+			data.name ||
+			{
+				en: data.enName || "",
+				bn: data.bnName || "",
+			};
 		this._sections = data.sections || [];
-		this._capacity = data.capacity;
-		this._roomNumber = data.roomNumber;
-		this._shift = data.shift;
+		this._classRoom = data.classRoom;
+		this._shift = data.shift?.name || data.shift || data.shiftId;
 		this._status = (data.status?.toUpperCase() as StatusEnum) || StatusEnum.ACTIVE;
 		this._createdAt = data.createdAt || new Date();
 		this._updatedAt = data.updatedAt || new Date();
@@ -44,12 +49,8 @@ export class ClassModel {
 		return this._sections;
 	}
 
-	get capacity(): number | undefined {
-		return this._capacity;
-	}
-
-	get roomNumber(): string | undefined {
-		return this._roomNumber;
+	get classRoom(): any {
+		return this._classRoom;
 	}
 
 	get shift(): string | undefined {

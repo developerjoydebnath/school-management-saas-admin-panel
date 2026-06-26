@@ -123,7 +123,7 @@ export function EditColumnDialog({
 							className="text-red-500 hover:bg-red-50 hover:text-red-600"
 							onClick={() => column && onDelete(column.id)}
 						>
-							<Trash2 className="mr-2 size-4" /> {t("deleteColumn")}
+							<Trash2 className="size-4" /> {t("deleteColumn")}
 						</Button>
 					)}
 					<div className="ml-auto flex gap-2">

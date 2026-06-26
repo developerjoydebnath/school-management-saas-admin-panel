@@ -36,6 +36,12 @@ export const PATHS = {
 			EDIT: (id: number | string) => `/schools-management/bank-accounts/${id}/edit`,
 			DETAILS: (id: number | string) => `/schools-management/bank-accounts/${id}/details`,
 		},
+		PAYMENTS: {
+			ROOT: "/schools-management/payments",
+			CREATE: "/schools-management/payments/create",
+			EDIT: (id: number | string) => `/schools-management/payments/${id}/edit`,
+			DETAILS: (id: number | string) => `/schools-management/payments/${id}/details`,
+		},
 	},
 	ACADEMICS: {
 		ROOT: "/academics",
@@ -44,6 +50,12 @@ export const PATHS = {
 			CREATE: "/academics/classes/create",
 			EDIT: (id: number | string) => `/academics/classes/${id}/edit`,
 			DETAILS: (id: number | string) => `/academics/classes/${id}/details`,
+		},
+		CLASS_ROOMS: {
+			ROOT: "/academics/class-rooms",
+			CREATE: "/academics/class-rooms/create",
+			EDIT: (id: number | string) => `/academics/class-rooms/${id}/edit`,
+			DETAILS: (id: number | string) => `/academics/class-rooms/${id}/details`,
 		},
 		SUBJECTS: {
 			ROOT: "/academics/subjects",

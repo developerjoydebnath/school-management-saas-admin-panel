@@ -19,9 +19,10 @@ export default function NumberInput({
       type="number"
       {...(props.min ? { min: props.min } : { min: 1 })}
       {...(props.max ? { max: props.max } : {})}
-      onChange={(e) =>
-        onChange(Math.max(+e.target.value, Number(props.min || 0)))
-      }
+      onChange={(e) => {
+        const val = e.target.value;
+        onChange(val === "" ? ("" as any) : Number(val));
+      }}
       value={value ?? ""}
       className={cn(
         "focus:border-primary focus:ring-primary w-full rounded-md px-3 py-2 h-10",

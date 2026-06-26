@@ -2,6 +2,15 @@ export enum SubjectTypeEnum {
 	MANDATORY = "MANDATORY",
 	OPTIONAL = "OPTIONAL",
 	PRACTICAL = "PRACTICAL",
+	FOURTH_SUBJECT = "FOURTH_SUBJECT",
+	RELIGION = "RELIGION",
+	GROUP_BASED = "GROUP_BASED",
+}
+
+export enum SubjectMarkDivisionEnum {
+	WRITTEN = "WRITTEN",
+	WRITTEN_MCQ = "WRITTEN_MCQ",
+	WRITTEN_MCQ_PRACTICAL = "WRITTEN_MCQ_PRACTICAL",
 }
 
 export enum StatusEnum {
@@ -19,4 +28,3 @@ export enum BaseRoleEnum {
 	PARENT = "PARENT",
 	USER = "USER",
 }
-

@@ -2,7 +2,7 @@ import axios from "@/shared/lib/axios";
 import { mutate } from "swr";
 import { SchoolBankAccount } from "../models/SchoolBankAccount";
 
-const BASE_URL = "/school-bank-accounts";
+const BASE_URL = "/superadmin/school-bank-accounts";
 
 export async function createSchoolBankAccount(payload: any): Promise<SchoolBankAccount> {
     const response = await axios.post(BASE_URL, payload);

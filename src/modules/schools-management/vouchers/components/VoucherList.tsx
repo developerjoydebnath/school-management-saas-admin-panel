@@ -28,12 +28,16 @@ export type VoucherFilter = {
 	search: string;
 	isActive: string[];
 	discountType: string[];
+	createdFrom: string;
+	createdTo: string;
 };
 
 const initialFilters: VoucherFilter = {
 	search: "",
 	isActive: [],
 	discountType: [],
+	createdFrom: "",
+	createdTo: "",
 };
 
 export function VoucherList() {
@@ -55,6 +59,8 @@ export function VoucherList() {
 		search: filter.search,
 		isActive: filter.isActive,
 		discountType: filter.discountType,
+		createdFrom: filter.createdFrom,
+		createdTo: filter.createdTo,
 	});
 
 	const [itemToDelete, setItemToDelete] = useState<string | null>(null);
@@ -125,24 +131,32 @@ export function VoucherList() {
 			cell: ({ row }) => {
 				const isActive = row.original.isActive;
 				return (
-					<ConfirmationModal
-						onConfirm={() => handleStatusToggle(row.original.id, row.original.isActive)}
-						title={t("confirmStatusChange")}
-						description={
-							isActive ? tc("changeToInactiveDesc") : tc("changeToActiveDesc")
-						}
-						confirmText={tc("changeStatus")}
-						variant="default"
+					<PermissionGuard
+						permissions={[
+							PERMISSIONS.SCHOOLS_MANAGEMENT.ALL,
+							PERMISSIONS.SCHOOLS_MANAGEMENT.VOUCHERS.ALL,
+							PERMISSIONS.SCHOOLS_MANAGEMENT.VOUCHERS.EDIT,
+						]}
 					>
-						<AlertDialogTrigger asChild>
-							<div className="group flex w-fit cursor-pointer items-center gap-2">
-								<Switch checked={isActive} className="pointer-events-none" />
-								<span className="text-sm capitalize">
-									{isActive ? "Active" : "Inactive"}
-								</span>
-							</div>
-						</AlertDialogTrigger>
-					</ConfirmationModal>
+						<ConfirmationModal
+							onConfirm={() => handleStatusToggle(row.original.id, row.original.isActive)}
+							title={t("confirmStatusChange")}
+							description={
+								isActive ? tc("changeToInactiveDesc") : tc("changeToActiveDesc")
+							}
+							confirmText={tc("changeStatus")}
+							variant="default"
+						>
+							<AlertDialogTrigger asChild>
+								<div className="group flex w-fit cursor-pointer items-center gap-2">
+									<Switch checked={isActive} className="pointer-events-none" />
+									<span className="text-sm capitalize">
+										{isActive ? "Active" : "Inactive"}
+									</span>
+								</div>
+							</AlertDialogTrigger>
+						</ConfirmationModal>
+					</PermissionGuard>
 				);
 			},
 		},
@@ -155,7 +169,11 @@ export function VoucherList() {
 					<div className="flex items-center gap-2">
 						<VoucherDetailsDialog voucherId={voucher.id} />
 						<PermissionGuard
-							permissions={[PERMISSIONS.SCHOOLS_MANAGEMENT.VOUCHERS.EDIT]}
+							permissions={[
+								PERMISSIONS.SCHOOLS_MANAGEMENT.ALL,
+								PERMISSIONS.SCHOOLS_MANAGEMENT.VOUCHERS.ALL,
+								PERMISSIONS.SCHOOLS_MANAGEMENT.VOUCHERS.EDIT,
+							]}
 						>
 							<Button asChild variant="outline" size="icon">
 								<Link href={PATHS.SCHOOLS_MANAGEMENT.VOUCHERS.EDIT(voucher.id)}>
@@ -164,7 +182,11 @@ export function VoucherList() {
 							</Button>
 						</PermissionGuard>
 						<PermissionGuard
-							permissions={[PERMISSIONS.SCHOOLS_MANAGEMENT.VOUCHERS.DELETE]}
+							permissions={[
+								PERMISSIONS.SCHOOLS_MANAGEMENT.ALL,
+								PERMISSIONS.SCHOOLS_MANAGEMENT.VOUCHERS.ALL,
+								PERMISSIONS.SCHOOLS_MANAGEMENT.VOUCHERS.DELETE,
+							]}
 						>
 							<ConfirmationModal
 								onConfirm={() => confirmDelete(voucher.id)}

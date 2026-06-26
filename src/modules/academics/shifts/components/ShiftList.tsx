@@ -6,20 +6,22 @@ import DataTable from "@/shared/components/table/DataTable";
 import TableFilter from "@/shared/components/table/TableFilter";
 import { AlertDialogTrigger } from "@/shared/components/ui/alert-dialog";
 import { Button } from "@/shared/components/ui/button";
-import { Card, CardContent } from "@/shared/components/ui/card";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/shared/components/ui/dialog";
-import { ScrollArea } from "@/shared/components/ui/scroll-area";
+import { Card, CardContent, CardHeader } from "@/shared/components/ui/card";
 import { Switch } from "@/shared/components/ui/switch";
 import { PERMISSIONS } from "@/shared/configs/permissions.config";
-import { useTableData } from "@/shared/hooks/use-table-data";
-import axios from "@/shared/lib/axios";
 import { ShiftModel } from "@/shared/models/shift.model";
+import { useAuthStore } from "@/shared/stores/authStore";
 import { StatusEnum } from "@/shared/types/enums";
+import { hasAccess } from "@/shared/utils/permission";
 import { ColumnDef } from "@tanstack/react-table";
 import { Pencil, Trash2 } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useState } from "react";
 import { toast } from "sonner";
+import { deleteShift, updateShift } from "../hooks/use-shift-mutations";
+import { useShifts } from "../hooks/use-shifts";
+import { ShiftCreate } from "./ShiftCreate";
+import ShiftFilterBar from "./ShiftFilterBar";
 import ShiftForm from "./ShiftForm";
 
 export type ShiftFilter = {
@@ -42,27 +44,24 @@ export default function ShiftList() {
 	const [shiftToChangeStatus, setShiftToChangeStatus] = useState<ShiftModel | null>(null);
 	const [isChangingStatus, setIsChangingStatus] = useState(false);
 
+	const { user } = useAuthStore((state) => state.auth);
+
 	const {
 		data: shifts,
 		meta,
 		isLoading,
-		mutate,
-	} = useTableData("/shifts", {
-		// page,
-		// limit,
-		// search: filter.search
+	} = useShifts({
+		page,
+		limit,
+		search: filter.search,
 	});
-
-	// serialize the data
-	const serializedShifts = shifts?.map((shift: any) => new ShiftModel(shift));
 
 	const confirmDelete = async (id: string) => {
 		setShiftToDelete(id);
 		setIsDeleting(true);
 		try {
-			await axios.delete(`/shifts/${id}`);
+			await deleteShift(id);
 			toast.success("Shift deleted successfully");
-			mutate();
 		} catch (err: any) {
 			toast.error("Failed to delete the shift. Please try again.");
 		} finally {
@@ -75,10 +74,9 @@ export default function ShiftList() {
 		setShiftToChangeStatus(shift);
 		setIsChangingStatus(true);
 		try {
-			const status = newStatus ? "Active" : "Inactive";
-			await axios.patch(`/shifts/${shift.id}`, { status });
+			const status = newStatus ? "ACTIVE" : "INACTIVE";
+			await updateShift(shift.id, { status });
 			toast.success(`Status updated to ${status}`);
-			mutate();
 		} catch (err: any) {
 			toast.error("Failed to update status.");
 		} finally {
@@ -98,13 +96,13 @@ export default function ShiftList() {
 			id: "startTime",
 			accessorKey: "startTime",
 			header: t("shiftStartTime"),
-			cell: ({ row }) => row.original.startTime || "-",
+			cell: ({ row }) => <span className="font-medium">{row.original.startTime}</span>,
 		},
 		{
 			id: "endTime",
 			accessorKey: "endTime",
 			header: t("shiftEndTime"),
-			cell: ({ row }) => row.original.endTime || "-",
+			cell: ({ row }) => <span className="font-medium">{row.original.endTime}</span>,
 		},
 		{
 			id: "status",
@@ -112,35 +110,41 @@ export default function ShiftList() {
 			header: t("status"),
 			cell: ({ row }) => {
 				const shift = row.original;
+				const isActive = shift.status === StatusEnum.ACTIVE;
 				return (
 					<div className="flex items-center gap-2">
-						<ConfirmationModal
-							onConfirm={() =>
-								confirmStatusChange(shift, shift.status !== StatusEnum.ACTIVE)
+						<PermissionGuard
+							permissions={
+								[
+									PERMISSIONS.ACADEMICS.SHIFTS.EDIT,
+									PERMISSIONS.ACADEMICS.ALL,
+								].filter(Boolean) as string[]
 							}
-							title={t("statusChangeTitle")}
-							description={
-								shift.status === StatusEnum.ACTIVE
-									? tc("changeToInactiveDesc")
-									: tc("changeToActiveDesc")
-							}
-							confirmText={tc("changeStatus")}
-							variant="default"
-							isLoading={isChangingStatus && shiftToChangeStatus?.id === shift.id}
 						>
-							<AlertDialogTrigger asChild>
-								<Switch checked={shift.status === StatusEnum.ACTIVE} />
-							</AlertDialogTrigger>
-						</ConfirmationModal>
-						<div
-							className={`w-fit rounded-full px-2.5 py-1 text-xs font-medium ${
-								shift.status === StatusEnum.ACTIVE
-									? "bg-green-100 text-green-800"
-									: "bg-red-100 text-red-800"
-							}`}
-						>
-							{shift.status}
-						</div>
+							<ConfirmationModal
+								onConfirm={() => confirmStatusChange(shift, !isActive)}
+								title={t("statusChangeTitle")}
+								description={
+									isActive
+										? tc("changeToInactiveDesc")
+										: tc("changeToActiveDesc")
+								}
+								confirmText={tc("changeStatus")}
+								variant="default"
+								isLoading={
+									isChangingStatus && shiftToChangeStatus?.id === shift.id
+								}
+							>
+								<AlertDialogTrigger asChild>
+									<div className="group flex w-fit cursor-pointer items-center gap-2">
+										<Switch checked={isActive} className="pointer-events-none" />
+										<span className="text-sm capitalize">
+											{isActive ? "Active" : "Inactive"}
+										</span>
+									</div>
+								</AlertDialogTrigger>
+							</ConfirmationModal>
+						</PermissionGuard>
 					</div>
 				);
 			},
@@ -155,9 +159,8 @@ export default function ShiftList() {
 						<PermissionGuard
 							permissions={
 								[
+									PERMISSIONS.ACADEMICS.SHIFTS.EDIT,
 									PERMISSIONS.ACADEMICS.ALL,
-									PERMISSIONS.ACADEMICS.SHIFTS?.ALL,
-									PERMISSIONS.ACADEMICS.SHIFTS?.EDIT,
 								].filter(Boolean) as string[]
 							}
 						>
@@ -172,9 +175,8 @@ export default function ShiftList() {
 						<PermissionGuard
 							permissions={
 								[
+									PERMISSIONS.ACADEMICS.SHIFTS.DELETE,
 									PERMISSIONS.ACADEMICS.ALL,
-									PERMISSIONS.ACADEMICS.SHIFTS?.ALL,
-									PERMISSIONS.ACADEMICS.SHIFTS?.DELETE,
 								].filter(Boolean) as string[]
 							}
 						>
@@ -199,7 +201,6 @@ export default function ShiftList() {
 		},
 	];
 
-	// reset filters
 	const resetFilters = () => {
 		setFilter(initialFilters);
 		setPage(1);
@@ -207,46 +208,50 @@ export default function ShiftList() {
 	};
 
 	return (
-		<>
-			<Card className="p-6 shadow-none ring-0">
-				<CardContent className="space-y-4 p-0">
-					<TableFilter
-						filter={filter}
-						setFilter={setFilter}
-						resetFilters={resetFilters}
-					/>
+		<Card className="p-6 shadow-none ring-0">
+			<CardHeader className="p-0">
+				<ShiftFilterBar filter={filter} setFilter={setFilter}>
+					<ShiftCreate />
+				</ShiftFilterBar>
+			</CardHeader>
 
-					<DataTable<ShiftModel>
-						data={serializedShifts || []}
-						isLoading={isLoading}
-						pagination={{
-							page: meta.page,
-							limit: meta.limit,
-							total: meta.total,
-							totalPages: meta.totalPages,
-							onPageChange: setPage,
-							onLimitChange: setLimit,
-						}}
-						columns={columns}
-					/>
-				</CardContent>
-			</Card>
+			<CardContent className="space-y-4 p-0">
+				<TableFilter
+					filter={filter}
+					setFilter={setFilter}
+					resetFilters={resetFilters}
+					hideExport={
+						!hasAccess(user, [
+							PERMISSIONS.ACADEMICS.SHIFTS.ALL,
+							PERMISSIONS.ACADEMICS.ALL,
+						])
+					}
+				/>
 
-			<Dialog open={!!editingShift} onOpenChange={(open) => !open && setEditingShift(null)}>
-				<DialogContent className="px-0">
-					<DialogHeader className="px-6">
-						<DialogTitle>Edit Shift</DialogTitle>
-					</DialogHeader>
-					<ScrollArea className="max-h-[80vh] px-4">
-						{editingShift && (
-							<ShiftForm
-								initialData={editingShift}
-								onSuccess={() => setEditingShift(null)}
-							/>
-						)}
-					</ScrollArea>
-				</DialogContent>
-			</Dialog>
-		</>
+				<DataTable<ShiftModel>
+					data={shifts || []}
+					isLoading={isLoading}
+					pagination={
+						meta
+							? {
+									page: meta.page,
+									limit: meta.limit,
+									total: meta.total,
+									totalPages: meta.totalPages,
+									onPageChange: setPage,
+									onLimitChange: setLimit,
+								}
+							: undefined
+					}
+					columns={columns}
+				/>
+			</CardContent>
+
+			<ShiftForm
+				isOpen={!!editingShift}
+				initialData={editingShift}
+				onClose={() => setEditingShift(null)}
+			/>
+		</Card>
 	);
 }

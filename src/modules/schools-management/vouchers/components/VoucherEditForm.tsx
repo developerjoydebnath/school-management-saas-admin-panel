@@ -3,15 +3,14 @@
 import InputField from "@/shared/components/form/InputField";
 import { Button } from "@/shared/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/shared/components/ui/card";
-import { Separator } from "@/shared/components/ui/separator";
 import { PATHS } from "@/shared/configs/paths.config";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useTranslations } from "next-intl";
 import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
-import { VoucherFormValues, voucherSchema } from "../dto/voucher.dto";
+import { discountTypeEnum, VoucherFormValues, voucherSchema } from "../dto/voucher.dto";
 import { updateVoucher } from "../hooks/use-voucher-mutations";
 import { VoucherModel } from "../../models/voucher.model";
 
@@ -33,7 +32,7 @@ export function VoucherEditForm({ voucher }: { voucher: VoucherModel }) {
 			code: voucher.code,
 			name: voucher.name,
 			description: voucher.description,
-			discountType: voucher.discountType,
+			discountType: voucher.discountType as discountTypeEnum,
 			discountValue: voucher.discountValue,
 			maxDiscountBdt: voucher.maxDiscountBdt,
 			maxRedemptions: voucher.maxRedemptions,
@@ -79,7 +78,7 @@ export function VoucherEditForm({ voucher }: { voucher: VoucherModel }) {
 	};
 
 	return (
-		<form onSubmit={form.handleSubmit(onSubmit)} className="mx-auto max-w-5xl space-y-6">
+		<form onSubmit={form.handleSubmit(onSubmit)} className="mx-auto max-w-7xl space-y-6">
 			{/* Basic Information */}
 			<Card className="gap-0 shadow-none ring-0">
 				<CardHeader className="pb-4">
@@ -125,7 +124,7 @@ export function VoucherEditForm({ voucher }: { voucher: VoucherModel }) {
 							control={form.control}
 							name="discountType"
 							label="Discount Type"
-							type="native_select"
+							type="select"
 							options={DISCOUNT_TYPE_OPTIONS}
 							required
 						/>
@@ -228,10 +227,8 @@ export function VoucherEditForm({ voucher }: { voucher: VoucherModel }) {
 				</CardContent>
 			</Card>
 
-			<Separator />
-
 			{/* Form Actions */}
-			<div className="flex justify-end gap-3">
+			<div className="bg-background/80 sticky bottom-4 z-10 flex items-center justify-end gap-3 rounded-lg border p-4 shadow-sm backdrop-blur-md">
 				<Button
 					variant="outline"
 					type="button"

@@ -40,6 +40,13 @@ export const PERMISSIONS = {
 			EDIT: "schools_management.bank_accounts.edit",
 			DELETE: "schools_management.bank_accounts.delete",
 		},
+		PAYMENTS: {
+			ALL: "schools_management.payments.all",
+			VIEW: "schools_management.payments.view",
+			CREATE: "schools_management.payments.create",
+			EDIT: "schools_management.payments.edit",
+			DELETE: "schools_management.payments.delete",
+		},
 	},
 	ACADEMICS: {
 		VIEW: "academics.view",
@@ -50,6 +57,13 @@ export const PERMISSIONS = {
 			CREATE: "academics.classes.create",
 			EDIT: "academics.classes.edit",
 			DELETE: "academics.classes.delete",
+		},
+		CLASS_ROOMS: {
+			ALL: "academics.class_rooms.all",
+			VIEW: "academics.class_rooms.view",
+			CREATE: "academics.class_rooms.create",
+			EDIT: "academics.class_rooms.edit",
+			DELETE: "academics.class_rooms.delete",
 		},
 		SUBJECTS: {
 			ALL: "academics.subjects.all",

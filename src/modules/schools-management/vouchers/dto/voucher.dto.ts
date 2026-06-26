@@ -1,10 +1,15 @@
 import { z } from "zod";
 
+export enum discountTypeEnum {
+	PERCENTAGE = "percentage",
+	FIXED_AMOUNT = "fixed_amount",
+}
+
 export const voucherSchema = z.object({
 	code: z.string().min(1, "Voucher code is required").max(50),
 	name: z.string().min(1, "Name is required").max(100),
 	description: z.string().optional().nullable(),
-	discountType: z.enum(["percentage", "fixed_amount"]),
+	discountType: z.enum(discountTypeEnum),
 	discountValue: z.coerce.number().min(0, "Must be positive"),
 	maxDiscountBdt: z.coerce.number().min(0).optional().nullable(),
 	maxRedemptions: z.coerce.number().int().min(1).optional().nullable(),

@@ -141,7 +141,7 @@ export default function PortalSettingsTab({ config, onUpdate }: PortalSettingsTa
 
 			<div className="flex justify-end">
 				<Button onClick={handleSave} disabled={isSaving}>
-					<Save className="mr-2 h-4 w-4" />
+					<Save className="h-4 w-4" />
 					{isSaving ? "Saving..." : "Save Settings"}
 				</Button>
 			</div>

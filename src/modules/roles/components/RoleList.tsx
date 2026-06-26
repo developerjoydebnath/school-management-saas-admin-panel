@@ -122,7 +122,13 @@ export function RoleList() {
 				return (
 					<div className="flex items-center gap-2">
 						<RoleDetailsDialog roleId={role.id} />
-						<PermissionGuard permissions={[PERMISSIONS.ROLES.MANAGEMENT.EDIT]}>
+						<PermissionGuard
+							permissions={[
+								PERMISSIONS.ROLES.ALL,
+								PERMISSIONS.ROLES.MANAGEMENT.ALL,
+								PERMISSIONS.ROLES.MANAGEMENT.EDIT,
+							]}
+						>
 							<Button
 								variant="outline"
 								size="icon"
@@ -135,7 +141,13 @@ export function RoleList() {
 								<Edit2 className="text-muted-foreground hover:text-foreground h-4 w-4" />
 							</Button>
 						</PermissionGuard>
-						<PermissionGuard permissions={[PERMISSIONS.ROLES.MANAGEMENT.DELETE]}>
+						<PermissionGuard
+							permissions={[
+								PERMISSIONS.ROLES.ALL,
+								PERMISSIONS.ROLES.MANAGEMENT.ALL,
+								PERMISSIONS.ROLES.MANAGEMENT.DELETE,
+							]}
+						>
 							{role.isSystem ? (
 								<Button variant="outline" size="icon" disabled>
 									<Trash2 className="h-4 w-4 text-red-500 opacity-50" />

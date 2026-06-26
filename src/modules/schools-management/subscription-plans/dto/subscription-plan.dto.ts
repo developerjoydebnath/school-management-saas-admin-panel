@@ -1,11 +1,20 @@
 import { z } from "zod";
 
+export enum billingCycleEnum {
+	MONTHLY = "monthly",
+	QUARTERLY = "quarterly",
+	SEMI_ANNUAL = "semi_annual",
+	ANNUAL = "annual",
+	LIFETIME = "lifetime",
+	CUSTOM = "custom",
+}
+
 export const subscriptionPlanSchema = z.object({
 	name: z.string().min(1, "Plan name is required"),
 	tagline: z.string().optional(),
 	description: z.string().optional(),
 	priceBdt: z.coerce.number().min(0, "Price must be 0 or more"),
-	billingCycle: z.enum(["monthly", "quarterly", "semi_annual", "annual", "lifetime", "custom"]),
+	billingCycle: z.enum(billingCycleEnum),
 	setupFeeBdt: z.coerce.number().min(0),
 	trialDays: z.coerce.number().int().min(0),
 	gracePeriodDays: z.coerce.number().int().min(0),

@@ -7,9 +7,9 @@ import {
 	FilterMobileWrapper,
 	FilterTriggerButton,
 } from "@/shared/components/custom/Filter";
+import DateRangeFilter from "@/shared/components/form/DateRangeFilter";
 import FilterButton from "@/shared/components/form/FilterButton";
 import { IconFilter } from "@tabler/icons-react";
-import { useTranslations } from "next-intl";
 import React from "react";
 import { SubscriptionPlanFilter } from "./SubscriptionPlanList";
 
@@ -20,8 +20,6 @@ type Props = {
 };
 
 export default function SubscriptionPlanFilterBar({ children, filter, setFilter }: Props) {
-	const t = useTranslations("SubscriptionPlansPage");
-
 	const statusOptions = [
 		{ label: "Active", value: "true" },
 		{ label: "Inactive", value: "false" },
@@ -64,6 +62,14 @@ export default function SubscriptionPlanFilterBar({ children, filter, setFilter 
 				clearFilter={() => setFilter({ ...filter, billingCycle: [] })}
 				options={billingCycleOptions}
 			/>
+			<DateRangeFilter
+				title="Created Date"
+				from={filter.createdFrom}
+				to={filter.createdTo}
+				onChange={(value) =>
+					setFilter({ ...filter, createdFrom: value.from, createdTo: value.to })
+				}
+			/>
 		</>
 	);
 
@@ -78,7 +84,7 @@ export default function SubscriptionPlanFilterBar({ children, filter, setFilter 
 					<FilterTriggerButton className="w-fit">
 						<span className="flex items-center gap-2">
 							<IconFilter strokeWidth={1.5} className="size-4" />
-							<span>{t("filter")}</span>
+							<span>Filter</span>
 						</span>
 					</FilterTriggerButton>
 

@@ -24,8 +24,9 @@ export default function ClassSelect({
 	placeholder = "Select Class",
 	className,
 }: ClassSelectProps) {
-	const { data: classes, isLoading } = useSWR("/classes");
+	const { data: response, isLoading } = useSWR("/classes/active-list");
 	const locale = useLocale();
+	const classes = response?.data || response || [];
 
 	if (isLoading) return <Skeleton className="h-10 w-full" />;
 
@@ -43,7 +44,7 @@ export default function ClassSelect({
 					>
 						{typeof cls.name === "object"
 							? getLocalizedName(cls.name, locale)
-							: cls.name}
+							: cls.name || cls.enName}
 					</SelectItem>
 				))}
 			</SelectContent>

@@ -4,22 +4,33 @@ import { SESSION_FORM_FIELDS } from "@/modules/academics/sessions/constants/sess
 import { SessionFormValues, sessionSchema } from "@/modules/academics/sessions/dto/session.dto";
 import InputField from "@/shared/components/form/InputField";
 import { Button } from "@/shared/components/ui/button";
-import axios from "@/shared/lib/axios";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/shared/components/ui/dialog";
+import { ScrollArea } from "@/shared/components/ui/scroll-area";
+import { SessionModel } from "@/shared/models/session.model";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useTranslations } from "next-intl";
 import { useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
-import { useSWRConfig } from "swr";
 import { z } from "zod";
+import { createSession, updateSession } from "../hooks/use-session-mutations";
 
 interface SessionFormProps {
+	isOpen: boolean;
+	onClose: () => void;
 	onSuccess?: () => void;
-	initialData?: SessionFormValues & { id?: string };
+	initialData?: SessionModel | null;
 }
 
-export default function SessionForm({ onSuccess, initialData }: SessionFormProps) {
-	const { mutate } = useSWRConfig();
+const normalizeSessionStatus = (status?: string) =>
+	status === "INACTIVE" ? "INACTIVE" : "ACTIVE";
+
+export default function SessionForm({
+	isOpen,
+	onClose,
+	onSuccess,
+	initialData,
+}: SessionFormProps) {
 	const t = useTranslations("Forms");
 	const ts = useTranslations("Sessions");
 
@@ -28,34 +39,42 @@ export default function SessionForm({ onSuccess, initialData }: SessionFormProps
 		defaultValues: {
 			name: initialData?.name || "",
 			year: initialData?.year || new Date().getFullYear(),
-			status: initialData?.status || "ACTIVE",
+			status: normalizeSessionStatus(initialData?.status),
 		},
 	});
 
 	useEffect(() => {
+		if (!isOpen) return;
+
 		if (initialData) {
 			form.reset({
 				name: initialData.name,
 				year: initialData.year,
-				status: initialData.status,
+				status: normalizeSessionStatus(initialData.status),
+			});
+		} else {
+			form.reset({
+				name: "",
+				year: new Date().getFullYear(),
+				status: "ACTIVE",
 			});
 		}
-	}, [initialData, form]);
+	}, [initialData, form, isOpen]);
 
 	const onSubmit = async (data: SessionFormValues) => {
 		try {
 			if (initialData?.id) {
-				await axios.patch(`/sessions/${initialData.id}`, data);
+				await updateSession(initialData.id, data);
 				toast.success("Session updated successfully");
 			} else {
-				await axios.post("/sessions", data);
+				await createSession(data);
 				toast.success("Session added successfully");
 			}
 			form.reset();
-			mutate((key: any) => typeof key === "string" && key.startsWith("/sessions"));
 			if (onSuccess) {
 				onSuccess();
 			}
+			onClose();
 		} catch (err: any) {
 			toast.error(
 				`An error occurred while ${initialData?.id ? "updating" : "adding"} the session. Please try again.`
@@ -64,35 +83,46 @@ export default function SessionForm({ onSuccess, initialData }: SessionFormProps
 	};
 
 	return (
-		<form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6 px-2">
-			{SESSION_FORM_FIELDS.map((field) => (
-				<InputField
-					key={field.name}
-					control={form.control}
-					{...(field as any)}
-					label={
-						field.name === "name"
-							? ts("sessionName")
-							: field.name === "year"
-								? ts("sessionYear")
-								: ts("status")
-					}
-				/>
-			))}
+		<Dialog open={isOpen} onOpenChange={onClose}>
+			<DialogContent className="px-0">
+				<DialogHeader className="px-6">
+					<DialogTitle>
+						{initialData ? ts("editSession") : ts("addSession")}
+					</DialogTitle>
+				</DialogHeader>
 
-			<Button
-				type="submit"
-				className="mt-4 h-10 w-full"
-				disabled={form.formState.isSubmitting}
-			>
-				{form.formState.isSubmitting
-					? initialData?.id
-						? t("updateLoading")
-						: t("saveLoading")
-					: initialData?.id
-						? t("update")
-						: t("save")}
-			</Button>
-		</form>
+				<ScrollArea className="max-h-[70vh] px-6">
+					<form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+						{SESSION_FORM_FIELDS.map((field) => (
+							<InputField
+								key={field.name}
+								control={form.control}
+								{...(field as any)}
+							/>
+						))}
+
+						<div className="flex justify-end gap-3 pt-2">
+							<Button
+								variant="outline"
+								type="button"
+								onClick={onClose}
+								disabled={form.formState.isSubmitting}
+							>
+								{t("cancel")}
+							</Button>
+							<Button type="submit" disabled={form.formState.isSubmitting}>
+								{form.formState.isSubmitting
+									? initialData?.id
+										? t("updateLoading")
+										: t("saveLoading")
+									: initialData?.id
+										? t("update")
+										: t("save")}
+							</Button>
+						</div>
+					</form>
+				</ScrollArea>
+			</DialogContent>
+		</Dialog>
 	);
 }
