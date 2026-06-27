@@ -1,6 +1,7 @@
 "use client";
 
 import { ScrollArea } from "@/shared/components/ui/scroll-area";
+import { Skeleton } from "@/shared/components/ui/skeleton";
 import {
 	SheetContent,
 	SheetDescription,
@@ -10,8 +11,14 @@ import {
 import { Subject } from "@/shared/models/subject.model";
 import { getLocalizedName } from "@/shared/utils/localization";
 import { useLocale, useTranslations } from "next-intl";
+import { useSubject } from "../hooks/use-subject";
 
 type Props = {
+	id: string;
+	open: boolean;
+};
+
+type SubjectContentProps = {
 	subject: Subject;
 };
 
@@ -33,7 +40,7 @@ function CompactPair({ label, value }: { label: string; value?: string | number 
 	);
 }
 
-function CompactClassChips({ subject }: Props) {
+function CompactClassChips({ subject }: SubjectContentProps) {
 	const names = classNames(subject);
 
 	return (
@@ -51,7 +58,7 @@ function CompactClassChips({ subject }: Props) {
 	);
 }
 
-function CompactMarkRows({ subject }: Props) {
+function CompactMarkRows({ subject }: SubjectContentProps) {
 	const rows = [
 		["Written", subject.writtenMarks, subject.writtenPassMarks],
 		["MCQ", subject.mcqMarks || "-", subject.mcqPassMarks || "-"],
@@ -59,14 +66,17 @@ function CompactMarkRows({ subject }: Props) {
 	];
 
 	return (
-		<div className="overflow-hidden rounded-md border">
-			<div className="grid grid-cols-3 bg-muted/40 px-3 py-2 text-xs">
+		<div className="overflow-hidden rounded-md border bg-popover">
+			<div className="grid grid-cols-3 border-b px-3 py-2 text-xs">
 				<span>Division</span>
 				<span>Marks</span>
 				<span>Pass Marks</span>
 			</div>
 			{rows.map(([label, marks, pass]) => (
-				<div key={label} className="grid grid-cols-3 border-t px-3 py-2 text-xs leading-5">
+				<div
+					key={label}
+					className="grid grid-cols-3 px-3 py-2 text-xs leading-5 transition-colors hover:bg-accent [&:not(:last-child)]:border-b"
+				>
 					<span>{label}</span>
 					<span>{marks}</span>
 					<span>{pass}</span>
@@ -76,9 +86,66 @@ function CompactMarkRows({ subject }: Props) {
 	);
 }
 
-export function SubjectDetailsSheet({ subject }: Props) {
+function SubjectDetailsSkeleton() {
+	return (
+		<div className="space-y-4 p-4">
+			{Array.from({ length: 3 }).map((_, sectionIndex) => (
+				<div key={sectionIndex} className="rounded-md border bg-muted/20 p-4">
+					<Skeleton className="h-4 w-36" />
+					<div className="mt-4 grid grid-cols-1 gap-x-4 gap-y-4 @xl/body:grid-cols-2">
+						{Array.from({ length: sectionIndex === 1 ? 3 : 4 }).map((__, itemIndex) => (
+							<div key={itemIndex} className="space-y-2">
+								<Skeleton className="h-3 w-24" />
+								<Skeleton className="h-4 w-32" />
+							</div>
+						))}
+					</div>
+				</div>
+			))}
+		</div>
+	);
+}
+
+export function SubjectDetailsSheet({ id, open }: Props) {
 	const locale = useLocale();
 	const t = useTranslations("Subjects");
+	const { data: subject, isLoading } = useSubject(open ? id : undefined);
+
+	const content = (() => {
+		if (isLoading || !subject) {
+			return <SubjectDetailsSkeleton />;
+		}
+
+		return (
+			<div className="space-y-4 p-4">
+				<div className="rounded-md border bg-muted/20 p-4">
+					<h3 className="text-sm font-normal">{t("subjectInformation")}</h3>
+					<div className="mt-3 grid grid-cols-1 gap-x-4 gap-y-3 @xl/body:grid-cols-2">
+						<CompactPair label="Subject Name" value={getLocalizedName(subject.name, locale)} />
+						<CompactPair label="Status" value={formatLabel(subject.status)} />
+						<CompactPair label="Full / Pass" value={`${subject.fullMarks} / ${subject.passMarks}`} />
+						<CompactPair label="Classes" value={subject.classes.length} />
+						<CompactPair label="Internal Code" value={subject.code} />
+						<CompactPair label="Board Code" value={subject.boardCode} />
+						<CompactPair label="Type" value={formatLabel(subject.type)} />
+						<CompactPair label="Group" value={formatLabel(subject.group)} />
+					</div>
+				</div>
+				<div className="rounded-md border bg-muted/20 p-4">
+					<h3 className="text-sm font-normal">{t("markDivisions")}</h3>
+					<div className="mt-3">
+						<CompactMarkRows subject={subject} />
+					</div>
+				</div>
+				<div className="rounded-md border bg-muted/20 p-4">
+					<h3 className="text-sm font-normal">{t("assignedClasses")}</h3>
+					<div className="mt-3">
+						<CompactClassChips subject={subject} />
+					</div>
+				</div>
+			</div>
+		);
+	})();
 
 	return (
 		<SheetContent className="w-full gap-0 p-0 sm:max-w-none @3xl/body:w-[64vw] @5xl/body:w-[54vw]">
@@ -87,33 +154,7 @@ export function SubjectDetailsSheet({ subject }: Props) {
 				<SheetDescription className="text-xs">{t("detailsSheetDescription")}</SheetDescription>
 			</SheetHeader>
 			<ScrollArea className="h-[calc(100vh-73px)]">
-				<div className="space-y-4 p-4">
-					<div className="rounded-md border p-4">
-						<h3 className="text-sm font-normal">{t("subjectInformation")}</h3>
-						<div className="mt-3 grid grid-cols-1 gap-x-4 gap-y-3 @xl/body:grid-cols-2">
-							<CompactPair label="Subject Name" value={getLocalizedName(subject.name, locale)} />
-							<CompactPair label="Status" value={formatLabel(subject.status)} />
-							<CompactPair label="Full / Pass" value={`${subject.fullMarks} / ${subject.passMarks}`} />
-							<CompactPair label="Classes" value={subject.classes.length} />
-							<CompactPair label="Internal Code" value={subject.code} />
-							<CompactPair label="Board Code" value={subject.boardCode} />
-							<CompactPair label="Type" value={formatLabel(subject.type)} />
-							<CompactPair label="Group" value={formatLabel(subject.group)} />
-						</div>
-					</div>
-					<div className="rounded-md border p-4">
-						<h3 className="text-sm font-normal">{t("markDivisions")}</h3>
-						<div className="mt-3">
-							<CompactMarkRows subject={subject} />
-						</div>
-					</div>
-					<div className="rounded-md border p-4">
-						<h3 className="text-sm font-normal">{t("assignedClasses")}</h3>
-						<div className="mt-3">
-							<CompactClassChips subject={subject} />
-						</div>
-					</div>
-				</div>
+				{content}
 			</ScrollArea>
 		</SheetContent>
 	);

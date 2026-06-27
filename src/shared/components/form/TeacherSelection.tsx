@@ -1,15 +1,22 @@
 import { Avatar, AvatarFallback } from "@/shared/components/ui/avatar";
+import { Button } from "@/shared/components/ui/button";
+import {
+	Command,
+	CommandEmpty,
+	CommandGroup,
+	CommandInput,
+	CommandItem,
+	CommandList,
+} from "@/shared/components/ui/command";
+import { Popover, PopoverContent, PopoverTrigger } from "@/shared/components/ui/popover";
 import { Skeleton } from "@/shared/components/ui/skeleton";
 import { useSWR } from "@/shared/hooks/use-swr";
 import { cn } from "@/shared/lib/utils";
 import { Teacher } from "@/shared/models/teacher.model";
-import { useLocale } from "next-intl";
 import { getLocalizedName } from "@/shared/utils/localization";
-import * as React from "react";
-import { Popover, PopoverContent, PopoverTrigger } from "@/shared/components/ui/popover";
-import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/shared/components/ui/command";
-import { Button } from "@/shared/components/ui/button";
 import { CheckIcon, ChevronDownIcon } from "lucide-react";
+import { useLocale } from "next-intl";
+import * as React from "react";
 
 interface TeacherSelectionProps {
 	value: string;
@@ -57,15 +64,20 @@ export default function TeacherSelection({
 							variant="outline"
 							role="combobox"
 							aria-expanded={open}
-							className="w-full justify-between font-normal bg-input/30 hover:bg-input/50"
+							className="bg-input/30 hover:bg-input/50 h-10! w-full justify-between font-normal"
 						>
 							<span className="truncate">
-								{selectedTeacher ? getLocalizedName(selectedTeacher.name, locale) : placeholder}
+								{selectedTeacher
+									? getLocalizedName(selectedTeacher.name, locale)
+									: placeholder}
 							</span>
 							<ChevronDownIcon className="ml-2 h-4 w-4 shrink-0 opacity-50" />
 						</Button>
 					</PopoverTrigger>
-					<PopoverContent className="w-[--radix-popover-trigger-width] min-w-[300px] p-0" align="start">
+					<PopoverContent
+						className="w-(--radix-popover-trigger-width) p-0"
+						align="start"
+					>
 						<Command>
 							<CommandInput placeholder="Search teachers..." />
 							<CommandList>
@@ -83,10 +95,12 @@ export default function TeacherSelection({
 											<CheckIcon
 												className={cn(
 													"mr-2 h-4 w-4",
-													value === teacher.id ? "opacity-100" : "opacity-0"
+													value === teacher.id
+														? "opacity-100"
+														: "opacity-0"
 												)}
 											/>
-											<div className="flex items-center gap-3 w-full overflow-hidden">
+											<div className="flex w-full items-center gap-3 overflow-hidden">
 												<Avatar className="size-8">
 													<AvatarFallback>
 														{getLocalizedName(teacher.name, locale)
@@ -94,8 +108,8 @@ export default function TeacherSelection({
 															.toUpperCase() || "?"}
 													</AvatarFallback>
 												</Avatar>
-												<div className="flex flex-col flex-1 overflow-hidden">
-													<span className="font-medium truncate">
+												<div className="flex flex-1 flex-col overflow-hidden">
+													<span className="truncate font-medium">
 														{getLocalizedName(teacher.name, locale)}
 													</span>
 													<span className="text-muted-foreground truncate text-xs">

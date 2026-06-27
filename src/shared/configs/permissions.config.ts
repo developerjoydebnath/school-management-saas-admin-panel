@@ -239,6 +239,13 @@ export const PERMISSIONS = {
 			EDIT: "staff.departments.edit",
 			DELETE: "staff.departments.delete",
 		},
+		DESIGNATIONS: {
+			ALL: "staff.designations.all",
+			VIEW: "staff.designations.view",
+			CREATE: "staff.designations.create",
+			EDIT: "staff.designations.edit",
+			DELETE: "staff.designations.delete",
+		},
 		PERFORMANCE: {
 			ALL: "staff.performance.all",
 			VIEW: "staff.performance.view",

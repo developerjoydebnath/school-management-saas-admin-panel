@@ -43,6 +43,29 @@ const formatLabel = (value: string) =>
 		.toLowerCase()
 		.replace(/\b\w/g, (char) => char.toUpperCase());
 
+function SubjectDetailsAction({ id }: { id: string }) {
+	const [open, setOpen] = useState(false);
+	const [hasOpened, setHasOpened] = useState(false);
+	const t = useTranslations("Subjects");
+
+	return (
+		<Sheet
+			open={open}
+			onOpenChange={(nextOpen) => {
+				setOpen(nextOpen);
+				if (nextOpen) setHasOpened(true);
+			}}
+		>
+			<SheetTrigger asChild>
+				<Button variant="outline" size="icon-sm" title={t("subjectDetails")}>
+					<Eye className="text-muted-foreground hover:text-foreground h-4 w-4" />
+				</Button>
+			</SheetTrigger>
+			<SubjectDetailsSheet id={id} open={hasOpened} />
+		</Sheet>
+	);
+}
+
 export default function SubjectList() {
 	const [filter, setFilter] = useState<SubjectFilter>(initialFilters);
 	const [page, setPage] = useState(1);
@@ -194,14 +217,7 @@ export default function SubjectList() {
 								PERMISSIONS.ACADEMICS.ALL,
 							]}
 						>
-							<Sheet>
-								<SheetTrigger asChild>
-									<Button variant="outline" size="icon-sm" title={t("subjectDetails")}>
-										<Eye className="text-muted-foreground hover:text-foreground h-4 w-4" />
-									</Button>
-								</SheetTrigger>
-								<SubjectDetailsSheet subject={subject} />
-							</Sheet>
+							<SubjectDetailsAction id={subject.id} />
 						</PermissionGuard>
 						<PermissionGuard
 							permissions={[

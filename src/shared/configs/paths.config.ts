@@ -49,19 +49,16 @@ export const PATHS = {
 			ROOT: "/academics/classes",
 			CREATE: "/academics/classes/create",
 			EDIT: (id: number | string) => `/academics/classes/${id}/edit`,
-			DETAILS: (id: number | string) => `/academics/classes/${id}/details`,
 		},
 		CLASS_ROOMS: {
 			ROOT: "/academics/class-rooms",
 			CREATE: "/academics/class-rooms/create",
 			EDIT: (id: number | string) => `/academics/class-rooms/${id}/edit`,
-			DETAILS: (id: number | string) => `/academics/class-rooms/${id}/details`,
 		},
 		SUBJECTS: {
 			ROOT: "/academics/subjects",
 			CREATE: "/academics/subjects/create",
 			EDIT: (id: number | string) => `/academics/subjects/${id}/edit`,
-			DETAILS: (id: number | string) => `/academics/subjects/${id}/details`,
 		},
 		SYLLABUS: {
 			ROOT: "/academics/syllabus",
@@ -203,6 +200,12 @@ export const PATHS = {
 			CREATE: "/staff/departments/create",
 			EDIT: (id: number | string) => `/staff/departments/${id}/edit`,
 			DETAILS: (id: number | string) => `/staff/departments/${id}/details`,
+		},
+		DESIGNATIONS: {
+			ROOT: "/staff/designations",
+			CREATE: "/staff/designations/create",
+			EDIT: (id: number | string) => `/staff/designations/${id}/edit`,
+			DETAILS: (id: number | string) => `/staff/designations/${id}/details`,
 		},
 		PERFORMANCE: {
 			ROOT: "/staff/performance",

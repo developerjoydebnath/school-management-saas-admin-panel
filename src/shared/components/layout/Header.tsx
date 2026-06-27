@@ -29,7 +29,7 @@ export default function Header() {
 	};
 
 	return (
-		<header className="bg-background sticky top-0 z-50 flex h-14 shrink-0 items-center justify-between border-b px-4">
+		<header className="bg-popover sticky top-0 z-50 flex h-14 shrink-0 items-center justify-between border-b px-4">
 			<div className="flex items-center gap-2">
 				<SidebarTrigger />
 				<Separator orientation="vertical" className="my-auto mr-2 h-4" />

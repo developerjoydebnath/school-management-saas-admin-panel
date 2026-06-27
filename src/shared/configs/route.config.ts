@@ -366,6 +366,14 @@ export const SidebarMenu: SidebarMenuType[] = [
 				matchPaths: [PATHS.STAFF.DEPARTMENTS.ROOT],
 			},
 			{
+				id: "staff_designations",
+				name: "staff_designations",
+				path: PATHS.STAFF.DESIGNATIONS.ROOT,
+				icon: FileBadge2,
+				permissions: [PERMISSIONS.STAFF.DESIGNATIONS.VIEW],
+				matchPaths: [PATHS.STAFF.DESIGNATIONS.ROOT],
+			},
+			{
 				id: "staff_performance",
 				name: "staff_performance",
 				path: PATHS.STAFF.PERFORMANCE.ROOT,
@@ -829,6 +837,7 @@ export const SidebarMenu: SidebarMenuType[] = [
 			},
 		],
 	},
+
 	{
 		id: "settings",
 		name: "settings",

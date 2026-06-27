@@ -11,7 +11,7 @@ import { Switch } from "@/shared/components/ui/switch";
 import { PATHS } from "@/shared/configs/paths.config";
 import { PERMISSIONS } from "@/shared/configs/permissions.config";
 import { ColumnDef } from "@tanstack/react-table";
-import { Edit2, Trash2 } from "lucide-react";
+import { Edit2, Trash2, Eye } from "lucide-react";
 import { useTranslations } from "next-intl";
 import Link from "next/link";
 import { useState } from "react";
@@ -20,8 +20,9 @@ import { useSWRConfig } from "swr";
 import { VoucherModel } from "../../models/voucher.model";
 import { deleteVoucher, updateVoucherStatus } from "../hooks/use-voucher-mutations";
 import { useVouchers } from "../hooks/use-vouchers";
+import { Sheet, SheetTrigger } from "@/shared/components/ui/sheet";
 import { VoucherCreateButton } from "./VoucherCreateButton";
-import { VoucherDetailsDialog } from "./VoucherDetailsDialog";
+import { VoucherDetailsSheet } from "./VoucherDetailsSheet";
 import VoucherFilterBar from "./VoucherFilterBar";
 
 export type VoucherFilter = {
@@ -39,6 +40,29 @@ const initialFilters: VoucherFilter = {
 	createdFrom: "",
 	createdTo: "",
 };
+
+function VoucherDetailsAction({ id }: { id: string }) {
+	const [open, setOpen] = useState(false);
+	const [hasOpened, setHasOpened] = useState(false);
+	const t = useTranslations("VouchersPage");
+
+	return (
+		<Sheet
+			open={open}
+			onOpenChange={(nextOpen) => {
+				setOpen(nextOpen);
+				if (nextOpen) setHasOpened(true);
+			}}
+		>
+			<SheetTrigger asChild>
+				<Button variant="outline" size="icon-sm">
+					<Eye className="text-muted-foreground hover:text-foreground h-4 w-4" />
+				</Button>
+			</SheetTrigger>
+			<VoucherDetailsSheet id={id} open={hasOpened} />
+		</Sheet>
+	);
+}
 
 export function VoucherList() {
 	const [filter, setFilter] = useState<VoucherFilter>(initialFilters);
@@ -167,7 +191,7 @@ export function VoucherList() {
 				const voucher = row.original;
 				return (
 					<div className="flex items-center gap-2">
-						<VoucherDetailsDialog voucherId={voucher.id} />
+						<VoucherDetailsAction id={voucher.id} />
 						<PermissionGuard
 							permissions={[
 								PERMISSIONS.SCHOOLS_MANAGEMENT.ALL,
@@ -175,7 +199,7 @@ export function VoucherList() {
 								PERMISSIONS.SCHOOLS_MANAGEMENT.VOUCHERS.EDIT,
 							]}
 						>
-							<Button asChild variant="outline" size="icon">
+							<Button asChild variant="outline" size="icon-sm">
 								<Link href={PATHS.SCHOOLS_MANAGEMENT.VOUCHERS.EDIT(voucher.id)}>
 									<Edit2 className="text-muted-foreground hover:text-foreground h-4 w-4" />
 								</Link>
@@ -197,7 +221,7 @@ export function VoucherList() {
 								isLoading={isDeleting && itemToDelete === voucher.id}
 							>
 								<AlertDialogTrigger asChild>
-									<Button variant="outline" size="icon">
+									<Button variant="outline" size="icon-sm">
 										<Trash2 className="h-4 w-4 text-red-500 hover:text-red-600" />
 									</Button>
 								</AlertDialogTrigger>

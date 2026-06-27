@@ -34,6 +34,29 @@ export type ClassRoomFilter = {
 
 const initialFilters: ClassRoomFilter = { search: "", status: [] };
 
+function ClassRoomDetailsAction({ id }: { id: string }) {
+	const [open, setOpen] = useState(false);
+	const [hasOpened, setHasOpened] = useState(false);
+	const t = useTranslations("ClassRooms");
+
+	return (
+		<Sheet
+			open={open}
+			onOpenChange={(nextOpen) => {
+				setOpen(nextOpen);
+				if (nextOpen) setHasOpened(true);
+			}}
+		>
+			<SheetTrigger asChild>
+				<Button variant="outline" size="icon-sm" title={t("viewDetails")}>
+					<Eye className="text-muted-foreground hover:text-foreground h-4 w-4" />
+				</Button>
+			</SheetTrigger>
+			<ClassRoomDetailsSheet id={id} open={hasOpened} />
+		</Sheet>
+	);
+}
+
 export default function ClassRoomList() {
 	const [filter, setFilter] = useState<ClassRoomFilter>(initialFilters);
 	const [page, setPage] = useState(1);
@@ -163,14 +186,7 @@ export default function ClassRoomList() {
 								PERMISSIONS.ACADEMICS.ALL,
 							]}
 						>
-							<Sheet>
-								<SheetTrigger asChild>
-									<Button variant="outline" size="icon-sm" title={t("viewDetails")}>
-										<Eye className="text-muted-foreground hover:text-foreground h-4 w-4" />
-									</Button>
-								</SheetTrigger>
-								<ClassRoomDetailsSheet room={room} />
-							</Sheet>
+							<ClassRoomDetailsAction id={room.id} />
 						</PermissionGuard>
 						<PermissionGuard
 							permissions={[

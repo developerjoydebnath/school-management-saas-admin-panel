@@ -859,6 +859,7 @@ Do not use `overflow-y-auto` with native scrollbars. Wrap the dialog content in 
 When showing entity details in a right-side sheet, use a compact, quiet layout.
 
 - On small screens, the sheet must be full width.
+- Do not pass full list-row objects into details sheets. The list API must return only the fields needed by the visible table columns and row actions. When the user opens a details sheet, open the sheet immediately, show skeleton loading content, call the details API by id, and render the loaded details response.
 - Use small text and normal font weight for titles, section headings, values, chips, and table rows.
 - Do not use large display text, bold section headers, or oversized statistic cards inside details sheets.
 - Put related summary fields into two-column sections when there is enough room.

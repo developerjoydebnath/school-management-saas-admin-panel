@@ -22,6 +22,8 @@ import { BankAccountModel } from "../../models/bank-account.model";
 import { deleteBankAccount } from "../hooks/use-bank-account-mutations";
 import { BankAccountCreateButton } from "./BankAccountCreateButton";
 import BankAccountFilterBar from "./BankAccountFilterBar";
+import { Sheet, SheetTrigger } from "@/shared/components/ui/sheet";
+import { BankAccountDetailsSheet } from "./BankAccountDetailsSheet";
 
 export type BankAccountFilter = {
 	search: string;
@@ -38,6 +40,29 @@ const initialFilters: BankAccountFilter = {
 	createdFrom: "",
 	createdTo: "",
 };
+
+function BankAccountDetailsAction({ id }: { id: string }) {
+	const [open, setOpen] = useState(false);
+	const [hasOpened, setHasOpened] = useState(false);
+	const t = useTranslations("SchoolsManagementBankAccounts");
+
+	return (
+		<Sheet
+			open={open}
+			onOpenChange={(nextOpen) => {
+				setOpen(nextOpen);
+				if (nextOpen) setHasOpened(true);
+			}}
+		>
+			<SheetTrigger asChild>
+				<Button variant="outline" size="icon-sm">
+					<Eye className="text-muted-foreground hover:text-foreground h-4 w-4" />
+				</Button>
+			</SheetTrigger>
+			<BankAccountDetailsSheet id={id} open={hasOpened} />
+		</Sheet>
+	);
+}
 
 export function BankAccountList() {
 	const [filter, setFilter] = useState<BankAccountFilter>(initialFilters);
@@ -139,14 +164,10 @@ export function BankAccountList() {
 				return (
 					<div className="flex items-center gap-2">
 						<PermissionGuard permissions={[PERMISSIONS.SCHOOLS_MANAGEMENT.BANK_ACCOUNTS.VIEW]}>
-							<Button asChild variant="outline" size="icon">
-								<Link href={PATHS.SCHOOLS_MANAGEMENT.BANK_ACCOUNTS.DETAILS(account.id)}>
-									<Eye className="text-muted-foreground hover:text-foreground h-4 w-4" />
-								</Link>
-							</Button>
+							<BankAccountDetailsAction id={account.id} />
 						</PermissionGuard>
 						<PermissionGuard permissions={[PERMISSIONS.SCHOOLS_MANAGEMENT.BANK_ACCOUNTS.EDIT]}>
-							<Button asChild variant="outline" size="icon">
+							<Button asChild variant="outline" size="icon-sm">
 								<Link href={PATHS.SCHOOLS_MANAGEMENT.BANK_ACCOUNTS.EDIT(account.id)}>
 									<Edit2 className="text-muted-foreground hover:text-foreground h-4 w-4" />
 								</Link>
@@ -162,7 +183,7 @@ export function BankAccountList() {
 								isLoading={isDeleting && accountToDelete === account.id}
 							>
 								<AlertDialogTrigger asChild>
-									<Button variant="outline" size="icon">
+									<Button variant="outline" size="icon-sm">
 										<Trash2 className="h-4 w-4 text-red-500 hover:text-red-600" />
 									</Button>
 								</AlertDialogTrigger>

@@ -1,28 +1,30 @@
 "use client";
 
+import ConfirmationModal from "@/shared/components/custom/ConfirmationModal";
 import PermissionGuard from "@/shared/components/custom/PermissionGuard";
 import DataTable from "@/shared/components/table/DataTable";
 import TableFilter from "@/shared/components/table/TableFilter";
+import { AlertDialogTrigger } from "@/shared/components/ui/alert-dialog";
 import { Badge } from "@/shared/components/ui/badge";
 import { Button } from "@/shared/components/ui/button";
 import { Card, CardContent, CardHeader } from "@/shared/components/ui/card";
+import { Sheet, SheetTrigger } from "@/shared/components/ui/sheet";
+import { PATHS } from "@/shared/configs/paths.config";
 import { PERMISSIONS } from "@/shared/configs/permissions.config";
 import { ColumnDef } from "@tanstack/react-table";
+import { format } from "date-fns";
 import { Edit2, Eye, Trash2 } from "lucide-react";
 import { useTranslations } from "next-intl";
-import { useState } from "react";
-import { useSchoolSubscriptions } from "../../hooks/use-school-subscriptions";
-import { SchoolSubscriptionModel } from "../../models/school-subscription.model";
-import SchoolSubscriptionFilterBar from "./SchoolSubscriptionFilterBar";
-import { PATHS } from "@/shared/configs/paths.config";
 import Link from "next/link";
-import ConfirmationModal from "@/shared/components/custom/ConfirmationModal";
-import { AlertDialogTrigger } from "@/shared/components/ui/alert-dialog";
+import { useState } from "react";
 import { toast } from "sonner";
 import { useSWRConfig } from "swr";
-import { format } from "date-fns";
-import { SchoolSubscriptionCreateButton } from "./SchoolSubscriptionCreateButton";
+import { useSchoolSubscriptions } from "../../hooks/use-school-subscriptions";
+import { SchoolSubscriptionModel } from "../../models/school-subscription.model";
 import { deleteSchoolSubscription } from "../hooks/use-school-subscription-mutations";
+import { SchoolSubscriptionCreateButton } from "./SchoolSubscriptionCreateButton";
+import { SchoolSubscriptionDetailsSheet } from "./SchoolSubscriptionDetailsSheet";
+import SchoolSubscriptionFilterBar from "./SchoolSubscriptionFilterBar";
 
 export type SchoolSubscriptionFilter = {
 	search: string;
@@ -37,6 +39,29 @@ const initialFilters: SchoolSubscriptionFilter = {
 	createdFrom: "",
 	createdTo: "",
 };
+
+function SchoolSubscriptionDetailsAction({ id }: { id: string }) {
+	const [open, setOpen] = useState(false);
+	const [hasOpened, setHasOpened] = useState(false);
+	const t = useTranslations("SchoolsManagementSchoolSubscriptions");
+
+	return (
+		<Sheet
+			open={open}
+			onOpenChange={(nextOpen) => {
+				setOpen(nextOpen);
+				if (nextOpen) setHasOpened(true);
+			}}
+		>
+			<SheetTrigger asChild>
+				<Button variant="outline" size="icon-sm">
+					<Eye className="text-muted-foreground hover:text-foreground h-4 w-4" />
+				</Button>
+			</SheetTrigger>
+			<SchoolSubscriptionDetailsSheet id={id} open={hasOpened} />
+		</Sheet>
+	);
+}
 
 export function SchoolSubscriptionList() {
 	const [filter, setFilter] = useState<SchoolSubscriptionFilter>(initialFilters);
@@ -68,7 +93,10 @@ export function SchoolSubscriptionList() {
 		try {
 			await deleteSchoolSubscription(id);
 			toast.success(t("deleteSuccess"));
-			mutate((key: any) => typeof key === "string" && key.startsWith("/superadmin/school-subscriptions"));
+			mutate(
+				(key: any) =>
+					typeof key === "string" && key.startsWith("/superadmin/school-subscriptions")
+			);
 		} catch {
 			// Toast is handled automatically by axios singleton
 		} finally {
@@ -82,7 +110,7 @@ export function SchoolSubscriptionList() {
 			id: "school",
 			header: t("school"),
 			cell: ({ row }) => (
-				<div className="font-medium text-primary">
+				<div className="text-primary font-medium">
 					{row.original.school?.schoolName || "Unknown School"}
 				</div>
 			),
@@ -90,11 +118,7 @@ export function SchoolSubscriptionList() {
 		{
 			id: "plan",
 			header: t("plan"),
-			cell: ({ row }) => (
-				<div>
-					{row.original.plan?.name || "Unknown Plan"}
-				</div>
-			),
+			cell: ({ row }) => <div>{row.original.plan?.name || "Unknown Plan"}</div>,
 		},
 		{
 			id: "price",
@@ -107,8 +131,18 @@ export function SchoolSubscriptionList() {
 			header: t("validity"),
 			cell: ({ row }) => (
 				<div className="text-sm">
-					<div className="text-muted-foreground">Start: {row.original.startsAt ? format(new Date(row.original.startsAt), "MMM d, yyyy") : "N/A"}</div>
-					<div className="text-muted-foreground">End: {row.original.expiresAt ? format(new Date(row.original.expiresAt), "MMM d, yyyy") : "N/A"}</div>
+					<div className="text-muted-foreground">
+						Start:{" "}
+						{row.original.startsAt
+							? format(new Date(row.original.startsAt), "MMM d, yyyy")
+							: "N/A"}
+					</div>
+					<div className="text-muted-foreground">
+						End:{" "}
+						{row.original.expiresAt
+							? format(new Date(row.original.expiresAt), "MMM d, yyyy")
+							: "N/A"}
+					</div>
 				</div>
 			),
 		},
@@ -141,21 +175,29 @@ export function SchoolSubscriptionList() {
 				const subscription = row.original;
 				return (
 					<div className="flex items-center gap-2">
-						<PermissionGuard permissions={[PERMISSIONS.SCHOOLS_MANAGEMENT.SCHOOL_SUBSCRIPTIONS.VIEW]}>
-							<Button asChild variant="outline" size="icon">
-								<Link href={PATHS.SCHOOLS_MANAGEMENT.SCHOOL_SUBSCRIPTIONS.DETAILS(subscription.id)}>
-									<Eye className="text-muted-foreground hover:text-foreground h-4 w-4" />
-								</Link>
-							</Button>
+						<PermissionGuard
+							permissions={[PERMISSIONS.SCHOOLS_MANAGEMENT.SCHOOL_SUBSCRIPTIONS.VIEW]}
+						>
+							<SchoolSubscriptionDetailsAction id={subscription.id} />
 						</PermissionGuard>
-						<PermissionGuard permissions={[PERMISSIONS.SCHOOLS_MANAGEMENT.SCHOOL_SUBSCRIPTIONS.EDIT]}>
-							<Button asChild variant="outline" size="icon">
-								<Link href={PATHS.SCHOOLS_MANAGEMENT.SCHOOL_SUBSCRIPTIONS.EDIT(subscription.id)}>
+						<PermissionGuard
+							permissions={[PERMISSIONS.SCHOOLS_MANAGEMENT.SCHOOL_SUBSCRIPTIONS.EDIT]}
+						>
+							<Button asChild variant="outline" size="icon-sm">
+								<Link
+									href={PATHS.SCHOOLS_MANAGEMENT.SCHOOL_SUBSCRIPTIONS.EDIT(
+										subscription.id
+									)}
+								>
 									<Edit2 className="text-muted-foreground hover:text-foreground h-4 w-4" />
 								</Link>
 							</Button>
 						</PermissionGuard>
-						<PermissionGuard permissions={[PERMISSIONS.SCHOOLS_MANAGEMENT.SCHOOL_SUBSCRIPTIONS.DELETE]}>
+						<PermissionGuard
+							permissions={[
+								PERMISSIONS.SCHOOLS_MANAGEMENT.SCHOOL_SUBSCRIPTIONS.DELETE,
+							]}
+						>
 							<ConfirmationModal
 								onConfirm={() => confirmDelete(subscription.id)}
 								title={t("deleteTitle")}
@@ -165,8 +207,8 @@ export function SchoolSubscriptionList() {
 								isLoading={isDeleting && subscriptionToDelete === subscription.id}
 							>
 								<AlertDialogTrigger asChild>
-									<Button variant="outline" size="icon">
-											<Trash2 className="h-4 w-4 text-red-500 hover:text-red-600" />
+									<Button variant="outline" size="icon-sm">
+										<Trash2 className="h-4 w-4 text-red-500 hover:text-red-600" />
 									</Button>
 								</AlertDialogTrigger>
 							</ConfirmationModal>

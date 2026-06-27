@@ -19,6 +19,8 @@ import { usePayments } from "../../hooks/use-payments";
 import { PaymentModel } from "../../models/payment.model";
 import { PaymentCreateButton } from "./PaymentCreateButton";
 import PaymentFilterBar from "./PaymentFilterBar";
+import { Sheet, SheetTrigger } from "@/shared/components/ui/sheet";
+import { PaymentDetailsSheet } from "./PaymentDetailsSheet";
 
 export type PaymentFilter = {
 	search: string;
@@ -35,6 +37,29 @@ const initialFilters: PaymentFilter = {
 	paidFrom: "",
 	paidTo: "",
 };
+
+function PaymentDetailsAction({ id }: { id: string }) {
+	const [open, setOpen] = useState(false);
+	const [hasOpened, setHasOpened] = useState(false);
+	const t = useTranslations("SchoolsManagementPayments");
+
+	return (
+		<Sheet
+			open={open}
+			onOpenChange={(nextOpen) => {
+				setOpen(nextOpen);
+				if (nextOpen) setHasOpened(true);
+			}}
+		>
+			<SheetTrigger asChild>
+				<Button variant="outline" size="icon-sm">
+					<Eye className="text-muted-foreground hover:text-foreground h-4 w-4" />
+				</Button>
+			</SheetTrigger>
+			<PaymentDetailsSheet id={id} open={hasOpened} />
+		</Sheet>
+	);
+}
 
 export function PaymentList() {
 	const [filter, setFilter] = useState<PaymentFilter>(initialFilters);
@@ -142,14 +167,10 @@ export function PaymentList() {
 				return (
 					<div className="flex items-center gap-2">
 						<PermissionGuard permissions={[PERMISSIONS.SCHOOLS_MANAGEMENT.PAYMENTS.VIEW]}>
-							<Button asChild variant="outline" size="icon">
-								<Link href={PATHS.SCHOOLS_MANAGEMENT.PAYMENTS.DETAILS(payment.id)}>
-									<Eye className="text-muted-foreground hover:text-foreground h-4 w-4" />
-								</Link>
-							</Button>
+							<PaymentDetailsAction id={payment.id} />
 						</PermissionGuard>
 						<PermissionGuard permissions={[PERMISSIONS.SCHOOLS_MANAGEMENT.PAYMENTS.EDIT]}>
-							<Button asChild variant="outline" size="icon">
+							<Button asChild variant="outline" size="icon-sm">
 								<Link href={PATHS.SCHOOLS_MANAGEMENT.PAYMENTS.EDIT(payment.id)}>
 									<Edit2 className="text-muted-foreground hover:text-foreground h-4 w-4" />
 								</Link>
@@ -158,7 +179,7 @@ export function PaymentList() {
 						<PermissionGuard permissions={[PERMISSIONS.SCHOOLS_MANAGEMENT.PAYMENTS.VIEW]}>
 							<Button
 								variant="outline"
-								size="icon"
+								size="icon-sm"
 								onClick={() =>
 									downloadPdf(
 										`/superadmin/payments/${payment.id}/invoice`,

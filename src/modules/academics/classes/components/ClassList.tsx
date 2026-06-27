@@ -19,7 +19,7 @@ import { getLocalizedName } from "@/shared/utils/localization";
 import { hasAccess } from "@/shared/utils/permission";
 import { ColumnDef } from "@tanstack/react-table";
 import { Eye, Pencil, Trash2 } from "lucide-react";
-import { useLocale, useTranslations } from "next-intl";
+import { useTranslations } from "next-intl";
 import Link from "next/link";
 import { useState } from "react";
 import { toast } from "sonner";
@@ -43,6 +43,29 @@ const initialFilters: ClassFilter = {
 	classRoomId: [],
 };
 
+function ClassDetailsAction({ id }: { id: string }) {
+	const [open, setOpen] = useState(false);
+	const [hasOpened, setHasOpened] = useState(false);
+	const t = useTranslations("Classes");
+
+	return (
+		<Sheet
+			open={open}
+			onOpenChange={(nextOpen) => {
+				setOpen(nextOpen);
+				if (nextOpen) setHasOpened(true);
+			}}
+		>
+			<SheetTrigger asChild>
+				<Button title={t("viewDetails")} variant="outline" size="icon-sm">
+					<Eye className="text-muted-foreground hover:text-foreground h-4 w-4" />
+				</Button>
+			</SheetTrigger>
+			<ClassDetailsSheet id={id} open={hasOpened} />
+		</Sheet>
+	);
+}
+
 export default function ClassList() {
 	const [filter, setFilter] = useState<ClassFilter>(initialFilters);
 	const [page, setPage] = useState(1);
@@ -53,7 +76,6 @@ export default function ClassList() {
 	const [isChangingStatus, setIsChangingStatus] = useState(false);
 	const t = useTranslations("Classes");
 	const tc = useTranslations("Common");
-	const locale = useLocale();
 	const { user } = useAuthStore((state) => state.auth);
 
 	const { data: classes, meta, isLoading } = useClasses({
@@ -223,14 +245,7 @@ export default function ClassList() {
 								PERMISSIONS.ACADEMICS.ALL,
 							]}
 						>
-							<Sheet>
-								<SheetTrigger asChild>
-									<Button title={t("viewDetails")} variant="outline" size="icon-sm">
-										<Eye className="text-muted-foreground hover:text-foreground h-4 w-4" />
-									</Button>
-								</SheetTrigger>
-								<ClassDetailsSheet cls={cls} />
-							</Sheet>
+							<ClassDetailsAction id={cls.id} />
 						</PermissionGuard>
 						<PermissionGuard
 							permissions={[

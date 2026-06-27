@@ -183,6 +183,7 @@ export default function ClassForm({ id, defaultValues, isEdit = false }: Props) 
 						label="Status"
 						type="select"
 						options={statusOptions}
+						placeholder="Select Status"
 						required
 					/>
 				</CardContent>

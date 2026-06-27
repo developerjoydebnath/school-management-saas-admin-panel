@@ -179,7 +179,7 @@ export function SchoolList() {
 								PERMISSIONS.SCHOOLS_MANAGEMENT.SCHOOLS.VIEW,
 							]}
 						>
-							<Button asChild variant="outline" size="icon">
+							<Button asChild variant="outline" size="icon-sm">
 								<Link href={PATHS.SCHOOLS_MANAGEMENT.SCHOOLS.DETAILS(school.id)}>
 									<Eye className="text-muted-foreground hover:text-foreground h-4 w-4" />
 								</Link>
@@ -192,7 +192,7 @@ export function SchoolList() {
 								PERMISSIONS.SCHOOLS_MANAGEMENT.SCHOOLS.EDIT,
 							]}
 						>
-							<Button asChild variant="outline" size="icon">
+							<Button asChild variant="outline" size="icon-sm">
 								<Link href={PATHS.SCHOOLS_MANAGEMENT.SCHOOLS.EDIT(school.id)}>
 									<Edit2 className="text-muted-foreground hover:text-foreground h-4 w-4" />
 								</Link>
@@ -205,7 +205,7 @@ export function SchoolList() {
 								PERMISSIONS.SCHOOLS_MANAGEMENT.BANK_ACCOUNTS.CREATE,
 							]}
 						>
-							<Button asChild variant="outline" size="icon">
+							<Button asChild variant="outline" size="icon-sm">
 								<Link
 									href={`${PATHS.SCHOOLS_MANAGEMENT.BANK_ACCOUNTS.CREATE}?schoolId=${school.id}`}
 								>
@@ -220,7 +220,7 @@ export function SchoolList() {
 								PERMISSIONS.SCHOOLS_MANAGEMENT.PAYMENTS.CREATE,
 							]}
 						>
-							<Button asChild variant="outline" size="icon">
+							<Button asChild variant="outline" size="icon-sm">
 								<Link
 									href={`${PATHS.SCHOOLS_MANAGEMENT.PAYMENTS.CREATE}?schoolId=${school.id}`}
 								>
@@ -244,7 +244,7 @@ export function SchoolList() {
 								isLoading={isDeleting && schoolToDelete === school.id}
 							>
 								<AlertDialogTrigger asChild>
-									<Button variant="outline" size="icon">
+									<Button variant="outline" size="icon-sm">
 										<Trash2 className="h-4 w-4 text-red-500 hover:text-red-600" />
 									</Button>
 								</AlertDialogTrigger>

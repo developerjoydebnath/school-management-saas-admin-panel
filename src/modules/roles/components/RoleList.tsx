@@ -8,18 +8,19 @@ import { AlertDialogTrigger } from "@/shared/components/ui/alert-dialog";
 import { Badge } from "@/shared/components/ui/badge";
 import { Button } from "@/shared/components/ui/button";
 import { Card, CardContent, CardHeader } from "@/shared/components/ui/card";
+import { Sheet, SheetTrigger } from "@/shared/components/ui/sheet";
 import { PERMISSIONS } from "@/shared/configs/permissions.config";
 import { RoleModel } from "@/shared/models/role.model";
 import { StatusEnum } from "@/shared/types/enums";
 import { ColumnDef } from "@tanstack/react-table";
-import { Edit2, ShieldAlert, Trash2 } from "lucide-react";
+import { Edit2, ShieldAlert, Trash2, Eye } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useState } from "react";
 import { toast } from "sonner";
 import { deleteRole } from "../hooks/use-role-mutations";
 import { useRoles } from "../hooks/use-roles";
 import { RoleCreate } from "./RoleCreate";
-import { RoleDetailsDialog } from "./RoleDetailsDialog";
+import { RoleDetailsSheet } from "./RoleDetailsSheet";
 import RoleFilterBar from "./RoleFilterBar";
 import { RoleForm } from "./RoleForm";
 
@@ -28,6 +29,29 @@ export type RoleFilter = {
 };
 
 const initialFilters: RoleFilter = { search: "" };
+
+function RoleDetailsAction({ id }: { id: string }) {
+	const [open, setOpen] = useState(false);
+	const [hasOpened, setHasOpened] = useState(false);
+	const t = useTranslations("RolesPage");
+
+	return (
+		<Sheet
+			open={open}
+			onOpenChange={(nextOpen) => {
+				setOpen(nextOpen);
+				if (nextOpen) setHasOpened(true);
+			}}
+		>
+			<SheetTrigger asChild>
+				<Button variant="outline" size="icon" title={t("viewDetails") || "View Details"}>
+					<Eye className="h-4 w-4 text-muted-foreground hover:text-foreground" />
+				</Button>
+			</SheetTrigger>
+			<RoleDetailsSheet id={id} open={hasOpened} />
+		</Sheet>
+	);
+}
 
 export function RoleList() {
 	const [filter, setFilter] = useState<RoleFilter>(initialFilters);
@@ -121,7 +145,7 @@ export function RoleList() {
 				const role = row.original;
 				return (
 					<div className="flex items-center gap-2">
-						<RoleDetailsDialog roleId={role.id} />
+						<RoleDetailsAction id={role.id} />
 						<PermissionGuard
 							permissions={[
 								PERMISSIONS.ROLES.ALL,

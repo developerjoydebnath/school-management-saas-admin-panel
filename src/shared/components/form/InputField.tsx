@@ -16,8 +16,8 @@ import { Textarea } from "@/shared/components/ui/textarea";
 import { cn } from "@/shared/lib/utils";
 import { useController, type UseControllerProps } from "react-hook-form";
 import { match } from "ts-pattern";
-import ClassSelect from "./ClassSelect";
 import ClassRoomSelect from "./ClassRoomSelect";
+import ClassSelect from "./ClassSelect";
 import ClassSelection from "./ClassSelection";
 import DatePicker from "./DatePicker";
 import MultiCheckbox from "./MultiCheckbox";
@@ -31,6 +31,7 @@ import ShiftSelect from "./ShiftSelect";
 import SubjectSelection from "./SubjectSelection";
 import SubscriptionPlanSelect from "./SubscriptionPlanSelect";
 import TagInput from "./TagInput";
+import TeacherSelection from "./TeacherSelection";
 import VoucherSelect from "./VoucherSelect";
 import { SimpleEditor } from "./rich-editor/simple-editor";
 
@@ -51,6 +52,7 @@ interface FormFieldProps extends UseControllerProps {
 	dependencyId?: string;
 	placeholderBase64?: string | null;
 	disabled?: boolean;
+	fieldClass?: string;
 }
 
 export default function InputField({
@@ -66,7 +68,8 @@ export default function InputField({
 		<div
 			className={cn(
 				"flex flex-col gap-2",
-				type === "checkbox" && "flex-row items-center gap-3"
+				type === "checkbox" && "flex-row items-center gap-3",
+				props.fieldClass
 			)}
 		>
 			{/* Checkbox and Switch render their own inline label – skip the block label */}
@@ -348,6 +351,16 @@ export default function InputField({
 							placeholder={props.placeholder}
 							className={className}
 							disabled={props.disabled}
+						/>
+					))
+
+					// teacherSelect
+					.with("teacherSelect", () => (
+						<TeacherSelection
+							value={field.value}
+							onChange={field.onChange}
+							placeholder={props.placeholder}
+							className={className}
 						/>
 					))
 
