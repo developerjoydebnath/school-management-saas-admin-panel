@@ -14,7 +14,7 @@ export class Teacher {
 
 	constructor(data: any = {}) {
 		this._id = data.id || "";
-		this._name = data.name || "";
+		this._name = data.name || data.fullName || "";
 		this._subjects = data.subjects || data.sections || [];
 		this._mobileNumber = data.mobile || data.contact || "";
 		this._email = data.email || "";

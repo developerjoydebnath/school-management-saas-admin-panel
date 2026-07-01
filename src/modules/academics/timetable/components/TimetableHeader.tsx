@@ -2,25 +2,34 @@
 
 import { Button } from "@/shared/components/ui/button";
 import { CardHeader } from "@/shared/components/ui/card";
-import { Download, Plus, Printer, Save } from "lucide-react";
+import { History, Plus, Printer, Save } from "lucide-react";
+import Link from "next/link";
 import { useTranslations } from "next-intl";
 
 interface TimetableHeaderProps {
 	sections: any[];
-	selectedSection: string | null;
-	onSelectSection: (name: string) => void;
+	selectedSections: string[];
+	onToggleSection: (id: string) => void;
 	onAddColumn: () => void;
+	historyHref: string;
+	onPrint: () => void;
 	disableActions: boolean;
 	onSave: () => void;
+	isSaving?: boolean;
+	isPrinting?: boolean;
 }
 
 export function TimetableHeader({
 	sections,
-	selectedSection,
-	onSelectSection,
+	selectedSections,
+	onToggleSection,
 	onAddColumn,
+	historyHref,
+	onPrint,
 	disableActions,
 	onSave,
+	isSaving,
+	isPrinting,
 }: TimetableHeaderProps) {
 	const t = useTranslations("Timetable");
 
@@ -29,15 +38,15 @@ export function TimetableHeader({
 			<div className="flex items-center gap-4">
 				{sections.length > 0 && (
 					<div className="bg-accent/50 flex rounded-lg border p-1">
-						{sections.map((sec: any, index: number) => (
+						{sections.map((sec: any) => (
 							<Button
-								key={sec.name}
-								variant={selectedSection === sec.name ? "default" : "ghost"}
+								key={sec.id || sec.name}
+								variant={selectedSections.includes(sec.id) ? "default" : "ghost"}
 								size="sm"
 								className="mx-0.5 h-8 px-3 text-xs"
-								onClick={() => onSelectSection(sec.name)}
+								onClick={() => onToggleSection(sec.id)}
 							>
-								{t('section')} {sec.name}
+								{getSectionName(sec.name)}
 							</Button>
 						))}
 					</div>
@@ -45,27 +54,38 @@ export function TimetableHeader({
 			</div>
 
 			<div className="flex gap-2">
-				<Button variant="outline" className="hidden sm:flex" disabled={disableActions}>
-					<Printer className="h-4 w-4" /> {t('print')}
-				</Button>
-				<Button variant="outline" className="hidden sm:flex" disabled={disableActions}>
-					<Download className="h-4 w-4" /> {t('export')}
+				<Button
+					asChild
+					variant="outline"
+					className="hidden sm:flex"
+				>
+					<Link href={historyHref}>
+						<History className="h-4 w-4" /> History
+					</Link>
 				</Button>
 				<Button
-					onClick={onAddColumn}
-					disabled={disableActions}
 					variant="outline"
+					className="hidden sm:flex"
+					disabled={disableActions || isPrinting}
+					onClick={onPrint}
 				>
-					<Plus className="h-4 w-4" /> {t('addColumn')}
+					<Printer className="h-4 w-4" /> {t("print")}
+				</Button>
+				<Button onClick={onAddColumn} disabled={disableActions} variant="outline">
+					<Plus className="h-4 w-4" /> {t("addColumn")}
 				</Button>
 				<Button
 					onClick={onSave}
-					disabled={disableActions}
+					disabled={disableActions || isSaving}
 					className="bg-primary hover:bg-primary/90 text-primary-foreground"
 				>
-					<Save className="h-4 w-4" /> {t('saveTimetable')}
+					<Save className="h-4 w-4" /> {t("saveTimetable")}
 				</Button>
 			</div>
 		</CardHeader>
 	);
+}
+
+function getSectionName(name: string | { en?: string; bn?: string }) {
+	return typeof name === "string" ? name : name?.en || "";
 }

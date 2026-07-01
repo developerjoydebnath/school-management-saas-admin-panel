@@ -60,6 +60,36 @@ When rendering dropdown fields through `InputField`, always use `type="select"`.
 
 **Why:** The app uses the shared styled select for consistent behavior, theme, spacing, and interaction across create/update forms.
 
+### Dialog Selection Rule
+
+When a selection field is rendered inside a `Dialog` or dialog-based form, use the popover + command combobox pattern used by `SubjectSingleSelection`. Do not use Radix `Select` / `SelectContent` inside dialogs.
+
+```tsx
+// Correct inside DialogContent
+<Popover>
+	<PopoverTrigger asChild>
+		<Button role="combobox" variant="outline">Select option</Button>
+	</PopoverTrigger>
+	<PopoverContent>
+		<Command>
+			<CommandInput placeholder="Search..." />
+			<ScrollArea
+				className="max-h-56 overflow-hidden"
+				viewportClassName="h-auto max-h-56"
+			>
+				<CommandList className="max-h-none overflow-visible">
+					<CommandItem onSelect={...}>Option</CommandItem>
+				</CommandList>
+			</ScrollArea>
+		</Command>
+	</PopoverContent>
+</Popover>
+```
+
+**Why:** Select popovers are portalled outside the dialog tree and can trigger dialog outside-interaction behavior. The popover + command combobox pattern keeps the dialog open when the user clicks inside the dialog after opening options.
+
+Command/combobox options must show a pointer cursor on hover. Every popover-command selection must wrap the `CommandList` in the shared `ScrollArea` with a max height, so long lists scroll with the app scrollbar and short lists keep their natural height.
+
 ## Placeholder Rule
 
 Every form field rendered through `InputField` must include a meaningful `placeholder` prop. Use concrete examples for text/number fields and clear action text for select fields.
@@ -201,22 +231,32 @@ export default function ExamplePage() {
 ## Button Component Rules
 
 1. **Icons in Buttons**: Never use margin utilities (`mr-2`, `ml-2`) inside a Button. The Button uses `gap` automatically.
-   ```tsx
-   // ✅ Correct
-   <Button><Plus className="size-4" /> Add</Button>
-   // ❌ Wrong
-   <Button><Plus className="mr-2 size-4" /> Add</Button>
-   ```
+
+    ```tsx
+    // ✅ Correct
+    <Button><Plus className="size-4" /> Add</Button>
+    // ❌ Wrong
+    <Button><Plus className="mr-2 size-4" /> Add</Button>
+    ```
 
 2. **Link Buttons**: Use `nativeButton={false}` + `render` prop when wrapping a `<Link>`.
-   ```tsx
-   <Button nativeButton={false} render={<Link href="/some-path" />}>Go</Button>
-   ```
+
+    ```tsx
+    <Button nativeButton={false} render={<Link href="/some-path" />}>
+    	Go
+    </Button>
+    ```
 
 3. **Trigger Buttons**: Use `render` prop for `AlertDialogTrigger` and similar.
-   ```tsx
-   <AlertDialogTrigger render={<Button variant="destructive"><Trash2 className="size-4" /></Button>} />
-   ```
+    ```tsx
+    <AlertDialogTrigger
+    	render={
+    		<Button variant="destructive">
+    			<Trash2 className="size-4" />
+    		</Button>
+    	}
+    />
+    ```
 
 ---
 
@@ -304,6 +344,7 @@ export default function EntityPage() {
 ```
 
 **The `EntityCreate` appears in TWO places:**
+
 1. Inside `<PageHeading>` wrapped in `<div className="hidden @3xl/page:flex">` — visible on desktop.
 2. As `children` passed to `<EntityFilterBar>` inside `EntityList` — visible on mobile.
 
@@ -388,8 +429,13 @@ export function EntityList() {
 							{/* Dialog-mode: */}
 							{/* <Button variant="outline" size="icon" onClick={() => { setSelectedEntity(entity); setIsFormOpen(true); }}><Edit2 className="h-4 w-4" /></Button> */}
 							{/* Page-mode: */}
-							<Button nativeButton={false} render={<Link href={PATHS.FEATURE.EDIT(entity.id)} />} variant="outline" size="icon">
-								<Edit2 className="h-4 w-4 text-muted-foreground" />
+							<Button
+								nativeButton={false}
+								render={<Link href={PATHS.FEATURE.EDIT(entity.id)} />}
+								variant="outline"
+								size="icon"
+							>
+								<Edit2 className="text-muted-foreground h-4 w-4" />
 							</Button>
 						</PermissionGuard>
 						<PermissionGuard permissions={[PERMISSIONS.FEATURE.DELETE]}>
@@ -401,7 +447,13 @@ export function EntityList() {
 								variant="destructive"
 								isLoading={isDeleting && entityToDelete === entity.id}
 							>
-								<AlertDialogTrigger render={<Button variant="outline" size="icon"><Trash2 className="h-4 w-4 text-red-500" /></Button>} />
+								<AlertDialogTrigger
+									render={
+										<Button variant="outline" size="icon">
+											<Trash2 className="h-4 w-4 text-red-500" />
+										</Button>
+									}
+								/>
 							</ConfirmationModal>
 						</PermissionGuard>
 					</div>
@@ -410,7 +462,11 @@ export function EntityList() {
 		},
 	];
 
-	const resetFilters = () => { setFilter(initialFilters); setPage(1); setLimit(10); };
+	const resetFilters = () => {
+		setFilter(initialFilters);
+		setPage(1);
+		setLimit(10);
+	};
 
 	return (
 		<Card className="p-6 shadow-none ring-0">
@@ -425,7 +481,18 @@ export function EntityList() {
 					columns={columns}
 					data={entities || []}
 					isLoading={isLoading}
-					pagination={meta ? { page: meta.page, limit: meta.limit, total: meta.total, totalPages: meta.totalPages, onPageChange: setPage, onLimitChange: setLimit } : undefined}
+					pagination={
+						meta
+							? {
+									page: meta.page,
+									limit: meta.limit,
+									total: meta.total,
+									totalPages: meta.totalPages,
+									onPageChange: setPage,
+									onLimitChange: setLimit,
+								}
+							: undefined
+					}
 				/>
 			</CardContent>
 			{/* Dialog-mode only: */}
@@ -441,9 +508,9 @@ export function EntityList() {
 
 ### Decision Rule
 
-| Situation | Strategy |
-|---|---|
-| **Simple form** (fewer than ~6 fields, no file uploads, no sections) | **Dialog Form** |
+| Situation                                                                       | Strategy                |
+| ------------------------------------------------------------------------------- | ----------------------- |
+| **Simple form** (fewer than ~6 fields, no file uploads, no sections)            | **Dialog Form**         |
 | **Complex form** (many fields, tabs, file uploads, multi-step, nested sections) | **Dedicated Page Form** |
 
 ### Strategy A: Dialog Form (Simple)
@@ -549,13 +616,28 @@ export function EntityForm({ isOpen, onClose, initialData, onSuccess }: EntityFo
 					</DialogTitle>
 				</DialogHeader>
 				<form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-					<InputField control={form.control} name="name" label="Name" type="text" required />
+					<InputField
+						control={form.control}
+						name="name"
+						label="Name"
+						type="text"
+						required
+					/>
 					<div className="flex justify-end gap-3 pt-4">
-						<Button variant="outline" type="button" onClick={onClose} disabled={isSubmitting}>
+						<Button
+							variant="outline"
+							type="button"
+							onClick={onClose}
+							disabled={isSubmitting}
+						>
 							{t("cancel")}
 						</Button>
 						<Button type="submit" disabled={isSubmitting}>
-							{isSubmitting ? t("saving") : initialData ? t("updateEntity") : t("createEntity")}
+							{isSubmitting
+								? t("saving")
+								: initialData
+									? t("updateEntity")
+									: t("createEntity")}
 						</Button>
 					</div>
 				</form>
@@ -690,9 +772,20 @@ export function EntityEditForm({ id }: { id: string }) {
 			</CardHeader>
 			<CardContent>
 				<form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-					<InputField control={form.control} name="name" label="Name" type="text" required />
+					<InputField
+						control={form.control}
+						name="name"
+						label="Name"
+						type="text"
+						required
+					/>
 					<div className="flex justify-end gap-3 pt-4">
-						<Button variant="outline" type="button" onClick={() => router.back()} disabled={isSubmitting}>
+						<Button
+							variant="outline"
+							type="button"
+							onClick={() => router.back()}
+							disabled={isSubmitting}
+						>
 							{t("cancel")}
 						</Button>
 						<Button type="submit" disabled={isSubmitting}>
@@ -829,6 +922,7 @@ export const deleteEntity = async (id: string | number) => {
 When creating modals that fetch detailed data (e.g., clicking an "Eye" icon in a data table):
 
 ### Avoid Loading Flashes
+
 Use a `hasOpened` state to track if the dialog has ever been opened. Pass this to your `useSWR` hook to prevent the query key from changing back to `null` while the dialog is animating closed. This prevents the loading skeleton from flashing during the closing animation.
 
 ```tsx
@@ -836,21 +930,20 @@ const [isOpen, setIsOpen] = useState(false);
 const [hasOpened, setHasOpened] = useState(false);
 
 useEffect(() => {
-    if (isOpen && !hasOpened) setHasOpened(true);
+	if (isOpen && !hasOpened) setHasOpened(true);
 }, [isOpen, hasOpened]);
 
 const { data } = useRole(hasOpened ? roleId : null);
 ```
 
 ### Scrollbars
+
 Do not use `overflow-y-auto` with native scrollbars. Wrap the dialog content in the shadcn `<ScrollArea>` component.
 
 ```tsx
 <DialogContent className="sm:max-w-[550px]">
-    <DialogHeader>...</DialogHeader>
-    <ScrollArea className="max-h-[70vh] pr-4 -mr-4">
-        {/* Content */}
-    </ScrollArea>
+	<DialogHeader>...</DialogHeader>
+	<ScrollArea className="-mr-4 max-h-[70vh] pr-4">{/* Content */}</ScrollArea>
 </DialogContent>
 ```
 
@@ -869,7 +962,7 @@ When showing entity details in a right-side sheet, use a compact, quiet layout.
 ```tsx
 <SheetContent className="w-full gap-0 p-0 sm:max-w-none @3xl/body:w-[64vw]">
 	<SheetHeader className="border-b p-4">
-		<SheetTitle className="text-base font-normal leading-6">{t("detailsTitle")}</SheetTitle>
+		<SheetTitle className="text-base leading-6 font-normal">{t("detailsTitle")}</SheetTitle>
 		<SheetDescription className="text-xs">{t("detailsDescription")}</SheetDescription>
 	</SheetHeader>
 	<ScrollArea className="h-[calc(100vh-73px)]">
@@ -890,12 +983,13 @@ When showing entity details in a right-side sheet, use a compact, quiet layout.
 ## Rich Text Rendering
 
 When rendering data that contains HTML tags (like `description` or `notes` generated by TipTap):
-*   Break them out of CSS Grids to allow full-width reading.
-*   Use Tailwind Typography plugin classes (`prose prose-sm dark:prose-invert`) alongside React's `dangerouslySetInnerHTML`.
+
+- Break them out of CSS Grids to allow full-width reading.
+- Use Tailwind Typography plugin classes (`prose prose-sm dark:prose-invert`) alongside React's `dangerouslySetInnerHTML`.
 
 ```tsx
-<div 
-  className="prose prose-sm dark:prose-invert max-w-none text-muted-foreground"
-  dangerouslySetInnerHTML={{ __html: role.description }}
+<div
+	className="prose prose-sm dark:prose-invert text-muted-foreground max-w-none"
+	dangerouslySetInnerHTML={{ __html: role.description }}
 />
 ```

@@ -16,7 +16,8 @@ export const PATHS = {
 			ROOT: "/schools-management/subscription-plans",
 			CREATE: "/schools-management/subscription-plans/create",
 			EDIT: (id: number | string) => `/schools-management/subscription-plans/${id}/edit`,
-			DETAILS: (id: number | string) => `/schools-management/subscription-plans/${id}/details`,
+			DETAILS: (id: number | string) =>
+				`/schools-management/subscription-plans/${id}/details`,
 		},
 		VOUCHERS: {
 			ROOT: "/schools-management/vouchers",
@@ -28,7 +29,8 @@ export const PATHS = {
 			ROOT: "/schools-management/school-subscriptions",
 			CREATE: "/schools-management/school-subscriptions/create",
 			EDIT: (id: number | string) => `/schools-management/school-subscriptions/${id}/edit`,
-			DETAILS: (id: number | string) => `/schools-management/school-subscriptions/${id}/details`,
+			DETAILS: (id: number | string) =>
+				`/schools-management/school-subscriptions/${id}/details`,
 		},
 		BANK_ACCOUNTS: {
 			ROOT: "/schools-management/bank-accounts",
@@ -68,6 +70,7 @@ export const PATHS = {
 		},
 		TIMETABLE: {
 			ROOT: "/academics/timetable",
+			HISTORY: "/academics/timetable/history",
 			CREATE: "/academics/timetable/create",
 			EDIT: (id: number | string) => `/academics/timetable/${id}/edit`,
 			DETAILS: (id: number | string) => `/academics/timetable/${id}/details`,

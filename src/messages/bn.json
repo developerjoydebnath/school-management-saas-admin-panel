@@ -7,6 +7,7 @@
 		"academics_subjects": "বিষয়সমূহ",
 		"academics_syllabus": "সিলেবাস",
 		"academics_timetable": "ক্লাস রুটিন",
+		"academics_timetable_history": "রুটিন হিস্টোরি",
 		"academics_homework": "হোমওয়ার্ক ও অ্যাসাইনমেন্ট",
 		"academics_online_classes": "অনলাইন ক্লাস",
 		"academics_shifts": "শিফট",
@@ -336,11 +337,31 @@
 		"emailMobile": "ইমেইল/মোবাইল",
 		"teacherDetails": "শিক্ষক তথ্য",
 		"teacherName": "নাম",
+		"employeeCode": "কর্মচারী কোড",
+		"phone": "ফোন",
+		"designation": "পদবী",
+		"department": "বিভাগ",
+		"employmentStatus": "চাকরির অবস্থা",
+		"changeStatus": "অবস্থা পরিবর্তন",
 		"subjects": "বিষয়সমূহ",
 		"status": "অবস্থা",
 		"actions": "অ্যাকশন",
 		"deleteTeacherDescription": "আপনি কি নিশ্চিত যে আপনি এই শিক্ষককে মুছতে চান? এই পদক্ষেপটি পূর্বাবস্থায় ফিরিয়ে আনা যাবে না।",
-		"statusChangeTitle": "শিক্ষকের অবস্থা পরিবর্তন করুন"
+		"statusChangeTitle": "শিক্ষকের অবস্থা পরিবর্তন করুন",
+		"personalInformation": "ব্যক্তিগত তথ্য",
+		"identityDocuments": "পরিচয়পত্র",
+		"contactInformation": "যোগাযোগের তথ্য",
+		"location": "লোকেশন",
+		"locationMap": "লোকেশন ম্যাপ",
+		"employment": "চাকরির তথ্য",
+		"careerTracking": "ক্যারিয়ার ট্র্যাকিং",
+		"subjectsQualifications": "বিষয় ও যোগ্যতা",
+		"qualificationDetails": "যোগ্যতার তথ্য",
+		"mpoInformation": "এমপিও তথ্য",
+		"ntrcaInformation": "এনটিআরসিএ তথ্য",
+		"salaryBank": "বেতন ও ব্যাংক",
+		"notes": "নোট",
+		"uploadedDocuments": "আপলোড করা ডকুমেন্ট"
 	},
 	"Timetable": {
 		"title": "ক্লাস রুটিন",
@@ -390,7 +411,30 @@
 		"selectASectionDesc": "রুটিন দেখতে বা সম্পাদনা করতে উপরের থেকে একটি নির্দিষ্ট শাখা নির্বাচন করুন।",
 		"assignPeriod": "পিরিয়ড বরাদ্দ করুন",
 		"addSubjectTeacher": "বিষয় ও শিক্ষক যোগ করুন",
-		"clearSlot": "স্লট পরিষ্কার করুন"
+		"clearSlot": "স্লট পরিষ্কার করুন",
+		"history": "রুটিন হিস্টোরি",
+		"historyDescription": "সেভ করা রুটিন ভার্সন দেখুন এবং আগের রুটিন স্ন্যাপশট পর্যালোচনা করুন।",
+		"resetFilter": "ফিল্টার রিসেট",
+		"version": "ভার্সন",
+		"target": "টার্গেট",
+		"saved": "সেভ করা",
+		"action": "অ্যাকশন",
+		"loading": "লোড হচ্ছে...",
+		"classRoutine": "ক্লাস রুটিন",
+		"noHistoryFound": "কোন হিস্টোরি পাওয়া যায়নি।",
+		"page": "পৃষ্ঠা",
+		"total": "মোট",
+		"prev": "আগের",
+		"next": "পরের",
+		"selectHistoryLog": "সেভ করা রুটিন দেখতে একটি হিস্টোরি লগ নির্বাচন করুন।",
+		"loadingSnapshot": "স্ন্যাপশট লোড হচ্ছে...",
+		"session": "সেশন",
+		"class": "ক্লাস",
+		"snapshotNotFound": "স্ন্যাপশট পাওয়া যায়নি।"
+	},
+	"TimetableHistory": {
+		"title": "রুটিন হিস্টোরি",
+		"description": "সেভ করা রুটিন ভার্সন দেখুন এবং আগের রুটিন স্ন্যাপশট পর্যালোচনা করুন।"
 	},
 	"Forms": {
 		"name": "নাম",
@@ -446,7 +490,9 @@
 		"changeStatus": "পরিবর্তন করুন",
 		"edit": "সম্পাদনা করুন",
 		"cancel": "বাতিল",
-		"actions": "অ্যাকশন"
+		"actions": "অ্যাকশন",
+		"deleteTitle": "আইটেম মুছুন",
+		"deleteDescription": "আপনি কি নিশ্চিত যে আপনি এটি মুছে ফেলতে চান? এই অ্যাকশনটি পূর্বাবস্থায় ফেরানো যাবে না।"
 	},
 	"AdmissionNew": {
 		"title": "নতুন ভর্তি",
@@ -1342,6 +1388,41 @@
 			"brandingDigital": {
 				"title": "ব্র্যান্ডিং এবং ডিজিটাল",
 				"description": "লিঙ্ক, ডোমেন এবং সামাজিক উপস্থিতি।"
+			}
+		}
+	},
+	"TeacherForm": {
+		"createTeacher": "শিক্ষক যোগ করুন",
+		"updateTeacher": "শিক্ষক তথ্য সংশোধন করুন",
+		"saving": "সংরক্ষণ হচ্ছে...",
+		"sections": {
+			"basicInfo": {
+				"title": "প্রাথমিক তথ্য",
+				"description": "সাধারণ এবং ব্যক্তিগত তথ্য।"
+			},
+			"locationContact": {
+				"title": "যোগাযোগের তথ্য",
+				"description": "ঠিকানা এবং যোগাযোগের বিবরণ।"
+			},
+			"employment": {
+				"title": "চাকরির বিবরণ",
+				"description": "পদবী, বিভাগ, বেতন এবং যোগদানের তথ্য।"
+			},
+			"subjectsQualifications": {
+				"title": "বিষয় ও যোগ্যতা",
+				"description": "বিশেষায়িত বিষয় এবং সর্বোচ্চ শিক্ষাগত বিবরণ।"
+			},
+			"mpo": {
+				"title": "এমপিও তথ্য",
+				"description": "সরকারি এমপিও পে-রোল বিবরণ।"
+			},
+			"bank": {
+				"title": "ব্যাংক তথ্য",
+				"description": "ব্যাংক হিসাব এবং মোবাইল ওয়ালেট বিবরণ।"
+			},
+			"profileImage": {
+				"title": "প্রোফাইল ছবি",
+				"description": "শিক্ষকের প্রোফাইল ছবি আপলোড করুন।"
 			}
 		}
 	},

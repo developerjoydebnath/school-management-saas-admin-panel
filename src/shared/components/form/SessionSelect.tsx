@@ -24,7 +24,8 @@ export default function SessionSelect({
 	placeholder = "Select Session",
 	className,
 }: SessionSelectProps) {
-	const { data: sessions, isLoading } = useSWR("/sessions");
+	const { data: response, isLoading } = useSWR("/sessions/active-list");
+	const sessions = response?.data || response || [];
 	const locale = useLocale();
 
 	if (isLoading) return <Skeleton className="h-10 w-full" />;

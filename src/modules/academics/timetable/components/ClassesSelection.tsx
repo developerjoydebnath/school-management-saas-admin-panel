@@ -5,8 +5,7 @@ import { Card, CardContent } from "@/shared/components/ui/card";
 import { ScrollArea, ScrollBar } from "@/shared/components/ui/scroll-area";
 import { ClassModel } from "@/shared/models/class.model";
 import { LayoutGrid } from "lucide-react";
-import { useLocale, useTranslations } from "next-intl";
-import { getLocalizedName } from "@/shared/utils/localization";
+import { useTranslations } from "next-intl";
 
 interface ClassesSelectionProps {
 	classes: ClassModel[];
@@ -16,7 +15,6 @@ interface ClassesSelectionProps {
 
 export function ClassesSelection({ classes, selectedClass, onSelectClass }: ClassesSelectionProps) {
 	const t = useTranslations("Timetable");
-	const locale = useLocale();
 	return (
 		<Card className="w-full border p-4 shadow-none ring-0">
 			<CardContent className="p-0">
@@ -35,7 +33,7 @@ export function ClassesSelection({ classes, selectedClass, onSelectClass }: Clas
 									onClick={() => onSelectClass(cls.id)}
 									className="rounded-full shadow-none"
 								>
-									<span>{getLocalizedName(cls.name, locale)}</span>
+									<span>{getEnglishName(cls.name)}</span>
 								</Button>
 							))}
 							{classes.length === 0 && (
@@ -50,4 +48,8 @@ export function ClassesSelection({ classes, selectedClass, onSelectClass }: Clas
 			</CardContent>
 		</Card>
 	);
+}
+
+function getEnglishName(name: string | { en?: string; bn?: string }) {
+	return typeof name === "string" ? name : name?.en || "";
 }

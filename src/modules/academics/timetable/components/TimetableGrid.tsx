@@ -13,15 +13,19 @@ import { DAYS } from "../types";
 interface TimetableGridProps {
 	periods: any[];
 	assignments: Record<string, any>;
-	onEditColumn: (period: any) => void;
-	onDeleteColumn: (id: string) => void;
-	onAssignPeriod: (day: string, period: any, assignment?: any) => void;
-	onReorderPeriods: (draggedId: string, targetId: string) => void;
+	days?: string[];
+	readOnly?: boolean;
+	onEditColumn?: (period: any) => void;
+	onDeleteColumn?: (id: string) => void;
+	onAssignPeriod?: (day: string, period: any, assignment?: any) => void;
+	onReorderPeriods?: (draggedId: string, targetId: string) => void;
 }
 
 export function TimetableGrid({
 	periods,
 	assignments,
+	days = DAYS,
+	readOnly = false,
 	onEditColumn,
 	onDeleteColumn,
 	onAssignPeriod,
@@ -32,19 +36,22 @@ export function TimetableGrid({
 	const [draggedPeriodId, setDraggedPeriodId] = useState<string | null>(null);
 
 	const handleDragStart = (e: React.DragEvent, id: string) => {
+		if (readOnly) return;
 		setDraggedPeriodId(id);
 		e.dataTransfer.effectAllowed = "move";
 		e.dataTransfer.setData("text/plain", id);
 	};
 
 	const handleDragOver = (e: React.DragEvent) => {
+		if (readOnly) return;
 		e.preventDefault();
 		e.dataTransfer.dropEffect = "move";
 	};
 
 	const handleDrop = (e: React.DragEvent, targetId: string) => {
+		if (readOnly) return;
 		e.preventDefault();
-		if (draggedPeriodId && draggedPeriodId !== targetId) {
+		if (draggedPeriodId && draggedPeriodId !== targetId && onReorderPeriods) {
 			onReorderPeriods(draggedPeriodId, targetId);
 		}
 		setDraggedPeriodId(null);
@@ -61,19 +68,22 @@ export function TimetableGrid({
 						{periods.map((p) => (
 							<th
 								key={p.id}
-								draggable
+								draggable={!readOnly}
 								onDragStart={(e) => handleDragStart(e, p.id)}
 								onDragOver={handleDragOver}
 								onDrop={(e) => handleDrop(e, p.id)}
 								onDragEnd={() => setDraggedPeriodId(null)}
 								className={cn(
-									"group relative min-w-[140px] cursor-grab border-r border-b p-2 text-center align-top transition-colors last:border-r-0 active:cursor-grabbing",
+									"group relative min-w-[140px] border-r border-b p-2 text-center align-top transition-colors last:border-r-0",
+									!readOnly && "cursor-grab active:cursor-grabbing",
 									draggedPeriodId === p.id && "bg-accent/50 opacity-50"
 								)}
 							>
-								<div className="absolute top-1 left-1/2 -translate-x-1/2 opacity-0 transition-opacity group-hover:opacity-30">
-									<GripHorizontal className="h-3 w-3" />
-								</div>
+								{!readOnly && (
+									<div className="absolute top-1 left-1/2 -translate-x-1/2 opacity-0 transition-opacity group-hover:opacity-30">
+										<GripHorizontal className="h-3 w-3" />
+									</div>
+								)}
 								<div className="mt-1.5 mb-1 flex flex-col items-center justify-center gap-1">
 									<span className="text-foreground text-[11px] font-bold tracking-wider uppercase">
 										{getLocalizedName(p.name, locale)}
@@ -83,37 +93,41 @@ export function TimetableGrid({
 									</span>
 								</div>
 
-								<div className="mt-1 flex justify-center gap-1">
-									<Button
-										variant="outline"
-										size="icon-xs"
-										className="h-5 w-5"
-										onClick={() => onEditColumn(p)}
-									>
-										<Pencil className="size-2.5" />
-									</Button>
-									<ConfirmationModal
-										onConfirm={() => onDeleteColumn(p.id)}
-										title={t("deleteColumn")}
-										description={t("deleteColumnDesc")}
-										confirmText={t("delete")}
-										variant="destructive"
-									>
-										<AlertDialogTrigger asChild><Button
+								{!readOnly && (
+									<div className="mt-1 flex justify-center gap-1">
+										<Button
+											variant="outline"
+											size="icon-xs"
+											className="h-5 w-5"
+											onClick={() => onEditColumn?.(p)}
+										>
+											<Pencil className="size-2.5" />
+										</Button>
+										<ConfirmationModal
+											onConfirm={() => onDeleteColumn?.(p.id)}
+											title={t("deleteColumn")}
+											description={t("deleteColumnDesc")}
+											confirmText={t("delete")}
+											variant="destructive"
+										>
+											<AlertDialogTrigger asChild>
+												<Button
 													variant="destructive"
 													size="icon-xs"
 													className="h-5 w-5"
 												>
 													<Trash2 className="size-3" />
-												</Button></AlertDialogTrigger>
-									</ConfirmationModal>
-								</div>
+												</Button>
+											</AlertDialogTrigger>
+										</ConfirmationModal>
+									</div>
+								)}
 							</th>
 						))}
 					</tr>
 				</thead>
 				<tbody>
-					{DAYS.map((day, dayIndex) => (
+					{days.map((day, dayIndex) => (
 						<tr key={day} className="hover:bg-accent/5 group border-b last:border-0">
 							<td className="bg-background text-muted-foreground group-hover:text-foreground sticky left-0 z-10 border-r p-2 text-center text-[11px] font-bold tracking-widest uppercase shadow-[1px_0_0_0_hsl(var(--border))] transition-colors">
 								{t(day.toLowerCase()) || day}
@@ -130,7 +144,7 @@ export function TimetableGrid({
 										return (
 											<td
 												key={p.id}
-												rowSpan={DAYS.length}
+												rowSpan={days.length}
 												className="bg-accent/5 text-muted-foreground w-[100px] border-r p-2 text-center align-middle"
 											>
 												<div className="flex h-full items-center justify-center">
@@ -180,9 +194,14 @@ export function TimetableGrid({
 										{assignmentList.length > 0 ? (
 											<div
 												onClick={() =>
-													onAssignPeriod(day, p, assignmentList)
+													!readOnly &&
+													onAssignPeriod?.(day, p, assignmentList)
 												}
-												className="bg-accent/30 border-primary/20 hover:border-primary/60 hover:bg-accent/60 group/item relative flex h-full min-h-[70px] w-full cursor-pointer flex-col gap-1.5 overflow-hidden rounded-lg border p-2 transition-all"
+												className={cn(
+													"bg-accent/30 border-primary/20 group/item relative flex h-full min-h-[70px] w-full flex-col gap-1.5 overflow-hidden rounded-lg border p-2 transition-all",
+													!readOnly &&
+														"hover:border-primary/60 hover:bg-accent/60 cursor-pointer"
+												)}
 											>
 												{assignmentList.map(
 													(assignment: any, idx: number) => (
@@ -229,10 +248,16 @@ export function TimetableGrid({
 											</div>
 										) : (
 											<div
-												onClick={() => onAssignPeriod(day, p)}
-												className="hover:border-primary/30 hover:bg-accent/60 text-foreground/20 hover:text-foreground/50 bg-accent/10 group/empty flex h-full min-h-[70px] cursor-pointer items-center justify-center rounded-lg border border-dashed border-transparent transition-all"
+												onClick={() =>
+													!readOnly && onAssignPeriod?.(day, p)
+												}
+												className={cn(
+													"text-foreground/20 bg-accent/10 group/empty flex h-full min-h-[70px] items-center justify-center rounded-lg border border-dashed border-transparent transition-all",
+													!readOnly &&
+														"hover:border-primary/30 hover:bg-accent/60 hover:text-foreground/50 cursor-pointer"
+												)}
 											>
-												<Plus className="h-5 w-5" />
+												{readOnly ? "-" : <Plus className="h-5 w-5" />}
 											</div>
 										)}
 									</td>

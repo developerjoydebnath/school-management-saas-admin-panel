@@ -1,24 +1,21 @@
 "use client";
 
-import TeacherForm from "@/modules/staff/teachers/components/TeacherForm";
 import TeacherList from "@/modules/staff/teachers/components/TeacherList";
 import PageHeading from "@/shared/components/custom/PageHeading";
 import PermissionGuard from "@/shared/components/custom/PermissionGuard";
 import { Button } from "@/shared/components/ui/button";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/shared/components/ui/dialog";
-import { ScrollArea } from "@/shared/components/ui/scroll-area";
 import { PATHS } from "@/shared/configs/paths.config";
 import { PERMISSIONS } from "@/shared/configs/permissions.config";
 import { useBreadcrumbStore } from "@/shared/stores/breadcrumb-store";
 import { Plus } from "lucide-react";
 import { useTranslations } from "next-intl";
-import { useEffect, useState } from "react";
+import Link from "next/link";
+import { useEffect } from "react";
 
 export default function TeachersPage() {
 	const { setBreadcrumbs } = useBreadcrumbStore();
-	const [isCreateOpen, setIsCreateOpen] = useState(false);
-	const t = useTranslations("Teachers");
 	const tNav = useTranslations("Navigation");
+	const t = useTranslations("Teachers");
 
 	useEffect(() => {
 		setBreadcrumbs([
@@ -29,36 +26,26 @@ export default function TeachersPage() {
 	}, [setBreadcrumbs, tNav]);
 
 	return (
-		<div className="space-y-6">
+		<div className="@container/page space-y-6">
 			<PageHeading routeName="Teachers">
-				<PermissionGuard
-					permissions={[
-						PERMISSIONS.STAFF.ALL,
-						PERMISSIONS.STAFF.TEACHERS.ALL,
-						PERMISSIONS.STAFF.TEACHERS.CREATE,
-					]}
-				>
-					<Button onClick={() => setIsCreateOpen(true)}>
-						<Plus className="size-4" />
-						{t("addTeacher")}
-					</Button>
-				</PermissionGuard>
+				<div className="hidden @3xl/page:flex">
+					<PermissionGuard
+						permissions={[
+							PERMISSIONS.STAFF.TEACHERS.CREATE,
+							PERMISSIONS.STAFF.TEACHERS.ALL,
+							PERMISSIONS.STAFF.ALL,
+						]}
+					>
+						<Button asChild>
+							<Link href={PATHS.STAFF.TEACHERS.CREATE}>
+								<Plus className="h-4 w-4" />
+								{t("addTeacher")}
+							</Link>
+						</Button>
+					</PermissionGuard>
+				</div>
 			</PageHeading>
-
-			<div>
-				<TeacherList />
-			</div>
-
-			<Dialog open={isCreateOpen} onOpenChange={setIsCreateOpen}>
-				<DialogContent className="px-0">
-					<DialogHeader className="px-6">
-						<DialogTitle>{t("addTeacherTitle")}</DialogTitle>
-					</DialogHeader>
-					<ScrollArea className="max-h-[80vh] px-4">
-						<TeacherForm onSuccess={() => setIsCreateOpen(false)} />
-					</ScrollArea>
-				</DialogContent>
-			</Dialog>
+			<TeacherList />
 		</div>
 	);
 }

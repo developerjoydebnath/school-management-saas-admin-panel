@@ -31,14 +31,17 @@ export default function TeacherSelection({
 	className,
 	placeholder = "Select teacher...",
 }: TeacherSelectionProps) {
-	const { data: teachers, isLoading: isTeachersLoading } = useSWR("/teachers");
-	const { data: subjects, isLoading: isSubjectsLoading } = useSWR("/subjects");
+	const { data: teachersRes, isLoading: isTeachersLoading } = useSWR("/staff/teachers/short-list");
+	const { data: subjectsRes, isLoading: isSubjectsLoading } = useSWR("/subjects/active-list");
 	const isLoading = isTeachersLoading || isSubjectsLoading;
 
 	const [open, setOpen] = React.useState(false);
 	const locale = useLocale();
 
-	const serializedTeachers = teachers?.map((t: any) => new Teacher(t)) || [];
+	const teachers = teachersRes?.data || teachersRes || [];
+	const subjects = subjectsRes?.data || subjectsRes || [];
+
+	const serializedTeachers = teachers.map((t: any) => new Teacher(t));
 	const selectedTeacher = serializedTeachers.find((t: Teacher) => t.id === value);
 
 	const getSubjectNames = (subjectIds: string[]) => {

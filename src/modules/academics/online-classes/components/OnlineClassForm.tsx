@@ -23,9 +23,11 @@ export default function OnlineClassForm({ onSuccess, initialData }: OnlineClassF
 	const ft = useTranslations("Forms");
 
 	const { data: subjectResponse } = useSWR("/subjects/active-list");
-	const { data: classesData } = useSWR("/classes");
-	const { data: teachersData } = useSWR("/teachers");
-	const subjectsData = Array.isArray(subjectResponse?.data) ? subjectResponse.data : subjectResponse || [];
+	const { data: classesResponse } = useSWR("/classes/active-list");
+	const { data: teachersResponse } = useSWR("/staff/teachers/short-list");
+	const subjectsData = subjectResponse?.data || subjectResponse || [];
+	const classesData = classesResponse?.data || classesResponse || [];
+	const teachersData = teachersResponse?.data || teachersResponse || [];
 
 	const subjectOptions =
 		(subjectsData as any[])?.map((s) => ({
@@ -41,7 +43,7 @@ export default function OnlineClassForm({ onSuccess, initialData }: OnlineClassF
 
 	const teacherOptions =
 		(teachersData as any[])?.map((t) => ({
-			label: `${t.firstName} ${t.lastName}`,
+			label: t.fullName || t.name?.en || t.name,
 			value: t.id,
 		})) || [];
 

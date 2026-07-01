@@ -23,7 +23,8 @@ export default function HomeworkForm({ onSuccess, initialData }: HomeworkFormPro
 	const ft = useTranslations("Forms");
 
 	const { data: subjectResponse } = useSWR("/subjects/active-list");
-	const { data: classesData } = useSWR("/classes");
+	const { data: classesRes } = useSWR("/classes/active-list");
+	const classesData = classesRes?.data || classesRes || [];
 	const subjectsData = Array.isArray(subjectResponse?.data) ? subjectResponse.data : subjectResponse || [];
 
 	const subjectOptions =

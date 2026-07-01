@@ -2,238 +2,233 @@
 
 import ConfirmationModal from "@/shared/components/custom/ConfirmationModal";
 import PermissionGuard from "@/shared/components/custom/PermissionGuard";
-import { TOption } from "@/shared/components/form/FilterButton";
 import DataTable from "@/shared/components/table/DataTable";
 import TableFilter from "@/shared/components/table/TableFilter";
 import { AlertDialogTrigger } from "@/shared/components/ui/alert-dialog";
-import { Badge } from "@/shared/components/ui/badge";
 import { Button } from "@/shared/components/ui/button";
 import { Card, CardContent, CardHeader } from "@/shared/components/ui/card";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/shared/components/ui/dialog";
-import { ScrollArea } from "@/shared/components/ui/scroll-area";
-import { Switch } from "@/shared/components/ui/switch";
+import { Badge } from "@/shared/components/ui/badge";
+import {
+	DropdownMenu,
+	DropdownMenuContent,
+	DropdownMenuItem,
+	DropdownMenuTrigger,
+} from "@/shared/components/ui/dropdown-menu";
+import { PATHS } from "@/shared/configs/paths.config";
 import { PERMISSIONS } from "@/shared/configs/permissions.config";
-import { useSWR } from "@/shared/hooks/use-swr";
-import { useTableData } from "@/shared/hooks/use-table-data";
-import axios from "@/shared/lib/axios";
-import { Teacher } from "@/shared/models/teacher.model";
-import { StatusEnum } from "@/shared/types/enums";
-import { getLocalizedName } from "@/shared/utils/localization";
+import { useAuthStore } from "@/shared/stores/authStore";
+import { hasAccess } from "@/shared/utils/permission";
 import { ColumnDef } from "@tanstack/react-table";
-import { Pencil, Trash2 } from "lucide-react";
-import { useLocale, useTranslations } from "next-intl";
+import { Eye, Pencil, Trash2 } from "lucide-react";
+import { useTranslations } from "next-intl";
+import Link from "next/link";
 import { useState } from "react";
 import { toast } from "sonner";
+import { deleteTeacher, updateTeacherEmploymentStatus } from "../hooks/use-teacher-mutations";
+import { useTeachers } from "../hooks/use-teachers";
+import { TeacherModel } from "../models/teacher.model";
 import TeacherFilterBar from "./TeacherFilterBar";
-import TeacherForm from "./TeacherForm";
 
 export type TeacherFilter = {
 	search: string;
-	base_role: string[];
-	status: string[];
+	status?: string[];
+	designationId?: string[];
+	departmentId?: string[];
+	primarySubjectId?: string[];
+	employmentType?: string[];
+	bloodGroup?: string[];
+	gender?: string[];
+	divisionId?: string;
+	districtId?: string;
+	upazilaId?: string;
+	isMpoListed?: string;
+	ntrcaRegistered?: string;
 };
 
-const initialFilters: TeacherFilter = { search: "", base_role: [], status: [] };
+const initialFilters: TeacherFilter = { search: "" };
+
+const statusOptions = [
+	{ label: "Active", value: "active" },
+	{ label: "On Leave", value: "on_leave" },
+	{ label: "Suspended", value: "suspended" },
+	{ label: "Resigned", value: "resigned" },
+	{ label: "Retired", value: "retired" },
+	{ label: "Terminated", value: "terminated" },
+	{ label: "Transferred", value: "transferred" },
+	{ label: "Deceased", value: "deceased" },
+];
 
 export default function TeacherList() {
-	const [editingTeacher, setEditingTeacher] = useState<Teacher | null>(null);
-	const [teacherToDelete, setTeacherToDelete] = useState<string | null>(null);
-	const [isDeleting, setIsDeleting] = useState(false);
-
-	const [teacherToChangeStatus, setTeacherToChangeStatus] = useState<Teacher | null>(null);
-	const [isChangingStatus, setIsChangingStatus] = useState(false);
-	const t = useTranslations("Teachers");
-	const tc = useTranslations("Common");
-	const locale = useLocale();
-	const { data: subjectResponse } = useSWR("/subjects/active-list");
-	const subjectsData = Array.isArray(subjectResponse?.data) ? subjectResponse.data : subjectResponse || [];
 	const [filter, setFilter] = useState<TeacherFilter>(initialFilters);
 	const [page, setPage] = useState(1);
 	const [limit, setLimit] = useState(10);
+	const [itemToDelete, setItemToDelete] = useState<string | null>(null);
+	const [isDeleting, setIsDeleting] = useState(false);
+	const [itemToChangeStatus, setItemToChangeStatus] = useState<TeacherModel | null>(null);
+	const [isChangingStatus, setIsChangingStatus] = useState(false);
+	const t = useTranslations("Teachers");
+	const tc = useTranslations("Common");
+	const { user } = useAuthStore((state) => state.auth);
 
-	const {
-		data: teachers,
-		meta,
-		isLoading,
-		mutate,
-	} = useTableData("/teachers", {
-		// page,
-		// limit,
-		// ...filter,
+	const { teachers, meta, isLoading } = useTeachers({
+		page,
+		limit,
+		...filter,
 	});
 
-	const serializedTeachers = teachers?.map((teacher: any) => new Teacher(teacher));
-
 	const confirmDelete = async (id: string) => {
-		setTeacherToDelete(id);
+		setItemToDelete(id);
 		setIsDeleting(true);
 		try {
-			await axios.delete(`/teachers/${id}`);
+			await deleteTeacher(id);
 			toast.success("Teacher deleted successfully");
-			mutate();
-		} catch (err: any) {
-			toast.error("Failed to delete teacher. Please try again.");
+		} catch {
+			// Global axios interceptor auto-toasts errors
 		} finally {
 			setIsDeleting(false);
-			setTeacherToDelete(null);
+			setItemToDelete(null);
 		}
 	};
 
-	const confirmStatusChange = async (teacher: Teacher, newStatus: boolean) => {
-		setTeacherToChangeStatus(teacher);
+	const confirmStatusChange = async (item: TeacherModel, newStatus: string) => {
+		setItemToChangeStatus(item);
 		setIsChangingStatus(true);
 		try {
-			const status = newStatus ? StatusEnum.ACTIVE : StatusEnum.INACTIVE;
-			await axios.patch(`/teachers/${teacher.id}`, { status });
-			toast.success(`Status updated to ${status}`);
-			mutate();
-		} catch (err: any) {
-			toast.error("Failed to update status.");
+			await updateTeacherEmploymentStatus(item.id, newStatus);
+			toast.success(`Status updated to ${newStatus}`);
+		} catch {
+			// Global axios interceptor auto-toasts errors
 		} finally {
 			setIsChangingStatus(false);
-			setTeacherToChangeStatus(null);
+			setItemToChangeStatus(null);
 		}
 	};
 
-	const columns: ColumnDef<Teacher>[] = [
+	const columns: ColumnDef<TeacherModel>[] = [
 		{
-			id: "name",
-			accessorKey: "name",
+			id: "employeeCode",
+			header: t("employeeCode"),
+			cell: ({ row }) => <span className="font-medium">{row.original.employeeCode}</span>,
+		},
+		{
+			id: "fullName",
 			header: t("teacherName"),
-			cell: ({ row }) => (
-				<span className="font-medium">{getLocalizedName(row.original.name, locale)}</span>
-			),
+			cell: ({ row }) => <span>{row.original.fullName}</span>,
 		},
 		{
-			id: "email",
-			accessorKey: "email",
-			header: t("emailMobile"),
-			cell: ({ row }) => (
-				<div className="flex flex-col">
-					<span className="text-sm font-medium">{row.original.email}</span>
-					<span className="text-muted-foreground text-xs">
-						{row.original.mobileNumber}
-					</span>
-				</div>
-			),
+			id: "phone",
+			header: t("phone"),
+			cell: ({ row }) => <span>{row.original.phone}</span>,
 		},
 		{
-			id: "subjects",
-			accessorKey: "subjects",
-			header: t("subjects"),
+			id: "designation",
+			header: t("designation"),
+			cell: ({ row }) => <span>{row.original.designation?.name || "-"}</span>,
+		},
+		{
+			id: "department",
+			header: t("department"),
+			cell: ({ row }) => <span>{row.original.department?.name || "-"}</span>,
+		},
+		{
+			id: "status",
+			header: t("employmentStatus"),
 			cell: ({ row }) => {
-				const subjects = row.original.subjects;
-				if (!subjects || subjects.length === 0)
-					return <span className="text-muted-foreground">-</span>;
+				const item = row.original;
 				return (
-					<div className="flex max-w-[200px] flex-wrap items-center gap-1">
-						{subjects.slice(0, 2).map((subjectId: string, idx: number) => {
-							const subject = subjectsData?.find((s: any) => s.id === subjectId);
-							return (
-								<Badge
-									key={idx}
-									variant="secondary"
-									className="h-5 rounded-sm px-1.5 py-0 text-[10px]"
-								>
-									{subject
-										? getLocalizedName(
-												{ en: subject.enName || "", bn: subject.bnName || "" },
-												locale
-											)
-										: subjectId}
-								</Badge>
-							);
-						})}
-						{subjects.length > 2 && (
-							<Badge
-								variant="secondary"
-								className="h-5 rounded-sm px-1.5 py-0 text-[10px]"
-							>
-								+{subjects.length - 2}
-							</Badge>
-						)}
-					</div>
+					<Badge variant={item.status === "active" ? "default" : "secondary"} className="capitalize">
+						{item.status?.replace(/_/g, " ") || "-"}
+					</Badge>
 				);
 			},
 		},
 		{
-			id: "status",
-			header: t("status"),
+			id: "statusAction",
+			header: t("changeStatus"),
 			cell: ({ row }) => {
-				const teacher = row.original;
+				const item = row.original;
 				return (
-					<div className="flex items-center gap-2">
-						<ConfirmationModal
-							onConfirm={() =>
-								confirmStatusChange(teacher, teacher.status !== StatusEnum.ACTIVE)
-							}
-							title={t("statusChangeTitle")}
-							description={
-								teacher.status === StatusEnum.ACTIVE
-									? tc("changeToInactiveDesc")
-									: tc("changeToActiveDesc")
-							}
-							confirmText={tc("changeStatus")}
-							variant="default"
-							isLoading={isChangingStatus && teacherToChangeStatus?.id === teacher.id}
-						>
-							<AlertDialogTrigger asChild>
-								<Switch checked={teacher.status === StatusEnum.ACTIVE} />
-							</AlertDialogTrigger>
-						</ConfirmationModal>
-						<div
-							className={`w-fit rounded-full px-2.5 py-1 text-xs font-medium ${
-								teacher.status === StatusEnum.ACTIVE
-									? "bg-green-100 text-green-800"
-									: "bg-red-100 text-red-800"
-							}`}
-						>
-							{teacher.status}
-						</div>
-					</div>
+					<PermissionGuard
+						permissions={[
+							PERMISSIONS.STAFF.TEACHERS.EDIT,
+							PERMISSIONS.STAFF.TEACHERS.ALL,
+							PERMISSIONS.STAFF.ALL,
+						]}
+					>
+						<DropdownMenu>
+							<DropdownMenuTrigger asChild>
+								<Button variant="outline" size="sm" disabled={isChangingStatus && itemToChangeStatus?.id === item.id}>
+									Change
+								</Button>
+							</DropdownMenuTrigger>
+							<DropdownMenuContent align="end">
+								{statusOptions.map((option) => (
+									<DropdownMenuItem
+										key={option.value}
+										disabled={option.value === item.status}
+										onSelect={() => confirmStatusChange(item, option.value)}
+										className="capitalize"
+									>
+										{option.label}
+									</DropdownMenuItem>
+								))}
+							</DropdownMenuContent>
+						</DropdownMenu>
+					</PermissionGuard>
 				);
 			},
 		},
 		{
 			id: "actions",
-			header: t("actions"),
+			header: tc("actions"),
 			cell: ({ row }) => {
-				const teacher = row.original;
+				const item = row.original;
 				return (
 					<div className="flex items-center gap-2">
 						<PermissionGuard
 							permissions={[
-								PERMISSIONS.STAFF.ALL,
+								PERMISSIONS.STAFF.TEACHERS.VIEW,
 								PERMISSIONS.STAFF.TEACHERS.ALL,
-								PERMISSIONS.STAFF.TEACHERS.EDIT,
+								PERMISSIONS.STAFF.ALL,
 							]}
 						>
-							<Button
-								variant="outline"
-								size="icon-sm"
-								onClick={() => setEditingTeacher(teacher)}
-							>
-								<Pencil className="text-muted-foreground hover:text-foreground h-4 w-4" />
+							<Button asChild variant="outline" size="icon-sm">
+								<Link href={PATHS.STAFF.TEACHERS.DETAILS(item.id)}>
+									<Eye className="text-muted-foreground hover:text-foreground h-4 w-4" />
+								</Link>
 							</Button>
 						</PermissionGuard>
 						<PermissionGuard
 							permissions={[
-								PERMISSIONS.STAFF.ALL,
+								PERMISSIONS.STAFF.TEACHERS.EDIT,
 								PERMISSIONS.STAFF.TEACHERS.ALL,
+								PERMISSIONS.STAFF.ALL,
+							]}
+						>
+							<Button asChild variant="outline" size="icon-sm">
+								<Link href={PATHS.STAFF.TEACHERS.EDIT(item.id)}>
+									<Pencil className="text-muted-foreground hover:text-foreground h-4 w-4" />
+								</Link>
+							</Button>
+						</PermissionGuard>
+						<PermissionGuard
+							permissions={[
 								PERMISSIONS.STAFF.TEACHERS.DELETE,
+								PERMISSIONS.STAFF.TEACHERS.ALL,
+								PERMISSIONS.STAFF.ALL,
 							]}
 						>
 							<ConfirmationModal
-								onConfirm={() => confirmDelete(teacher.id)}
-								title={t("deleteTeacherTitle")}
-								description={t("deleteTeacherDescription")}
+								onConfirm={() => confirmDelete(item.id)}
+								title={tc("deleteTitle")}
+								description={tc("deleteDescription")}
 								confirmText={tc("delete")}
 								variant="destructive"
-								isLoading={isDeleting && teacherToDelete === teacher.id}
+								isLoading={isDeleting && itemToDelete === item.id}
 							>
 								<AlertDialogTrigger asChild>
 									<Button variant="destructive" size="icon-sm">
-										<Trash2 className="h-4 w-4 text-red-500 hover:text-red-600" />
+										<Trash2 />
 									</Button>
 								</AlertDialogTrigger>
 							</ConfirmationModal>
@@ -251,48 +246,40 @@ export default function TeacherList() {
 	};
 
 	return (
-		<Card className="p-4 shadow-none ring-0 sm:p-6">
+		<Card className="p-6 shadow-none ring-0">
 			<CardHeader className="p-0">
 				<TeacherFilterBar filter={filter} setFilter={setFilter} />
 			</CardHeader>
 			<CardContent className="space-y-4 p-0">
-				<TableFilter filter={filter} setFilter={setFilter} resetFilters={resetFilters} />
-
-				<DataTable<Teacher>
-					data={serializedTeachers || []}
-					isLoading={isLoading}
-					pagination={{
-						page: meta.page,
-						limit: meta.limit,
-						total: meta.total,
-						totalPages: meta.totalPages,
-						onPageChange: setPage,
-						onLimitChange: setLimit,
-					}}
+				<TableFilter
+					filter={filter}
+					setFilter={setFilter}
+					resetFilters={resetFilters}
+					hideExport={
+						!hasAccess(user, [
+							PERMISSIONS.STAFF.TEACHERS.ALL,
+							PERMISSIONS.STAFF.ALL,
+						])
+					}
+				/>
+				<DataTable
 					columns={columns}
+					data={teachers || []}
+					isLoading={isLoading}
+					pagination={
+						meta
+							? {
+									page: meta.page,
+									limit: meta.limit,
+									total: meta.total,
+									totalPages: meta.totalPages,
+									onPageChange: setPage,
+									onLimitChange: setLimit,
+								}
+							: undefined
+					}
 				/>
 			</CardContent>
-
-			<Dialog
-				open={!!editingTeacher}
-				onOpenChange={(open) => !open && setEditingTeacher(null)}
-			>
-				<DialogContent className="px-0">
-					<DialogHeader className="px-6">
-						<DialogTitle>
-							{editingTeacher?.id ? t("editTeacherTitle") : t("addTeacherTitle")}
-						</DialogTitle>
-					</DialogHeader>
-					<ScrollArea className="max-h-[80vh] px-4">
-						{editingTeacher && (
-							<TeacherForm
-								initialData={editingTeacher}
-								onSuccess={() => setEditingTeacher(null)}
-							/>
-						)}
-					</ScrollArea>
-				</DialogContent>
-			</Dialog>
 		</Card>
 	);
 }

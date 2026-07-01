@@ -29,14 +29,20 @@ import SectionSelect from "./SectionSelect";
 import SessionSelect from "./SessionSelect";
 import ShiftSelect from "./ShiftSelect";
 import SubjectSelection from "./SubjectSelection";
+import SubjectSingleSelection from "./SubjectSingleSelection";
 import SubscriptionPlanSelect from "./SubscriptionPlanSelect";
 import TagInput from "./TagInput";
 import TeacherSelection from "./TeacherSelection";
+import UploadDocumentMulti from "./UploadDocumentMulti";
+import UploadDocumentSingle from "./UploadDocumentSingle";
 import VoucherSelect from "./VoucherSelect";
+import DesignationSelect from "./DesignationSelect";
+import DepartmentSelect from "./DepartmentSelect";
 import { SimpleEditor } from "./rich-editor/simple-editor";
 
 interface FormFieldProps extends UseControllerProps {
 	label?: string;
+	moduleName?: string;
 	placeholder?: string;
 	type?: string;
 	required?: boolean;
@@ -133,6 +139,7 @@ export default function InputField({
 					.with("textarea", () => (
 						<Textarea
 							{...field}
+							value={field.value ?? ""}
 							placeholder={props?.placeholder}
 							className={cn("h-32", className)}
 						/>
@@ -160,6 +167,22 @@ export default function InputField({
 						<UploadImage
 							className={className}
 							placeholderBase64={props.placeholderBase64}
+							{...props}
+							{...field}
+						/>
+					))
+					// document-multi
+					.with("document-multi", () => (
+						<UploadDocumentMulti
+							className={className}
+							{...props}
+							{...field}
+						/>
+					))
+					// document-single
+					.with("document-single", () => (
+						<UploadDocumentSingle
+							className={className}
 							{...props}
 							{...field}
 						/>
@@ -301,6 +324,16 @@ export default function InputField({
 						/>
 					))
 
+					// subjectSingleSelect
+					.with("subjectSingleSelect", () => (
+						<SubjectSingleSelection
+							value={field.value}
+							onChange={field.onChange}
+							placeholder={props.placeholder}
+							className={className}
+						/>
+					))
+
 					// classSelect
 					.with("classSelect", () => (
 						<ClassSelect
@@ -361,6 +394,28 @@ export default function InputField({
 							onChange={field.onChange}
 							placeholder={props.placeholder}
 							className={className}
+						/>
+					))
+
+					// designationSelect
+					.with("designationSelect", () => (
+						<DesignationSelect
+							value={field.value}
+							onChange={field.onChange}
+							placeholder={props.placeholder}
+							className={className}
+							disabled={props.disabled}
+						/>
+					))
+
+					// departmentSelect
+					.with("departmentSelect", () => (
+						<DepartmentSelect
+							value={field.value}
+							onChange={field.onChange}
+							placeholder={props.placeholder}
+							className={className}
+							disabled={props.disabled}
 						/>
 					))
 

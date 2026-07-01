@@ -9,9 +9,10 @@ const UploadImage = React.forwardRef<
 		value?: string | File | null;
 		onChange: (file: File) => void;
 		className?: string;
+		defaultPreview?: string | null;
 		placeholderBase64?: string | null;
 	}
->(({ value, onChange, className, placeholderBase64 }, ref) => {
+>(({ value, onChange, className, defaultPreview, placeholderBase64 }, ref) => {
 	const [localUrl, setLocalUrl] = useState<string | null>(null);
 
 	const onDrop = useCallback(
@@ -26,7 +27,7 @@ const UploadImage = React.forwardRef<
 
 	const isFile = value instanceof File;
 	const isString = typeof value === "string" && value.length > 0;
-	const showPreview = localUrl || isFile || isString;
+	const showPreview = localUrl || isFile || isString || defaultPreview;
 
 	let previewUrl = "";
 	if (localUrl) {
@@ -34,7 +35,9 @@ const UploadImage = React.forwardRef<
 	} else if (isFile) {
 		previewUrl = URL.createObjectURL(value as File);
 	} else if (isString) {
-		previewUrl = value as string;
+		previewUrl = defaultPreview || (value as string);
+	} else if (defaultPreview) {
+		previewUrl = defaultPreview;
 	}
 
 	return (

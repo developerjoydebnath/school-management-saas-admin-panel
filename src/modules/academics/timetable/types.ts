@@ -1,5 +1,30 @@
 export type PeriodType = "Period" | "Break" | "Lunch" | "Assembly" | "Activity" | "Prayer";
 
+export type TimetableColumn = {
+	id: string;
+	name: string;
+	startTime: string;
+	endTime: string;
+	type: PeriodType;
+};
+
+export type TimetableAssignment = {
+	subjectId: string;
+	teacherId: string;
+	classRoomId?: string;
+	subjectName?: string | { en: string; bn?: string };
+	teacherName?: string;
+	roomNumber?: string;
+};
+
+export type TimetableCells = Record<string, TimetableAssignment[]>;
+
+export type TimetableTarget = {
+	sessionId: string;
+	classId: string;
+	sectionId?: string | null;
+};
+
 export const PERIOD_TYPES: PeriodType[] = [
 	"Period",
 	"Break",

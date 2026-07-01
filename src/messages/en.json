@@ -7,6 +7,7 @@
 		"academics_subjects": "Subjects",
 		"academics_syllabus": "Syllabus",
 		"academics_timetable": "Class Timetable",
+		"academics_timetable_history": "Timetable History",
 		"academics_homework": "Homework & Assignments",
 		"academics_online_classes": "Online Classes",
 		"academics_shifts": "Shifts",
@@ -340,11 +341,31 @@
 		"emailMobile": "Email/Mobile",
 		"teacherDetails": "Teacher Details",
 		"teacherName": "Name",
+		"employeeCode": "Employee Code",
+		"phone": "Phone",
+		"designation": "Designation",
+		"department": "Department",
+		"employmentStatus": "Employment Status",
+		"changeStatus": "Change Status",
 		"subjects": "Subjects",
 		"status": "Status",
 		"actions": "Actions",
 		"deleteTeacherDescription": "Are you sure you want to delete this teacher? This action cannot be undone.",
-		"statusChangeTitle": "Change Teacher Status"
+		"statusChangeTitle": "Change Teacher Status",
+		"personalInformation": "Personal Information",
+		"identityDocuments": "Identity Documents",
+		"contactInformation": "Contact Information",
+		"location": "Location",
+		"locationMap": "Location Map",
+		"employment": "Employment",
+		"careerTracking": "Career Tracking",
+		"subjectsQualifications": "Subjects & Qualifications",
+		"qualificationDetails": "Qualification Details",
+		"mpoInformation": "MPO Information",
+		"ntrcaInformation": "NTRCA Information",
+		"salaryBank": "Salary & Bank",
+		"notes": "Notes",
+		"uploadedDocuments": "Uploaded Documents"
 	},
 	"Timetable": {
 		"title": "Class Timetable",
@@ -395,7 +416,30 @@
 		"assignPeriod": "Assign Period",
 		"addSubjectTeacher": "Add Subject & Teacher",
 		"clearSlot": "Clear Slot",
+		"history": "History",
+		"historyDescription": "View saved timetable versions and inspect previous routine snapshots.",
+		"resetFilter": "Reset Filter",
+		"version": "Version",
+		"target": "Target",
+		"saved": "Saved",
+		"action": "Action",
+		"loading": "Loading...",
+		"classRoutine": "Class routine",
+		"noHistoryFound": "No history found.",
+		"page": "Page",
+		"total": "Total",
+		"prev": "Prev",
+		"next": "Next",
+		"selectHistoryLog": "Select a history log to view the saved timetable.",
+		"loadingSnapshot": "Loading snapshot...",
+		"session": "Session",
+		"class": "Class",
+		"snapshotNotFound": "Snapshot not found.",
 		"noClassesFound": "No classes found"
+	},
+	"TimetableHistory": {
+		"title": "Timetable History",
+		"description": "View saved timetable versions and inspect previous routine snapshots."
 	},
 	"Forms": {
 		"name": "Name",
@@ -451,7 +495,9 @@
 		"changeStatus": "Change Status",
 		"edit": "Edit",
 		"cancel": "Cancel",
-		"actions": "Actions"
+		"actions": "Actions",
+		"deleteTitle": "Delete Item",
+		"deleteDescription": "Are you sure you want to delete this item? This action cannot be undone."
 	},
 	"AdmissionNew": {
 		"title": "New Admission",
@@ -1347,6 +1393,41 @@
 			"brandingDigital": {
 				"title": "Branding & Digital",
 				"description": "Links, domains, and social presence."
+			}
+		}
+	},
+	"TeacherForm": {
+		"createTeacher": "Create Teacher",
+		"updateTeacher": "Update Teacher",
+		"saving": "Saving...",
+		"sections": {
+			"basicInfo": {
+				"title": "Basic Information",
+				"description": "General and personal identity details."
+			},
+			"locationContact": {
+				"title": "Contact Information",
+				"description": "Address and communication details."
+			},
+			"employment": {
+				"title": "Employment Details",
+				"description": "Designation, department, salary and joining details."
+			},
+			"subjectsQualifications": {
+				"title": "Subjects & Qualifications",
+				"description": "Specializations and highest educational details."
+			},
+			"mpo": {
+				"title": "MPO Information",
+				"description": "Government MPO payroll details."
+			},
+			"bank": {
+				"title": "Bank Information",
+				"description": "Bank account and mobile wallet details."
+			},
+			"profileImage": {
+				"title": "Profile Image",
+				"description": "Upload teacher profile photo."
 			}
 		}
 	},

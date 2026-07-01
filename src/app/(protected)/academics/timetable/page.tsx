@@ -20,7 +20,7 @@ export default function TimetablePage() {
 	}, [setBreadcrumbs, tNav]);
 
 	return (
-		<div className="min-w-0 space-y-6">
+		<div className="@container/page min-w-0 space-y-6">
 			<PageHeading routeName="Timetable" />
 			<div className="w-full min-w-0">
 				<TimetableView />

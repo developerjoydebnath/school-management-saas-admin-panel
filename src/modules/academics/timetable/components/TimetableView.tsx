@@ -1,22 +1,16 @@
 "use client";
 
-import ConfirmationModal from "@/shared/components/custom/ConfirmationModal";
-import { Button } from "@/shared/components/ui/button";
 import { Card, CardContent } from "@/shared/components/ui/card";
-import { Checkbox } from "@/shared/components/ui/checkbox";
-import {
-	Dialog,
-	DialogContent,
-	DialogFooter,
-	DialogHeader,
-	DialogTitle,
-} from "@/shared/components/ui/dialog";
+import { PATHS } from "@/shared/configs/paths.config";
 import { useSWR } from "@/shared/hooks/use-swr";
-import axios from "@/shared/lib/axios";
 import { ClassModel } from "@/shared/models/class.model";
-import { useTranslations } from "next-intl";
-import { useEffect, useState } from "react";
+import { useSessionStore } from "@/shared/stores/session-store";
+import { useLocale, useTranslations } from "next-intl";
+import { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
+import { downloadTimetablePdf, saveTimetable } from "../hooks/use-timetable-mutations";
+import { useCurrentTimetable } from "../hooks/use-timetables";
+import { DAYS, TimetableCells, TimetableColumn } from "../types";
 import { AssignPeriodDialog } from "./AssignPeriodDialog";
 import { ClassesSelection } from "./ClassesSelection";
 import { EditColumnDialog } from "./EditColumnDialog";
@@ -24,7 +18,7 @@ import { EmptyState } from "./EmptyState";
 import { TimetableGrid } from "./TimetableGrid";
 import { TimetableHeader } from "./TimetableHeader";
 
-const DEFAULT_PERIODS = [
+const DEFAULT_PERIODS: TimetableColumn[] = [
 	{ id: "1", name: "Period 1", startTime: "08:00", endTime: "08:45", type: "Period" },
 	{ id: "2", name: "Period 2", startTime: "08:45", endTime: "09:30", type: "Period" },
 	{ id: "3", name: "Period 3", startTime: "09:30", endTime: "10:15", type: "Period" },
@@ -33,61 +27,95 @@ const DEFAULT_PERIODS = [
 ];
 
 export default function TimetableView() {
-	const { data: classes } = useSWR("/classes");
-	const { data: timetables, mutate: mutateTimetables } = useSWR("/timetables");
 	const t = useTranslations("Timetable");
-	const ft = useTranslations("Forms");
+	const locale = useLocale();
+	const { selectedSessionId } = useSessionStore();
+	const { data: sessionsRes } = useSWR("/sessions/active-list");
+	const { data: classesRes } = useSWR("/classes/active-list");
+	const { data: subjectResponse } = useSWR("/subjects/active-list");
+	const { data: roomResponse } = useSWR("/class-rooms/active-list");
+
+	const sessions = useMemo(() => sessionsRes?.data || sessionsRes || [], [sessionsRes]);
+	const sessionId =
+		selectedSessionId ||
+		sessions.find((session: any) => session.status === "ACTIVE")?.id ||
+		sessions[0]?.id ||
+		null;
+	const classes = useMemo(() => classesRes?.data || classesRes || [], [classesRes]);
+	const subjectsData = useMemo(
+		() => subjectResponse?.data || subjectResponse || [],
+		[subjectResponse]
+	);
+	const roomsData = useMemo(() => roomResponse?.data || roomResponse || [], [roomResponse]);
+
+	const serializedClasses: ClassModel[] = useMemo(
+		() => classes?.map((cls: any) => new ClassModel(cls)) || [],
+		[classes]
+	);
 
 	const [selectedClass, setSelectedClass] = useState<string | null>("");
-	const [selectedSection, setSelectedSection] = useState<string | null>("ALL");
-
-	// Periods State
-	const [periods, setPeriods] = useState<any[]>(DEFAULT_PERIODS);
-
-	// Assignments State (Day_PeriodId -> [{subject, teacher, roomNumber}])
-	const [assignments, setAssignments] = useState<Record<string, any>>({});
-
-	// Dialog States
-	const [editingColumn, setEditingColumn] = useState<any | null>(null);
+	const [selectedSectionIds, setSelectedSectionIds] = useState<string[]>([]);
+	const [periods, setPeriods] = useState<TimetableColumn[]>(DEFAULT_PERIODS);
+	const [assignments, setAssignments] = useState<TimetableCells>({});
+	const [editingColumn, setEditingColumn] = useState<TimetableColumn | null>(null);
 	const [assigningPeriod, setAssigningPeriod] = useState<any | null>(null);
+	const [isSaving, setIsSaving] = useState(false);
+	const [isPrinting, setIsPrinting] = useState(false);
 
-	const [saveDialogOpen, setSaveDialogOpen] = useState(false);
-	const [selectedSectionsToApply, setSelectedSectionsToApply] = useState<string[]>([]);
-
-	const serializedClasses: ClassModel[] = classes?.map((cls: any) => new ClassModel(cls)) || [];
-	const activeClass = serializedClasses?.find((c: ClassModel) => c.id === selectedClass);
+	const activeClass = serializedClasses.find((c) => c.id === selectedClass);
 	const sections = activeClass?.sections || [];
+	const sectionKey = sections.map((section) => section.id).join(",");
+	const activeSectionId = sections.length ? selectedSectionIds[0] || null : null;
+	const isSectionSelectionRequired = sections.length > 0 && selectedSectionIds.length === 0;
+	const disableActions = !sessionId || !selectedClass || isSectionSelectionRequired;
+	const historyHref = useMemo(() => {
+		const params = new URLSearchParams();
+		if (sessionId) params.set("sessionId", sessionId);
+		if (selectedClass) params.set("classId", selectedClass);
+		if (selectedSectionIds[0]) params.set("sectionId", selectedSectionIds[0]);
 
-	const isSectionSelectionRequired = sections.length > 0 && selectedSection === "ALL";
-	const disableActions = !selectedClass || isSectionSelectionRequired;
+		const query = params.toString();
+		return query
+			? `${PATHS.ACADEMICS.TIMETABLE.HISTORY}?${query}`
+			: PATHS.ACADEMICS.TIMETABLE.HISTORY;
+	}, [sessionId, selectedClass, selectedSectionIds]);
+
+	const { data: timetableResponse, isLoading: isTimetableLoading } = useCurrentTimetable({
+		sessionId,
+		classId: selectedClass,
+		sectionId: activeSectionId,
+	});
 
 	useEffect(() => {
-		if (selectedClass && timetables && !isSectionSelectionRequired) {
-			const timetable = timetables.find((t: any) => {
-				const matchesClass = t.classId === selectedClass;
-				const matchesSection =
-					selectedSection === "ALL"
-						? t.section === null ||
-							t.section === undefined ||
-							(Array.isArray(t.section) && t.section.length === 0)
-						: t.section === selectedSection ||
-							(Array.isArray(t.section) && t.section.includes(selectedSection));
-				return matchesClass && matchesSection;
-			});
-
-			if (timetable) {
-				// eslint-disable-next-line react-hooks/set-state-in-effect
-				setPeriods(timetable.periods || DEFAULT_PERIODS);
-				setAssignments(timetable.assignments || {});
-			} else {
-				setPeriods(DEFAULT_PERIODS);
-				setAssignments({});
-			}
-		} else {
-			setPeriods(DEFAULT_PERIODS);
-			setAssignments({});
+		if (!selectedClass || !sections.length) {
+			setSelectedSectionIds([]);
+			return;
 		}
-	}, [selectedClass, selectedSection, timetables, isSectionSelectionRequired]);
+
+		setSelectedSectionIds((current) => {
+			const existing = current.filter((id) => sections.some((section) => section.id === id));
+			const next = existing.length ? existing : [sections[0].id as string];
+			const isSame =
+				next.length === current.length && next.every((id, index) => id === current[index]);
+			return isSame ? current : next;
+		});
+	}, [selectedClass, sectionKey]);
+
+	useEffect(() => {
+		if (!selectedClass || isSectionSelectionRequired || isTimetableLoading) return;
+
+		const timetable = timetableResponse?.data || null;
+		setPeriods(timetable?.columns || timetable?.periods || DEFAULT_PERIODS);
+		setAssignments(timetable?.cells || timetable?.assignments || {});
+	}, [selectedClass, isSectionSelectionRequired, isTimetableLoading, timetableResponse]);
+
+	const handleToggleSection = (id: string) => {
+		setSelectedSectionIds((current) =>
+			current.includes(id)
+				? current.filter((sectionId) => sectionId !== id)
+				: [...current, id]
+		);
+	};
 
 	const handleAddColumn = () => {
 		setEditingColumn({
@@ -99,131 +127,103 @@ export default function TimetableView() {
 		});
 	};
 
-	const handleSaveColumn = (data: any) => {
-		if (periods.find((p) => p.id === data.id)) {
-			setPeriods(periods.map((p) => (p.id === data.id ? data : p)));
-		} else {
-			setPeriods([...periods, data]);
-		}
+	const handleSaveColumn = (data: TimetableColumn) => {
+		const normalized = {
+			...data,
+			id: data.id.startsWith("new-") ? `${Date.now()}` : data.id,
+		};
+		setPeriods((current) =>
+			current.some((p) => p.id === data.id)
+				? current.map((p) => (p.id === data.id ? normalized : p))
+				: [...current, normalized]
+		);
 		setEditingColumn(null);
 	};
 
 	const handleDeleteColumn = (id: string) => {
-		setPeriods(periods.filter((p) => p.id !== id));
+		setPeriods((current) => current.filter((p) => p.id !== id));
+		setAssignments((current) => {
+			const next = { ...current };
+			DAYS.forEach((day) => delete next[`${day}_${id}`]);
+			return next;
+		});
 		setEditingColumn(null);
 		toast.success("Column deleted");
 	};
-
-	const { data: subjectResponse } = useSWR("/subjects/active-list");
-	const subjectsData = Array.isArray(subjectResponse?.data) ? subjectResponse.data : subjectResponse || [];
-	const { data: teachersData } = useSWR("/teachers");
 
 	const handleAssignPeriod = (data: any[]) => {
 		if (!assigningPeriod) return;
 
 		const enrichedData = data.map((item) => {
-			const subject = subjectsData?.find((s: any) => s.id === item.subjectId);
-			const teacher = teachersData?.find((t: any) => t.id === item.teacherId);
+			const subject = subjectsData.find((s: any) => s.id === item.subjectId);
+			const room = roomsData.find((r: any) => r.id === item.classRoomId);
 			return {
 				...item,
-				subjectName: subject?.enName || subject?.name || item.subjectId,
-				teacherName: teacher?.name || item.teacherId,
+				subjectName: subject
+					? {
+							en: subject.enName || subject.name?.en || "",
+							bn: subject.bnName || subject.name?.bn || "",
+						}
+					: item.subjectId,
+				roomNumber: room?.roomNo || item.roomNumber || "",
 			};
 		});
 
 		const key = `${assigningPeriod.day}_${assigningPeriod.period.id}`;
-		setAssignments({
-			...assignments,
+		setAssignments((current) => ({
+			...current,
 			[key]: enrichedData,
-		});
+		}));
 		setAssigningPeriod(null);
 	};
 
 	const handleDeleteAssignment = (day: string, id: string) => {
 		const key = `${day}_${id}`;
-		const newAssignments = { ...assignments };
-		delete newAssignments[key];
-		setAssignments(newAssignments);
+		setAssignments((current) => {
+			const next = { ...current };
+			delete next[key];
+			return next;
+		});
 		setAssigningPeriod(null);
 		toast.success("Assignment cleared");
 	};
 
-	const handleSaveTimetable = () => {
-		if (sections.length > 0) {
-			setSelectedSectionsToApply([selectedSection!]);
-			setSaveDialogOpen(true);
-		} else {
-			saveTimetableDirectly();
-		}
-	};
+	const handleSaveTimetable = async () => {
+		if (!sessionId || !selectedClass) return;
 
-	const saveTimetableDirectly = async () => {
+		setIsSaving(true);
 		try {
-			const payload = {
+			await saveTimetable({
+				sessionId,
 				classId: selectedClass,
-				section: null,
-				periods,
-				assignments,
-			};
-
-			const existingTimetable = timetables?.find(
-				(t: any) =>
-					t.classId === selectedClass && (t.section === null || t.section === undefined)
-			);
-
-			if (existingTimetable) {
-				await axios.put(`/timetables/${existingTimetable.id}`, {
-					...payload,
-					id: existingTimetable.id,
-				});
-			} else {
-				await axios.post("/timetables", payload);
-			}
-			mutateTimetables();
-			toast.success("Timetable saved successfully");
-		} catch (error) {
-			toast.error("Failed to save timetable");
+				sectionIds: sections.length ? selectedSectionIds : undefined,
+				columns: periods,
+				cells: assignments,
+			});
+			toast.success(t("saveSuccess"));
+		} catch {
+			// Global axios interceptor handles the error toast.
+		} finally {
+			setIsSaving(false);
 		}
 	};
 
-	const handleConfirmSave = async () => {
+	const handlePrintTimetable = async () => {
+		if (!sessionId || !selectedClass) return;
+
+		setIsPrinting(true);
 		try {
-			for (const sec of selectedSectionsToApply) {
-				const payload = {
-					classId: selectedClass,
-					section: sec,
-					periods,
-					assignments,
-				};
-
-				// Look for existing single-section or multi-section matches to overwrite properly
-				let existingTimetable = timetables?.find(
-					(t: any) => t.classId === selectedClass && t.section === sec
-				);
-
-				if (!existingTimetable) {
-					existingTimetable = timetables?.find(
-						(t: any) =>
-							t.classId === selectedClass &&
-							Array.isArray(t.section) &&
-							t.section.includes(sec)
-					);
-				}
-
-				if (existingTimetable) {
-					await axios.put(`/timetables/${existingTimetable.id}`, {
-						...payload,
-						id: existingTimetable.id,
-					});
-				} else {
-					await axios.post("/timetables", payload);
-				}
-			}
-			mutateTimetables();
-			setSaveDialogOpen(false);
-			toast.success(`Timetable saved for sections: ${selectedSectionsToApply.join(", ")}`);
-		} catch (error) {
-			toast.error("Failed to save timetable");
+			await downloadTimetablePdf({
+				sessionId,
+				classId: selectedClass,
+				sectionIds: sections.length ? selectedSectionIds : undefined,
+				locale,
+				fileName: "class-timetable.pdf",
+			});
+		} catch {
+			// Global axios interceptor handles non-blob errors.
+		} finally {
+			setIsPrinting(false);
 		}
 	};
 
@@ -234,18 +234,22 @@ export default function TimetableView() {
 				selectedClass={selectedClass}
 				onSelectClass={(id) => {
 					setSelectedClass(id);
-					setSelectedSection("ALL");
+					setSelectedSectionIds([]);
 				}}
 			/>
 
 			<Card className="w-full min-w-0 gap-0 overflow-hidden border p-0 shadow-none ring-0">
 				<TimetableHeader
 					sections={sections}
-					selectedSection={selectedSection}
-					onSelectSection={setSelectedSection}
+					selectedSections={selectedSectionIds}
+					onToggleSection={handleToggleSection}
 					onAddColumn={handleAddColumn}
+					historyHref={historyHref}
+					onPrint={handlePrintTimetable}
 					disableActions={disableActions}
 					onSave={handleSaveTimetable}
+					isSaving={isSaving}
+					isPrinting={isPrinting}
 				/>
 
 				<CardContent className="p-0">
@@ -253,21 +257,6 @@ export default function TimetableView() {
 						<EmptyState />
 					) : isSectionSelectionRequired ? (
 						<div className="text-muted-foreground flex h-[400px] flex-col items-center justify-center space-y-4 p-8 text-center">
-							<div className="bg-accent/50 rounded-full p-4">
-								<svg
-									className="text-muted-foreground/60 h-8 w-8"
-									fill="none"
-									viewBox="0 0 24 24"
-									stroke="currentColor"
-								>
-									<path
-										strokeLinecap="round"
-										strokeLinejoin="round"
-										strokeWidth={2}
-										d="M12 6v6m0 0v6m0-6h6m-6 0H6"
-									/>
-								</svg>
-							</div>
 							<div>
 								<h3 className="text-foreground font-semibold">
 									{t("selectASection")}
@@ -299,7 +288,6 @@ export default function TimetableView() {
 				</CardContent>
 			</Card>
 
-			{/* Dialogs */}
 			<EditColumnDialog
 				open={!!editingColumn}
 				column={editingColumn}
@@ -317,61 +305,6 @@ export default function TimetableView() {
 				onAssign={handleAssignPeriod}
 				onDelete={handleDeleteAssignment}
 			/>
-
-
-			{/* Save Apply to Sections Dialog */}
-			<Dialog open={saveDialogOpen} onOpenChange={setSaveDialogOpen}>
-				<DialogContent>
-					<DialogHeader>
-						<DialogTitle>{t("saveTimetable")}</DialogTitle>
-					</DialogHeader>
-					<div className="space-y-4">
-						<p className="text-muted-foreground text-sm">{t("applyTimeTable")}</p>
-						<div className="space-y-2">
-							{sections.map((sec: any) => (
-								<div key={sec.name} className="flex items-center space-x-2">
-									<Checkbox
-										id={`sec-${sec.name}`}
-										checked={selectedSectionsToApply.includes(sec.name)}
-										onCheckedChange={(checked) => {
-											if (checked) {
-												setSelectedSectionsToApply([
-													...selectedSectionsToApply,
-													sec.name,
-												]);
-											} else {
-												setSelectedSectionsToApply(
-													selectedSectionsToApply.filter(
-														(s) => s !== sec.name
-													)
-												);
-											}
-										}}
-									/>
-									<label
-										htmlFor={`sec-${sec.name}`}
-										className="text-sm leading-none font-medium peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
-									>
-										Section {sec.name}{" "}
-										{sec.name === selectedSection && "(Current)"}
-									</label>
-								</div>
-							))}
-						</div>
-					</div>
-					<DialogFooter>
-						<Button variant="outline" onClick={() => setSaveDialogOpen(false)}>
-							{ft("cancel")}
-						</Button>
-						<Button
-							onClick={handleConfirmSave}
-							disabled={selectedSectionsToApply.length === 0}
-						>
-							{t("saveTimetable")}
-						</Button>
-					</DialogFooter>
-				</DialogContent>
-			</Dialog>
 		</div>
 	);
 }

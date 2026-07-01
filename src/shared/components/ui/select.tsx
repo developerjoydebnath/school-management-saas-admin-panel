@@ -6,8 +6,57 @@ import * as React from "react";
 
 import { cn } from "@/shared/lib/utils";
 
-function Select({ ...props }: React.ComponentProps<typeof SelectPrimitive.Root>) {
-	return <SelectPrimitive.Root data-slot="select" {...props} />;
+let openSelectCount = 0;
+let clearSelectLayerTimer: ReturnType<typeof setTimeout> | null = null;
+
+function setSelectLayerOpen(isOpen: boolean) {
+	if (typeof document === "undefined") return;
+
+	if (clearSelectLayerTimer) {
+		clearTimeout(clearSelectLayerTimer);
+		clearSelectLayerTimer = null;
+	}
+
+	if (isOpen) {
+		document.body.setAttribute("data-select-layer-open", "true");
+		return;
+	}
+
+	clearSelectLayerTimer = setTimeout(() => {
+		if (openSelectCount <= 0) {
+			document.body.removeAttribute("data-select-layer-open");
+		}
+		clearSelectLayerTimer = null;
+	}, 0);
+}
+
+function Select({ onOpenChange, ...props }: React.ComponentProps<typeof SelectPrimitive.Root>) {
+	const isOpenRef = React.useRef(false);
+
+	React.useEffect(() => {
+		return () => {
+			if (isOpenRef.current) {
+				openSelectCount = Math.max(0, openSelectCount - 1);
+				setSelectLayerOpen(openSelectCount > 0);
+			}
+		};
+	}, []);
+
+	const handleOpenChange = (open: boolean) => {
+		if (open && !isOpenRef.current) {
+			openSelectCount += 1;
+		}
+
+		if (!open && isOpenRef.current) {
+			openSelectCount = Math.max(0, openSelectCount - 1);
+		}
+
+		isOpenRef.current = open;
+		setSelectLayerOpen(openSelectCount > 0);
+		onOpenChange?.(open);
+	};
+
+	return <SelectPrimitive.Root data-slot="select" onOpenChange={handleOpenChange} {...props} />;
 }
 
 function SelectGroup({ className, ...props }: React.ComponentProps<typeof SelectPrimitive.Group>) {

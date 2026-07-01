@@ -14,6 +14,7 @@ import {
 import { Separator } from "@/shared/components/ui/separator";
 import { SidebarTrigger } from "@/shared/components/ui/sidebar";
 import { useBreadcrumbStore } from "@/shared/stores/breadcrumb-store";
+import Link from "next/link";
 import React from "react";
 
 export default function Header() {
@@ -43,8 +44,8 @@ export default function Header() {
 										{isLast ? (
 											<BreadcrumbPage>{crumb.label}</BreadcrumbPage>
 										) : crumb.href ? (
-											<BreadcrumbLink href={crumb.href}>
-												{crumb.label}
+											<BreadcrumbLink asChild>
+												<Link href={crumb.href}>{crumb.label}</Link>
 											</BreadcrumbLink>
 										) : (
 											<span className="text-muted-foreground">

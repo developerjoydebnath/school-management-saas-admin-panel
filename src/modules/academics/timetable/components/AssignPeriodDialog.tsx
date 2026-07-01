@@ -1,7 +1,8 @@
 "use client";
 
+import ClassRoomCombobox from "@/shared/components/form/ClassRoomCombobox";
 import SubjectSingleSelection from "@/shared/components/form/SubjectSingleSelection";
-import TeacherSelection from "@/shared/components/form/TeacherSelection";
+import SubjectTeacherSelect from "@/shared/components/form/SubjectTeacherSelect";
 import ConfirmationModal from "@/shared/components/custom/ConfirmationModal";
 import { AlertDialogTrigger } from "@/shared/components/ui/alert-dialog";
 import { Button } from "@/shared/components/ui/button";
@@ -13,13 +14,12 @@ import {
 	DialogHeader,
 	DialogTitle,
 } from "@/shared/components/ui/dialog";
-import { Input } from "@/shared/components/ui/input";
 import { Label } from "@/shared/components/ui/label";
 import { ScrollArea } from "@/shared/components/ui/scroll-area";
+import { getLocalizedName } from "@/shared/utils/localization";
 import { Plus, Trash2 } from "lucide-react";
 import { useLocale, useTranslations } from "next-intl";
 import { useEffect, useState } from "react";
-import { getLocalizedName } from "@/shared/utils/localization";
 
 interface AssignPeriodDialogProps {
 	open: boolean;
@@ -51,12 +51,12 @@ export function AssignPeriodDialog({
 				setLocalAssignments(
 					existing.length > 0
 						? existing
-						: [{ subjectId: "", teacherId: "", roomNumber: "" }]
+						: [{ subjectId: "", teacherId: "", classRoomId: "" }]
 				);
 			} else if (existing) {
 				setLocalAssignments([existing]);
 			} else {
-				setLocalAssignments([{ subjectId: "", teacherId: "", roomNumber: "" }]);
+				setLocalAssignments([{ subjectId: "", teacherId: "", classRoomId: "" }]);
 			}
 		}
 	}, [open, assigningPeriod]);
@@ -66,7 +66,7 @@ export function AssignPeriodDialog({
 	const handleAddMore = () => {
 		setLocalAssignments([
 			...localAssignments,
-			{ subjectId: "", teacherId: "", roomNumber: "" },
+			{ subjectId: "", teacherId: "", classRoomId: "" },
 		]);
 	};
 
@@ -76,7 +76,11 @@ export function AssignPeriodDialog({
 
 	const updateAssignment = (index: number, field: string, value: string) => {
 		const newAssignments = [...localAssignments];
-		newAssignments[index] = { ...newAssignments[index], [field]: value };
+		newAssignments[index] = {
+			...newAssignments[index],
+			[field]: value,
+			...(field === "subjectId" ? { teacherId: "", teacherName: "" } : {}),
+		};
 		setLocalAssignments(newAssignments);
 	};
 
@@ -88,7 +92,8 @@ export function AssignPeriodDialog({
 				<DialogHeader className="border-b px-6 pb-4">
 					<DialogTitle>{t("assignPeriod")}</DialogTitle>
 					<DialogDescription className="text-muted-foreground text-xs">
-						{assigningPeriod?.day} • {getLocalizedName(assigningPeriod?.period?.name, locale)} •{" "}
+						{assigningPeriod?.day} -{" "}
+						{getLocalizedName(assigningPeriod?.period?.name, locale)} -{" "}
 						{assigningPeriod?.period?.startTime}-{assigningPeriod?.period?.endTime}
 					</DialogDescription>
 				</DialogHeader>
@@ -122,26 +127,34 @@ export function AssignPeriodDialog({
 									<div className="grid grid-cols-1 gap-4">
 										<div className="space-y-2">
 											<Label className="text-xs">Teacher</Label>
-											<TeacherSelection
+											<SubjectTeacherSelect
+												subjectId={assignment.subjectId || ""}
 												value={assignment.teacherId || ""}
-												onChange={(val) =>
-													updateAssignment(index, "teacherId", val)
-												}
+												onChange={(val, teacher) => {
+													const newAssignments = [...localAssignments];
+													newAssignments[index] = {
+														...newAssignments[index],
+														teacherId: val,
+														teacherName: teacher?.fullName || "",
+													};
+													setLocalAssignments(newAssignments);
+												}}
 											/>
 										</div>
 										<div className="space-y-2">
 											<Label className="text-xs">Room Number</Label>
-											<Input
-												placeholder="e.g. 101"
-												value={assignment.roomNumber || ""}
-												onChange={(e) =>
-													updateAssignment(
-														index,
-														"roomNumber",
-														e.target.value
-													)
-												}
-												className="h-10"
+											<ClassRoomCombobox
+												placeholder="Select room"
+												value={assignment.classRoomId || ""}
+												onChange={(val, room) => {
+													const newAssignments = [...localAssignments];
+													newAssignments[index] = {
+														...newAssignments[index],
+														classRoomId: val,
+														roomNumber: room?.roomNo || "",
+													};
+													setLocalAssignments(newAssignments);
+												}}
 											/>
 										</div>
 									</div>
