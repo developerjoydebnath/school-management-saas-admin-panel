@@ -23,6 +23,7 @@ interface SubjectSingleSelectionProps {
 	onChange: (value: string) => void;
 	className?: string;
 	placeholder?: string;
+	classId?: string;
 }
 
 export default function SubjectSingleSelection({
@@ -30,8 +31,9 @@ export default function SubjectSingleSelection({
 	onChange,
 	className,
 	placeholder = "Select subject...",
+	classId,
 }: SubjectSingleSelectionProps) {
-	const { data: response, isLoading } = useSWR("/subjects/active-list");
+	const { data: response, isLoading } = useSWR("/subjects/active-list", { classId });
 	const [open, setOpen] = React.useState(false);
 	const locale = useLocale();
 

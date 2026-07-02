@@ -15,6 +15,7 @@ interface SubjectSelectionProps {
 	onChange: (value: string[]) => void;
 	placeholder?: string;
 	className?: string;
+	classId?: string;
 }
 
 export default function SubjectSelection({
@@ -22,8 +23,9 @@ export default function SubjectSelection({
 	onChange,
 	placeholder = "Select subjects...",
 	className,
+	classId,
 }: SubjectSelectionProps) {
-	const { data: subjectResponse, isLoading } = useSWR("/subjects/active-list");
+	const { data: subjectResponse, isLoading } = useSWR("/subjects/active-list", { classId });
 	const [open, setOpen] = React.useState(false);
 	const [inputValue, setInputValue] = React.useState("");
 	const locale = useLocale();

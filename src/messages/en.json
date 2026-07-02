@@ -97,6 +97,7 @@
 		"create": "Create",
 		"edit": "Edit",
 		"details": "Details",
+		"history": "History",
 		"settings": "Settings",
 		"settings_profile": "School Profile",
 		"settings_users": "User Management",
@@ -231,6 +232,48 @@
 		"classAssignmentDescription": "Select which classes will study this subject.",
 		"descriptionTitle": "Additional Notes"
 	},
+	"Exams": {
+		"title": "Exam Schedule",
+		"description": "Create exam schedules, assign classes, and keep subject mark snapshots.",
+		"addExam": "Add Exam",
+		"createTitle": "Create Exam",
+		"createDescription": "Set exam dates, classes, grading rules, and copied subject marks.",
+		"editTitle": "Edit Exam",
+		"editDescription": "Update exam setup, selected classes, and instructions.",
+		"deleteTitle": "Delete Exam",
+		"deleteDescription": "Are you sure you want to delete this exam? This action cannot be undone.",
+		"detailsTitle": "Exam Details",
+		"detailsDescription": "Review exam setup, assigned classes, and subject mark snapshots.",
+		"examInformation": "Exam Information",
+		"examInformationDescription": "Review the exam identity, dates, grading scale, and linked syllabus count.",
+		"classSelection": "Class Selection",
+		"classSelectionDescription": "Select the classes that will participate in this exam.",
+		"rules": "Rules & Instructions",
+		"rulesDescription": "Set default marks and instructions that guide exam operations.",
+		"examName": "Exam Name",
+		"type": "Type",
+		"dateRange": "Date Range",
+		"classes": "Classes",
+		"classesDescription": "Classes assigned to this exam schedule.",
+		"subjects": "Subjects",
+		"subjectsDescription": "Subject mark snapshots copied for the selected classes.",
+		"status": "Status",
+		"actions": "Actions",
+		"statusChangeTitle": "Change Exam Status",
+		"statusChangeDescription": "Change status to {status}?",
+		"createSuccess": "Exam created successfully",
+		"updateSuccess": "Exam updated successfully",
+		"deleteSuccess": "Exam deleted successfully",
+		"statusUpdateSuccess": "Exam status updated successfully"
+	},
+	"CreateExam": {
+		"title": "Create Exam",
+		"description": "Create an exam and copy subject mark setup for selected classes."
+	},
+	"EditExam": {
+		"title": "Edit Exam",
+		"description": "Update exam setup and selected classes."
+	},
 	"Syllabus": {
 		"title": "Syllabus",
 		"description": "Manage academic syllabus and track progress.",
@@ -251,6 +294,31 @@
 		"actions": "Actions",
 		"addSyllabusTitle": "Add New Syllabus",
 		"editSyllabusTitle": "Edit Syllabus",
+		"formDescription": "Create an exam-wise syllabus with subjects, chapters, topics, and section targets.",
+		"sections": "Sections",
+		"sectionsDescription": "Select sections only when this syllabus should be created for sections separately.",
+		"subjectPlan": "Subject Plan",
+		"subjectPlanDescription": "Add subject chapters and topic coverage for the selected exam.",
+		"detailsTitle": "Syllabus Details",
+		"detailsDescription": "Review syllabus target, content, and completion progress.",
+		"syllabusInformation": "Syllabus Information",
+		"syllabusInformationDescription": "Review the syllabus target, publication status, and overall progress.",
+		"exam": "Exam",
+		"class": "Class",
+		"content": "Content",
+		"history": "History",
+		"updateProgress": "Update Progress",
+		"progressOverview": "Progress Overview",
+		"progressOverviewDescription": "Update topic progress and mark completed topics.",
+		"saveProgress": "Save Progress",
+		"markCompleted": "Mark Completed",
+		"progressUpdateSuccess": "Syllabus progress updated successfully",
+		"statusChangeDescription": "Change status to {status}?",
+		"deleteTitle": "Delete Syllabus",
+		"version": "Version",
+		"changeType": "Change Type",
+		"summary": "Summary",
+		"changedAt": "Changed At",
 		"deleteConfirm": "Are you sure you want to delete this syllabus entry?",
 		"deleteSuccess": "Syllabus deleted successfully",
 		"deleteError": "Failed to delete syllabus",
@@ -265,6 +333,22 @@
 		"pending": "Pending",
 		"inProgress": "In Progress",
 		"completed": "Completed"
+	},
+	"CreateSyllabus": {
+		"title": "Create Syllabus",
+		"description": "Create exam-wise syllabus content for a class or selected sections."
+	},
+	"EditSyllabus": {
+		"title": "Edit Syllabus",
+		"description": "Update syllabus chapters, topics, and publication status."
+	},
+	"SyllabusHistory": {
+		"title": "Syllabus History",
+		"description": "Review saved syllabus versions and changes."
+	},
+	"SyllabusProgress": {
+		"title": "Update Syllabus Progress",
+		"description": "Update weighted topic progress for this syllabus."
 	},
 	"Homework": {
 		"title": "Homework & Assignments",

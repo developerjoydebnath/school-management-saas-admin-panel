@@ -67,6 +67,8 @@ export const PATHS = {
 			CREATE: "/academics/syllabus/create",
 			EDIT: (id: number | string) => `/academics/syllabus/${id}/edit`,
 			DETAILS: (id: number | string) => `/academics/syllabus/${id}/details`,
+			HISTORY: (id: number | string) => `/academics/syllabus/${id}/history`,
+			PROGRESS: (id: number | string) => `/academics/syllabus/${id}/progress`,
 		},
 		TIMETABLE: {
 			ROOT: "/academics/timetable",
@@ -310,7 +312,6 @@ export const PATHS = {
 			ROOT: "/examinations/schedule",
 			CREATE: "/examinations/schedule/create",
 			EDIT: (id: number | string) => `/examinations/schedule/${id}/edit`,
-			DETAILS: (id: number | string) => `/examinations/schedule/${id}/details`,
 		},
 		MARKS: {
 			ROOT: "/examinations/marks",

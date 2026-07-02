@@ -20,6 +20,7 @@ type FilterButtonProps = {
 	clearFilter: () => void;
 	className?: string;
 	wrapperClassName?: string;
+	singleSelect?: boolean;
 };
 
 export default function FilterButton({
@@ -30,6 +31,7 @@ export default function FilterButton({
 	clearFilter,
 	className,
 	wrapperClassName,
+	singleSelect = false,
 }: FilterButtonProps) {
 	const [open, setOpen] = useState(false);
 	const [search, setSearch] = useState("");
@@ -51,11 +53,16 @@ export default function FilterButton({
 
 	const handleSelection = (opt: TOption) => {
 		const exists = selected.includes(opt.value);
-		const updatedSelectedOptions = exists
-			? selected.filter((val) => val !== opt.value)
-			: [...selected, opt.value];
+		const updatedSelectedOptions = singleSelect
+			? exists
+				? []
+				: [opt.value]
+			: exists
+				? selected.filter((val) => val !== opt.value)
+				: [...selected, opt.value];
 
 		onSelect?.(updatedSelectedOptions);
+		if (singleSelect) setOpen(false);
 	};
 
 	const resetFilter = (e: MouseEvent<HTMLSpanElement>) => {

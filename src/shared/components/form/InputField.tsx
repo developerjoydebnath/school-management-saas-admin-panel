@@ -38,6 +38,7 @@ import UploadDocumentSingle from "./UploadDocumentSingle";
 import VoucherSelect from "./VoucherSelect";
 import DesignationSelect from "./DesignationSelect";
 import DepartmentSelect from "./DepartmentSelect";
+import ExamSelect from "./ExamSelect";
 import { SimpleEditor } from "./rich-editor/simple-editor";
 
 interface FormFieldProps extends UseControllerProps {
@@ -321,6 +322,7 @@ export default function InputField({
 							onChange={field.onChange}
 							placeholder={props.placeholder}
 							className={className}
+							classId={props.dependencyId}
 						/>
 					))
 
@@ -331,6 +333,7 @@ export default function InputField({
 							onChange={field.onChange}
 							placeholder={props.placeholder}
 							className={className}
+							classId={props.dependencyId}
 						/>
 					))
 
@@ -373,6 +376,18 @@ export default function InputField({
 							onChange={field.onChange}
 							placeholder={props.placeholder}
 							className={className}
+						/>
+					))
+
+					// examSelect
+					.with("examSelect", () => (
+						<ExamSelect
+							value={field.value}
+							onChange={field.onChange}
+							placeholder={props.placeholder}
+							className={className}
+							sessionId={props.dependencyId}
+							disabled={props.disabled}
 						/>
 					))
 
