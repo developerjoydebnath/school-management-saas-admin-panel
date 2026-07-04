@@ -4,6 +4,47 @@ export const PATHS = {
 		FORGOT_PASSWORD: "/forgot-password",
 	},
 	DASHBOARD: "/dashboard",
+	INVENTORY: {
+		ROOT: "/inventory",
+		OVERVIEW: "/inventory/overview",
+		CATEGORIES: {
+			ROOT: "/inventory/categories",
+			CREATE: "/inventory/categories/create",
+			EDIT: (id: number | string) => `/inventory/categories/${id}/edit`,
+		},
+		ITEMS: {
+			ROOT: "/inventory/items",
+			CREATE: "/inventory/items/create",
+			EDIT: (id: number | string) => `/inventory/items/${id}/edit`,
+		},
+		LOCATIONS: {
+			ROOT: "/inventory/locations",
+			CREATE: "/inventory/locations/create",
+			EDIT: (id: number | string) => `/inventory/locations/${id}/edit`,
+		},
+		STOCK: {
+			ROOT: "/inventory/stock",
+			CREATE: "/inventory/stock/create",
+			EDIT: (id: number | string) => `/inventory/stock/${id}/edit`,
+		},
+		ASSETS: {
+			ROOT: "/inventory/assets",
+			CREATE: "/inventory/assets/create",
+			EDIT: (id: number | string) => `/inventory/assets/${id}/edit`,
+		},
+		MOVEMENTS: {
+			ROOT: "/inventory/movements",
+			CREATE: "/inventory/movements/create",
+		},
+		MAINTENANCE: {
+			ROOT: "/inventory/maintenance",
+			CREATE: "/inventory/maintenance/create",
+			EDIT: (id: number | string) => `/inventory/maintenance/${id}/edit`,
+		},
+		AUDIT_LOGS: {
+			ROOT: "/inventory/audit-logs",
+		},
+	},
 	SCHOOLS_MANAGEMENT: {
 		ROOT: "/schools-management",
 		SCHOOLS: {

@@ -20,6 +20,12 @@ import ClassRoomSelect from "./ClassRoomSelect";
 import ClassSelect from "./ClassSelect";
 import ClassSelection from "./ClassSelection";
 import DatePicker from "./DatePicker";
+import DepartmentSelect from "./DepartmentSelect";
+import DesignationSelect from "./DesignationSelect";
+import ExamSelect from "./ExamSelect";
+import InventoryCategorySelect from "./InventoryCategorySelect";
+import InventoryItemSelect from "./InventoryItemSelect";
+import InventoryLocationSelect from "./InventoryLocationSelect";
 import MultiCheckbox from "./MultiCheckbox";
 import NumberInput from "./NumberInput";
 import PasswordInput from "./PasswordInput";
@@ -35,10 +41,8 @@ import TagInput from "./TagInput";
 import TeacherSelection from "./TeacherSelection";
 import UploadDocumentMulti from "./UploadDocumentMulti";
 import UploadDocumentSingle from "./UploadDocumentSingle";
+import UserSingleSelection from "./UserSingleSelection";
 import VoucherSelect from "./VoucherSelect";
-import DesignationSelect from "./DesignationSelect";
-import DepartmentSelect from "./DepartmentSelect";
-import ExamSelect from "./ExamSelect";
 import { SimpleEditor } from "./rich-editor/simple-editor";
 
 interface FormFieldProps extends UseControllerProps {
@@ -358,7 +362,50 @@ export default function InputField({
 						/>
 					))
 
+					// inventoryCategorySelect
+					.with("inventoryCategorySelect", () => (
+						<InventoryCategorySelect
+							value={field.value}
+							onChange={field.onChange}
+							placeholder={props.placeholder}
+							className={className}
+							disabled={props.disabled}
+						/>
+					))
+
+					// inventoryItemSelect
+					.with("inventoryItemSelect", () => (
+						<InventoryItemSelect
+							value={field.value}
+							onChange={field.onChange}
+							placeholder={props.placeholder}
+							className={className}
+							disabled={props.disabled}
+						/>
+					))
+
+					// inventoryLocationSelect
+					.with("inventoryLocationSelect", () => (
+						<InventoryLocationSelect
+							value={field.value}
+							onChange={field.onChange}
+							placeholder={props.placeholder}
+							className={className}
+							disabled={props.disabled}
+						/>
+					))
+
 					// sectionSelect
+
+					// userSingleSelect
+					.with("userSingleSelect", () => (
+						<UserSingleSelection
+							value={field.value}
+							onChange={field.onChange}
+							placeholder={props.placeholder}
+							className={className}
+						/>
+					))
 					.with("sectionSelect", () => (
 						<SectionSelect
 							value={field.value}

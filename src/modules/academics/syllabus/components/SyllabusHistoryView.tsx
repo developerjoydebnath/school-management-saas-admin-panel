@@ -32,6 +32,16 @@ export default function SyllabusHistoryView({ id }: { id: string }) {
 			cell: ({ row }) => <span>{row.original.summary || "-"}</span>,
 		},
 		{
+			id: "details",
+			header: t("details"),
+			cell: ({ row }) => <span>{row.original.details || "-"}</span>,
+		},
+		{
+			id: "updatedBy",
+			header: t("updatedBy"),
+			cell: ({ row }) => <span>{row.original.changedByName || "-"}</span>,
+		},
+		{
 			id: "changedAt",
 			header: t("changedAt"),
 			cell: ({ row }) => <span>{row.original.changedAt?.slice(0, 19).replace("T", " ")}</span>,
