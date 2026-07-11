@@ -127,6 +127,16 @@ function normalizeQuotaValue(value: unknown) {
 	return String(value);
 }
 
+const bangladeshMobileRegex = /^01[3-9]\d{8}$/;
+const bangladeshMobileMessage = "Enter a valid Bangladeshi mobile number";
+const optionalBangladeshMobileSchema = z
+	.string()
+	.optional()
+	.or(z.literal(""))
+	.refine((value) => !value || bangladeshMobileRegex.test(value), {
+		message: bangladeshMobileMessage,
+	});
+
 function AdmissionExtraControls({
 	category,
 	control,
@@ -204,7 +214,7 @@ function AdmissionExtraControls({
 						control={control}
 						name="referenceMobile"
 						label="Reference Mobile"
-						type="text"
+						type="tel"
 						placeholder="e.g. 01712345678"
 					/>
 				</div>
@@ -219,7 +229,6 @@ function AdmissionDiscountSummary({ feeSummary }: { feeSummary: any }) {
 	if (!feeSummary) return null;
 
 	const requiredTotal = Number(feeSummary.requiredTotal || 0);
-	const shownTotal = Number(feeSummary.shownTotal || requiredTotal);
 	const discountAmount = Number(feeSummary.discountAmount || 0);
 	const payableAmount = Number(feeSummary.payableAmount ?? requiredTotal);
 	const discountBreakdown = Array.isArray(feeSummary.discountBreakdown)
@@ -236,14 +245,10 @@ function AdmissionDiscountSummary({ feeSummary }: { feeSummary: any }) {
 
 	return (
 		<div className="col-span-full rounded-lg border bg-muted/20 p-4 text-sm">
-			<div className="grid gap-2 md:grid-cols-3">
+			<div className="grid gap-2 md:grid-cols-2">
 				<div>
 					<span className="text-muted-foreground">Required total: </span>
 					<span className="font-semibold">BDT {requiredTotal}</span>
-				</div>
-				<div>
-					<span className="text-muted-foreground">Shown total: </span>
-					<span className="font-semibold">BDT {shownTotal}</span>
 				</div>
 				<div>
 					<span className="text-muted-foreground">Payable: </span>
@@ -292,6 +297,11 @@ export default function NewAdmissionForm({
 		"/admission/settings/current"
 	);
 	const settings = settingsResponse?.data;
+	const { data: shiftsResponse } = useSWR("/shifts/options");
+	const shiftOptions = useMemo(() => {
+		const options = shiftsResponse?.data || shiftsResponse || [];
+		return Array.isArray(options) ? options : [];
+	}, [shiftsResponse]);
 
 	const admissionMode = id ? "full" : (settings?.admissionMode || "fast");
 
@@ -299,7 +309,10 @@ export default function NewAdmissionForm({
 		const fields = dedupeAdmissionFields(settings?.fieldConfigs || []);
 		return fields
 			.filter((field: any) =>
-				admissionMode === "fast"
+				id
+					? (field.showInFastMode ?? field.isShown) ||
+						(field.showInFullMode ?? field.isShown)
+					: admissionMode === "fast"
 					? (field.showInFastMode ?? field.isShown)
 					: (field.showInFullMode ?? field.isShown)
 			)
@@ -311,7 +324,7 @@ export default function NewAdmissionForm({
 				type: field.fieldType,
 				label: locale === "bn" && field.labelBn ? field.labelBn : field.label,
 			}));
-	}, [admissionMode, locale, settings]);
+	}, [admissionMode, id, locale, settings]);
 
 	const admissionFields = useMemo<AdmissionFieldConfig[]>(() => {
 		return allFields;
@@ -320,13 +333,16 @@ export default function NewAdmissionForm({
 	const fieldRequired = useMemo(() => {
 		return allFields.reduce((acc: Record<string, boolean>, field: any) => {
 			acc[field.fieldKey || field.id] = Boolean(
-				admissionMode === "fast"
+				id
+					? (field.requiredInFastMode ?? field.isRequired) ||
+						(field.requiredInFullMode ?? field.isRequired)
+					: admissionMode === "fast"
 					? (field.requiredInFastMode ?? field.isRequired)
 					: (field.requiredInFullMode ?? field.isRequired)
 			);
 			return acc;
 		}, {});
-	}, [admissionMode, allFields]);
+	}, [admissionMode, allFields, id]);
 
 	const isEmptyValue = (value: any) =>
 		value === "" ||
@@ -347,6 +363,84 @@ export default function NewAdmissionForm({
 				return value.url || value.imageUrl || value.fileUrl || value.path;
 			}
 		}
+		return value;
+	};
+
+	const formatInputDate = (value: any) => {
+		if (!value) return "";
+		const date = value instanceof Date ? value : new Date(value);
+		if (Number.isNaN(date.getTime())) return String(value);
+		return date.toISOString().slice(0, 10);
+	};
+
+	const getInitialFieldValue = (field: AdmissionFieldConfig, fieldKey: string) => {
+		if (!initialData) return undefined;
+		const fieldType = field.fieldType || field.type;
+		const normalizedFieldKey = normalizeFieldIdentity(fieldKey);
+		const isPhotoField =
+			normalizedFieldKey.includes("photo") ||
+			normalizeFieldIdentity(field.label).includes("photo");
+
+		const resolveShiftValue = (value: any) => {
+			if (!value) return value;
+			const raw = String(value);
+			const matchedShift = shiftOptions.find(
+				(shift: any) =>
+					shift.value === raw ||
+					String(shift.label || "").toLowerCase() === raw.toLowerCase()
+			);
+			return matchedShift?.value || raw;
+		};
+
+		if (field.isCustom) {
+			try {
+				const custom =
+					typeof initialData.customData === "string"
+						? JSON.parse(initialData.customData || "{}")
+						: initialData.customData || {};
+				return custom[fieldKey];
+			} catch (e) {
+				return undefined;
+			}
+		}
+
+		if (fieldType === "file") {
+			const documents = Array.isArray(initialData.documents)
+				? initialData.documents
+				: [];
+			const document = documents.find(
+				(item: any) =>
+					item?.fieldKey === fieldKey ||
+					item?.type === fieldKey ||
+					item?.documentType === fieldKey
+			);
+			if (document) return document;
+
+			if (isPhotoField && initialData.photoUrl) {
+				return initialData.photoUrl;
+			}
+		}
+
+		const aliases: Record<string, any> = {
+			fullName: initialData.studentNameEn,
+			dob: initialData.dateOfBirth,
+			class: initialData.applyingClassId || initialData.classId,
+			classId: initialData.applyingClassId || initialData.classId,
+			section: initialData.sectionId,
+			session: initialData.sessionId,
+			sessionYear: initialData.sessionId,
+			mobile: initialData.fatherMobile,
+			shift: resolveShiftValue(initialData.shiftId || initialData.shift),
+			shiftId: resolveShiftValue(initialData.shiftId || initialData.shift),
+			specialQuota: normalizeQuotaValue(initialData.specialQuota),
+			quota: normalizeQuotaValue(initialData.specialQuota || initialData.quota),
+			photo: initialData.photoUrl,
+			studentPhoto: initialData.photoUrl,
+			photoUrl: initialData.photoUrl,
+		};
+
+		const value = aliases[fieldKey] ?? initialData[fieldKey];
+		if (fieldType === "date") return formatInputDate(value);
 		return value;
 	};
 
@@ -402,6 +496,10 @@ export default function NewAdmissionForm({
 				} else {
 					fieldSchema = fieldSchema.optional();
 				}
+			} else if (fieldType === "phone") {
+				fieldSchema = isReq
+					? z.string().regex(bangladeshMobileRegex, bangladeshMobileMessage)
+					: optionalBangladeshMobileSchema;
 			} else if (fieldType === "number" || fieldType === "dynamic_select") {
 				fieldSchema = z.union([z.string(), z.number()]);
 				if (isReq) {
@@ -423,45 +521,44 @@ export default function NewAdmissionForm({
 			}
 
 			shape[fieldKey] = fieldSchema;
-			// Use initialData if available
 			let val: any = fieldType === "checkbox" ? false : "";
 			if (initialData) {
-				if (field.isCustom) {
-					try {
-						const custom =
-							typeof initialData.customData === "string"
-								? JSON.parse(initialData.customData || "{}")
-								: initialData.customData || {};
-						val = custom[fieldKey] || "";
-					} catch (e) {
-						val = "";
-					}
-				} else {
-					val = initialData[fieldKey] || "";
-				}
+				val = getInitialFieldValue(field, fieldKey);
+				if (val === undefined || val === null) val = fieldType === "checkbox" ? false : "";
 			}
 			defaults[fieldKey] = val;
 		});
 
 		shape.photoPlaceholder = shape.photoPlaceholder || z.string().optional().or(z.literal(""));
 		shape.photoMediaId = shape.photoMediaId || z.string().optional().or(z.literal(""));
+		shape.photoUrl = shape.photoUrl || z.string().optional().or(z.literal(""));
 		shape.manualDiscountType = z.string().optional().or(z.literal(""));
 		shape.manualDiscountScope = z.string().optional().or(z.literal(""));
 		shape.manualDiscountValue = z.union([z.string(), z.number()]).optional();
 		shape.manualDiscountReason = z.string().optional().or(z.literal(""));
 		shape.referenceName = z.string().optional().or(z.literal(""));
-		shape.referenceMobile = z.string().optional().or(z.literal(""));
+		shape.referenceMobile = optionalBangladeshMobileSchema;
 		defaults.photoPlaceholder =
 			initialData?.photoPlaceholder || "";
 		defaults.photoMediaId = initialData?.photoMediaId || "";
+		defaults.photoUrl = initialData?.photoUrl || "";
+		const isManualDiscount = initialData?.discountSource === "manual";
 		defaults.manualDiscountType =
-			initialData?.manualDiscountType || "fixed_amount";
+			initialData?.manualDiscountType ||
+			(isManualDiscount ? initialData?.discountType : undefined) ||
+			"fixed_amount";
 		defaults.manualDiscountScope =
-			initialData?.manualDiscountScope || "required_total";
+			initialData?.manualDiscountScope ||
+			(isManualDiscount ? initialData?.discountScope : undefined) ||
+			"required_total";
 		defaults.manualDiscountValue =
-			initialData?.manualDiscountValue ?? (settings?.manualDiscountEnabled ? "0" : "");
+			initialData?.manualDiscountValue ??
+			(isManualDiscount ? initialData?.discountValue : undefined) ??
+			(settings?.manualDiscountEnabled ? "0" : "");
 		defaults.manualDiscountReason =
-			initialData?.manualDiscountReason || "";
+			initialData?.manualDiscountReason ||
+			(isManualDiscount ? initialData?.discountReason : undefined) ||
+			"";
 		defaults.referenceName = initialData?.referenceName || "";
 		defaults.referenceMobile =
 			initialData?.referenceMobile || "";
@@ -470,7 +567,7 @@ export default function NewAdmissionForm({
 			schema: z.object(shape),
 			defaultValues: defaults,
 		};
-	}, [admissionFields, fieldRequired, initialData]);
+	}, [admissionFields, fieldRequired, initialData, shiftOptions]);
 
 	const form = useForm({
 		resolver: zodResolver(schema as any),
@@ -704,6 +801,8 @@ export default function NewAdmissionForm({
 						if (value && typeof value === "object" && !(value instanceof File)) {
 							const uploadedDocument = value as Record<string, any>;
 							documentsPayload.push({
+								fieldKey: key,
+								documentType: key,
 								type: uploadedDocument.type || key,
 								label: uploadedDocument.label || field?.label || key,
 								mediaId: uploadedDocument.mediaId,
@@ -716,6 +815,8 @@ export default function NewAdmissionForm({
 							});
 						} else if (serializedValue) {
 							documentsPayload.push({
+								fieldKey: key,
+								documentType: key,
 								type: key,
 								label: field?.label || key,
 								url: serializedValue,
@@ -737,6 +838,8 @@ export default function NewAdmissionForm({
 								const file = document?.file;
 								if (!file) return null;
 								return {
+									fieldKey: document.type || "other",
+									documentType: document.type || "other",
 									type: document.type || "other",
 									mediaId: file.mediaId,
 									url: file.url,

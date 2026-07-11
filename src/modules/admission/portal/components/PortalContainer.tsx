@@ -3,12 +3,14 @@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/shared/components/ui/tabs";
 import { useSWR } from "@/shared/hooks/use-swr";
 import { Loader2 } from "lucide-react";
+import { useTranslations } from "next-intl";
 import PortalOverviewTab from "./PortalOverviewTab";
 import PortalPaymentTab from "./PortalPaymentTab";
 import PortalSettingsTab from "./PortalSettingsTab";
 
 export default function PortalContainer() {
-	const { data, isLoading, mutate } = useSWR("/portalConfig");
+	const t = useTranslations("Portal");
+	const { data, isLoading, mutate } = useSWR("/admission/portal/config");
 
 	if (isLoading) {
 		return (
@@ -26,15 +28,21 @@ export default function PortalContainer() {
 		);
 	}
 
-	const config = data;
+	const config = data?.data || data;
 
 	return (
-		<div className="space-y-6">
+		<div>
 			<Tabs defaultValue="overview" className="w-full">
-				<TabsList className="mb-4 grid w-full grid-cols-3 lg:w-[600px]">
-					<TabsTrigger value="overview">Overview</TabsTrigger>
-					<TabsTrigger value="settings">Settings & Dates</TabsTrigger>
-					<TabsTrigger value="payment">Payment Setup</TabsTrigger>
+				<TabsList className="mb-2 h-12! gap-2 border">
+					<TabsTrigger value="overview" className="h-10 cursor-pointer px-4">
+						{t("overview")}
+					</TabsTrigger>
+					<TabsTrigger value="settings" className="h-10 cursor-pointer px-4">
+						{t("portalForm")}
+					</TabsTrigger>
+					<TabsTrigger value="payment" className="h-10 cursor-pointer px-4">
+						{t("feePreview")}
+					</TabsTrigger>
 				</TabsList>
 
 				<TabsContent value="overview">

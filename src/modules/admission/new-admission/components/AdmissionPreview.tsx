@@ -1,5 +1,6 @@
 "use client";
 
+import { ProgressiveImage } from "@/shared/components/media/ProgressiveImage";
 import { Button } from "@/shared/components/ui/button";
 import { useSWR } from "@/shared/hooks/use-swr";
 import { getLocalizedName } from "@/shared/utils/localization";
@@ -46,11 +47,19 @@ export default function AdmissionPreview({
 			: null
 	);
 
-	const classes = classResponse?.data || classResponse || [];
-	const sessions = sessionResponse?.data || sessionResponse || [];
-	const divisions = divisionResponse?.data || divisionResponse || [];
-	const districts = districtResponse?.data || districtResponse || [];
-	const upazilas = upazilaResponse?.data || upazilaResponse || [];
+	const unwrapOptions = (response: any) => {
+		const data = response?.data ?? response;
+		if (Array.isArray(data)) return data;
+		if (Array.isArray(data?.items)) return data.items;
+		if (Array.isArray(data?.data)) return data.data;
+		return [];
+	};
+
+	const classes = unwrapOptions(classResponse);
+	const sessions = unwrapOptions(sessionResponse);
+	const divisions = unwrapOptions(divisionResponse);
+	const districts = unwrapOptions(districtResponse);
+	const upazilas = unwrapOptions(upazilaResponse);
 	const categories = Array.from(new Set(fields.map((field) => field.category)));
 
 	const getCategoryIcon = (category: string) => {
@@ -90,16 +99,83 @@ export default function AdmissionPreview({
 	};
 
 	const findName = (items: any[], value: any) => {
-		const item = items.find((entry: any) => String(entry.id) === String(value));
+		const item = items.find(
+			(entry: any) =>
+				String(entry.id) === String(value) ||
+				String(entry.value) === String(value)
+		);
 		if (!item) return undefined;
 		if (typeof item.name === "object") return getLocalizedName(item.name, locale);
-		return item.name || item.enName || item.label;
+		return item.label || item.name || item.enName || item.bnName;
+	};
+
+	const formatPreviewDate = (value: any) => {
+		if (!value) return "-";
+		const date = value instanceof Date ? value : new Date(value);
+		if (Number.isNaN(date.getTime())) return String(value);
+		return date.toISOString().slice(0, 10);
+	};
+
+	const getMediaMeta = (field: any) => {
+		const value = values[field.id];
+		if (!value) return null;
+		if (typeof File !== "undefined" && value instanceof File) {
+			return {
+				name: value.name,
+				type: value.type,
+				size: value.size,
+				url: undefined,
+			};
+		}
+
+		if (typeof value === "string") {
+			const isUrl = value.startsWith("/") || value.startsWith("http");
+			return isUrl ? { url: value, name: field.label || "Uploaded file" } : null;
+		}
+
+		if (typeof value !== "object") return null;
+		const url =
+			value.url ||
+			value.fileUrl ||
+			value.documentUrl ||
+			value.photoUrl ||
+			value.path ||
+			value.src;
+		if (!url) return null;
+		return {
+			url,
+			placeholder: value.placeholder || value.placeholderUrl || value.photoPlaceholder,
+			name: value.originalName || value.name || value.fileName || field.label || "Uploaded file",
+			type: value.mimeType || value.type || value.contentType,
+			size: value.size,
+		};
+	};
+
+	const isImageMedia = (media: any) => {
+		const marker = `${media?.type || ""} ${media?.url || ""}`.toLowerCase();
+		return (
+			marker.includes("image/") ||
+			/\.(png|jpe?g|webp|gif|avif|svg)(\?|$)/i.test(String(media?.url || ""))
+		);
+	};
+
+	const isFileLikeField = (field: any) => {
+		const key = String(field.fieldKey || field.id || "").toLowerCase();
+		return (
+			field.type === "file" ||
+			field.fieldType === "file" ||
+			key.includes("photo") ||
+			key.includes("document") ||
+			key.includes("certificate") ||
+			key.includes("nid") ||
+			key.includes("slip")
+		);
 	};
 
 	const getPreviewValue = (field: any) => {
 		const value = values[field.id];
 		if (value === undefined || value === null || value === "") return "-";
-		if (value instanceof File) return value.name;
+		if (typeof File !== "undefined" && value instanceof File) return value.name;
 		if (typeof value === "object") {
 			return (
 				value.label ||
@@ -112,6 +188,9 @@ export default function AdmissionPreview({
 		}
 
 		const fieldKey = field.fieldKey || field.id;
+		if (field.type === "date" || field.fieldType === "date" || /date|dob|paidAt/i.test(fieldKey)) {
+			return formatPreviewDate(value);
+		}
 		const optionLabel = findOptionLabel(field, value);
 		if (optionLabel) return optionLabel;
 		if (["applyingClassId", "classId", "class"].includes(fieldKey)) {
@@ -141,6 +220,46 @@ export default function AdmissionPreview({
 			return findName(upazilas, value) || value;
 		}
 		return String(value);
+	};
+
+	const PreviewValue = ({ field }: { field: any }) => {
+		const media = isFileLikeField(field) ? getMediaMeta(field) : null;
+		if (media) {
+			if (media.url && isImageMedia(media)) {
+				return (
+					<div className="mt-2">
+						<ProgressiveImage
+							src={media.url}
+							alt={media.name}
+							placeholderBase64={media.placeholder}
+							width={320}
+							height={160}
+							className="h-full w-full object-cover"
+							wrapperClassName="h-28 w-full rounded-md border bg-muted"
+						/>
+						<p className="text-muted-foreground mt-2 truncate text-xs">{media.name}</p>
+					</div>
+				);
+			}
+
+			return (
+				<div className="bg-muted/40 mt-2 flex items-center gap-3 rounded-md border p-3">
+					<FileText className="text-muted-foreground size-5 shrink-0" />
+					<div className="min-w-0">
+						<p className="truncate text-sm font-medium">{media.name}</p>
+						<p className="text-muted-foreground text-xs">
+							{media.url ? "Uploaded document" : "Selected file"}
+						</p>
+					</div>
+				</div>
+			);
+		}
+
+		return (
+			<p className="mt-0.5 truncate text-sm font-semibold">
+				{getPreviewValue(field)}
+			</p>
+		);
 	};
 
 	return (
@@ -219,9 +338,7 @@ export default function AdmissionPreview({
 									<p className="text-muted-foreground text-[10px] font-medium tracking-tight uppercase">
 										{field.label}
 									</p>
-									<p className="mt-0.5 truncate text-sm font-semibold">
-										{getPreviewValue(field)}
-									</p>
+									<PreviewValue field={field} />
 								</div>
 							))}
 						</div>

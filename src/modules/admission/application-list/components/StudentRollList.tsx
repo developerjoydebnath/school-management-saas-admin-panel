@@ -12,20 +12,36 @@ import {
 } from "@/shared/components/ui/table";
 import { useTableData } from "@/shared/hooks/use-table-data";
 import { useTranslations } from "next-intl";
+import { useEffect } from "react";
 
 interface StudentRollListProps {
 	classId?: string;
 	sessionId?: string;
 	section?: string;
+	onSuggestedRoll?: (roll: string) => void;
 }
 
-export default function StudentRollList({ classId, sessionId, section }: StudentRollListProps) {
+export default function StudentRollList({
+	classId,
+	sessionId,
+	section,
+	onSuggestedRoll,
+}: StudentRollListProps) {
 	const t = useTranslations("Applications");
 	const { data: students, isLoading } = useTableData(
 		"/admissions/rolls",
 		{ classId, sessionId, sectionId: section },
 		{ revalidateOnMount: true }
 	);
+
+	useEffect(() => {
+		if (!Array.isArray(students) || !onSuggestedRoll) return;
+		const maxRoll = students.reduce((max, student: any) => {
+			const roll = Number.parseInt(String(student.rollNumber || "0"), 10);
+			return Number.isFinite(roll) ? Math.max(max, roll) : max;
+		}, 0);
+		onSuggestedRoll(String(maxRoll + 1).padStart(3, "0"));
+	}, [students, onSuggestedRoll]);
 
 	if (isLoading) {
 		return (

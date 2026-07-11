@@ -97,6 +97,7 @@ function AdmissionPhotoField({
 					typeof photoValue === "string" ? getMediaUrl(photoValue) : undefined
 				}
 				placeholderBase64={placeholder}
+				className="h-44 sm:h-52"
 			/>
 			{isUploading && (
 				<div className="bg-background/80 absolute inset-0 flex items-center justify-center rounded-lg backdrop-blur-sm">
@@ -274,7 +275,7 @@ function AdmissionConfiguredField({
 		];
 	}
 
-	let inputType: string = fieldType === "phone" ? "text" : fieldType;
+	let inputType: string = fieldType === "phone" ? "tel" : fieldType;
 	const optionSource = field.options?.source;
 	if (
 		fieldKey === "class" ||
@@ -313,7 +314,9 @@ function AdmissionConfiguredField({
 
 	const shouldSpanFull =
 		category !== "documents" &&
-		(fieldKey?.toLowerCase().includes("address") ||
+		(fieldType === "textarea" ||
+			(fieldType === "file" && lowerKey.includes("photo")) ||
+			fieldKey?.toLowerCase().includes("address") ||
 			fieldKey === "previousSchool" ||
 			fieldKey === "previousSchoolName" ||
 			fieldKey === "conditions" ||

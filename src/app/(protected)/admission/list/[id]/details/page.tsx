@@ -5,7 +5,7 @@ import PageHeading from "@/shared/components/custom/PageHeading";
 import { Button } from "@/shared/components/ui/button";
 import { PATHS } from "@/shared/configs/paths.config";
 import { useBreadcrumbStore } from "@/shared/stores/breadcrumb-store";
-import { Check, Pencil, X } from "lucide-react";
+import { Pencil } from "lucide-react";
 import { useTranslations } from "next-intl";
 import Link from "next/link";
 import { use, useEffect } from "react";
@@ -15,7 +15,6 @@ export default function ApplicationDetailsPage({ params }: { params: Promise<{ i
 	const { setBreadcrumbs } = useBreadcrumbStore();
 	const tNav = useTranslations("Navigation");
 	const t = useTranslations("ApplicationDetails");
-	const tApp = useTranslations("Applications");
 	const tCommon = useTranslations("Common");
 
 	useEffect(() => {
@@ -37,14 +36,6 @@ export default function ApplicationDetailsPage({ params }: { params: Promise<{ i
 							{tCommon("edit")}
 						</Button>
 					</Link>
-					<Button variant="destructive" size="sm">
-						<X className="size-4" />
-						{tApp("reject")}
-					</Button>
-					<Button variant="default" size="sm">
-						<Check className="size-4" />
-						{tApp("approve")}
-					</Button>
 				</div>
 			</PageHeading>
 			<div className="@container/main grid grid-cols-1 items-start gap-8">

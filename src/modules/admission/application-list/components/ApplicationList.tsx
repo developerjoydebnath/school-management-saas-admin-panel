@@ -1,7 +1,6 @@
 "use client";
 
 import ConfirmationModal from "@/shared/components/custom/ConfirmationModal";
-import { TOption } from "@/shared/components/form/FilterButton";
 import DataTable from "@/shared/components/table/DataTable";
 import TableFilter from "@/shared/components/table/TableFilter";
 import { AlertDialogTrigger } from "@/shared/components/ui/alert-dialog";
@@ -38,9 +37,26 @@ import StudentRollList from "./StudentRollList";
 export type ApplicationFilter = {
 	search: string;
 	status: string[];
+	source: string[];
+	sessionId: string[];
+	classId: string[];
+	sectionId: string[];
+	paymentStatus: string[];
+	dateFrom: string;
+	dateTo: string;
 };
 
-const initialFilters: ApplicationFilter = { search: "", status: [] };
+const initialFilters: ApplicationFilter = {
+	search: "",
+	status: [],
+	source: [],
+	sessionId: [],
+	classId: [],
+	sectionId: [],
+	paymentStatus: [],
+	dateFrom: "",
+	dateTo: "",
+};
 
 export default function ApplicationList() {
 	const [applicationToDelete, setApplicationToDelete] = useState<string | null>(null);
@@ -67,6 +83,13 @@ export default function ApplicationList() {
 		limit,
 		search: filter.search,
 		status: filter.status.join(","),
+		source: filter.source.join(","),
+		sessionId: filter.sessionId[0] || "",
+		classId: filter.classId[0] || "",
+		sectionId: filter.sectionId[0] || "",
+		paymentStatus: filter.paymentStatus.join(","),
+		dateFrom: filter.dateFrom,
+		dateTo: filter.dateTo,
 	});
 
 	const selectedApplication = statusUpdate
@@ -137,7 +160,9 @@ export default function ApplicationList() {
 					<span className="font-medium">
 						{row.original.fullName || row.original.studentName}
 					</span>
-					<span className="text-muted-foreground text-xs">{row.original.id}</span>
+					<span className="text-muted-foreground text-xs">
+						{row.original.applicationNo || "-"}
+					</span>
 				</div>
 			),
 		},
@@ -145,7 +170,14 @@ export default function ApplicationList() {
 			id: "class",
 			accessorKey: "class",
 			header: t("class"),
-			cell: ({ row }) => <span className="text-sm font-medium">{row.original.class}</span>,
+			cell: ({ row }) => (
+				<div className="flex flex-col">
+					<span className="text-sm font-medium">{row.original.class || "-"}</span>
+					<span className="text-muted-foreground text-xs">
+						{row.original.section ? `Section ${row.original.section}` : "No section"}
+					</span>
+				</div>
+			),
 		},
 		{
 			id: "guardianName",
@@ -163,6 +195,51 @@ export default function ApplicationList() {
 			),
 		},
 		{
+			id: "source",
+			header: "Source",
+			cell: ({ row }) => (
+				<div className="flex flex-col">
+					<span className="text-sm font-medium capitalize">
+						{String(row.original.source || "-").replace("_", " ")}
+					</span>
+					<span className="text-muted-foreground text-xs capitalize">
+						{row.original.paymentStatus || "pending"}
+					</span>
+				</div>
+			),
+		},
+		{
+			id: "progress",
+			header: "Progress",
+			cell: ({ row }) => {
+				const completion = row.original.completion || {};
+				const percent = Number(completion.completionPercent || 0);
+				return (
+					<div className="min-w-36 space-y-1">
+						<div className="flex items-center justify-between gap-3 text-xs">
+							<span className="text-muted-foreground">
+								{completion.completedFields || 0}/{completion.totalFields || 0}
+							</span>
+							<span className="font-medium">{percent}%</span>
+						</div>
+						<div className="bg-muted h-1.5 overflow-hidden rounded-full">
+							<div
+								className={cn(
+									"h-full rounded-full",
+									percent >= 80
+										? "bg-green-500"
+										: percent >= 50
+											? "bg-amber-500"
+											: "bg-red-500"
+								)}
+								style={{ width: `${Math.min(percent, 100)}%` }}
+							/>
+						</div>
+					</div>
+				);
+			},
+		},
+		{
 			id: "status",
 			header: t("status"),
 			cell: ({ row }) => {
@@ -173,7 +250,9 @@ export default function ApplicationList() {
 				return (
 					<Select
 						value={status}
-						onValueChange={(val) => setStatusUpdate({ id: app.id, status: val })}
+						onValueChange={(val) => {
+							if (val !== status) setStatusUpdate({ id: app.id, status: val });
+						}}
 						disabled={status === "approved"}
 					>
 						<SelectTrigger
@@ -194,7 +273,10 @@ export default function ApplicationList() {
 							<SelectItem className="cursor-pointer py-2 text-xs" value="pending">
 								Pending
 							</SelectItem>
-							<SelectItem className="cursor-pointer py-2 text-xs" value="under_review">
+							<SelectItem
+								className="cursor-pointer py-2 text-xs"
+								value="under_review"
+							>
 								Under Review
 							</SelectItem>
 							<SelectItem className="cursor-pointer py-2 text-xs" value="approved">
@@ -240,9 +322,11 @@ export default function ApplicationList() {
 							variant="destructive"
 							isLoading={isDeleting && applicationToDelete === app.id}
 						>
-							<AlertDialogTrigger asChild><Button variant="destructive" size="icon-sm">
-										<Trash2 className="h-4 w-4 text-red-500 hover:text-red-600" />
-									</Button></AlertDialogTrigger>
+							<AlertDialogTrigger asChild>
+								<Button variant="destructive" size="icon-sm">
+									<Trash2 className="h-4 w-4 text-red-500 hover:text-red-600" />
+								</Button>
+							</AlertDialogTrigger>
 						</ConfirmationModal>
 					</div>
 				);
@@ -257,7 +341,7 @@ export default function ApplicationList() {
 	};
 
 	return (
-		<Card className="p-4 shadow-none ring-0 sm:p-6">
+		<Card className="@container/page p-4 shadow-none ring-0 sm:p-6">
 			<CardHeader className="p-0">
 				<ApplicationFilterBar filter={filter} setFilter={setFilter} />
 			</CardHeader>
@@ -267,14 +351,18 @@ export default function ApplicationList() {
 				<DataTable<any>
 					data={applications || []}
 					isLoading={isLoading}
-					pagination={{
-						page: meta.page,
-						limit: meta.limit,
-						total: meta.total,
-						totalPages: meta.totalPages,
-						onPageChange: setPage,
-						onLimitChange: setLimit,
-					}}
+					pagination={
+						meta
+							? {
+									page: meta.page,
+									limit: meta.limit,
+									total: meta.total,
+									totalPages: meta.totalPages,
+									onPageChange: setPage,
+									onLimitChange: setLimit,
+								}
+							: undefined
+					}
 					columns={columns}
 				/>
 			</CardContent>
@@ -325,8 +413,11 @@ export default function ApplicationList() {
 											</DialogHeader>
 											<StudentRollList
 												classId={selectedApplication?.classId}
-												sessionId={selectedApplication?.session}
+												sessionId={selectedApplication?.sessionId}
 												section={selectedApplication?.sectionId}
+												onSuggestedRoll={(suggestedRoll) =>
+													setRoll((current) => current || suggestedRoll)
+												}
 											/>
 										</DialogContent>
 									</Dialog>

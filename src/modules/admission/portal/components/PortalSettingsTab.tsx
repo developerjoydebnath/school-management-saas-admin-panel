@@ -1,16 +1,29 @@
 "use client";
 
-
-
+import { Badge } from "@/shared/components/ui/badge";
 import { Button } from "@/shared/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/shared/components/ui/card";
-import { Checkbox } from "@/shared/components/ui/checkbox";
+import {
+	Card,
+	CardContent,
+	CardDescription,
+	CardHeader,
+	CardTitle,
+} from "@/shared/components/ui/card";
 import { Input } from "@/shared/components/ui/input";
 import { Label } from "@/shared/components/ui/label";
-import { Textarea } from "@/shared/components/ui/textarea";
-import axios from "axios";
-import { CalendarIcon, Save } from "lucide-react";
-import { useState } from "react";
+import { Switch } from "@/shared/components/ui/switch";
+import {
+	Table,
+	TableBody,
+	TableCell,
+	TableHead,
+	TableHeader,
+	TableRow,
+} from "@/shared/components/ui/table";
+import axios from "@/shared/lib/axios";
+import { Save } from "lucide-react";
+import { useLocale, useTranslations, useMessages } from "next-intl";
+import { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 
 interface PortalSettingsTabProps {
@@ -18,37 +31,126 @@ interface PortalSettingsTabProps {
 	onUpdate: () => void;
 }
 
-const AVAILABLE_CLASSES = ["Class 1", "Class 2", "Class 3", "Class 4", "Class 5", "Class 6", "Class 7", "Class 8", "Class 9", "Class 10", "Class 11", "Class 12"];
+type PortalField = {
+	id: string;
+	fieldKey: string;
+	section: string;
+	label: string;
+	labelBn?: string | null;
+	fieldType: string;
+	isSystem?: boolean;
+	isSystemLocked?: boolean;
+	sortOrder?: number;
+	options?: any;
+	portal?: {
+		isShown?: boolean;
+		isRequired?: boolean;
+	};
+};
+
+function dateInputValue(value?: string | null) {
+	if (!value) return "";
+	const date = new Date(value);
+	if (Number.isNaN(date.getTime())) return "";
+	const local = new Date(date.getTime() - date.getTimezoneOffset() * 60000);
+	return local.toISOString().slice(0, 16);
+}
+
+function sectionTitle(section: string) {
+	return section
+		.split("_")
+		.map((part) => part.charAt(0).toUpperCase() + part.slice(1))
+		.join(" ");
+}
+
+function makeSlug(value: string) {
+	return value
+		.trim()
+		.toLowerCase()
+		.replace(/[^a-z0-9]+/g, "-")
+		.replace(/^-+|-+$/g, "");
+}
 
 export default function PortalSettingsTab({ config, onUpdate }: PortalSettingsTabProps) {
+	const locale = useLocale();
+	const t = useTranslations("Portal");
+	const messages = useMessages() as any;
+	const portalSections = messages?.Portal?.sections || {};
 	const [isSaving, setIsSaving] = useState(false);
-	const [formData, setFormData] = useState({
-		openDate: config.openDate || "",
-		closeDate: config.closeDate || "",
-		examDate: config.examDate || "",
-		resultDate: config.resultDate || "",
-		guidelines: config.guidelines || "",
-		allowedClasses: config.allowedClasses || [],
+	const [form, setForm] = useState({
+		onlinePortalEnabled: Boolean(config.onlinePortalEnabled),
+		onlinePortalSlug: config.onlinePortalSlug || "",
+		onlinePortalOpensAt: dateInputValue(config.onlinePortalOpensAt),
+		onlinePortalClosesAt: dateInputValue(config.onlinePortalClosesAt),
 	});
+	const [fields, setFields] = useState<PortalField[]>([]);
 
-	const handleClassToggle = (className: string, checked: boolean) => {
-		setFormData((prev) => {
-			if (checked) {
-				return { ...prev, allowedClasses: [...prev.allowedClasses, className] };
-			} else {
-				return { ...prev, allowedClasses: prev.allowedClasses.filter((c: string) => c !== className) };
-			}
+	useEffect(() => {
+		setForm({
+			onlinePortalEnabled: Boolean(config.onlinePortalEnabled),
+			onlinePortalSlug: config.onlinePortalSlug || "",
+			onlinePortalOpensAt: dateInputValue(config.onlinePortalOpensAt),
+			onlinePortalClosesAt: dateInputValue(config.onlinePortalClosesAt),
 		});
+		setFields(
+			[...(config.fieldConfigs || [])].sort(
+				(a: PortalField, b: PortalField) => (a.sortOrder || 0) - (b.sortOrder || 0)
+			)
+		);
+	}, [config]);
+
+	const groupedFields = useMemo(() => {
+		const grouped = new Map<string, PortalField[]>();
+		for (const field of fields) {
+			grouped.set(field.section, [...(grouped.get(field.section) || []), field]);
+		}
+		return Array.from(grouped.entries());
+	}, [fields]);
+
+	const setPortalFlag = (
+		fieldKey: string,
+		flag: "isShown" | "isRequired",
+		checked: boolean
+	) => {
+		setFields((current) =>
+			current.map((field) =>
+				field.fieldKey === fieldKey
+					? {
+						...field,
+						portal: {
+							...(field.portal || {}),
+							[flag]: checked,
+							...(flag === "isShown" && !checked ? { isRequired: false } : {}),
+						},
+					}
+					: field
+			)
+		);
 	};
 
 	const handleSave = async () => {
+		setIsSaving(true);
 		try {
-			setIsSaving(true);
-			await axios.patch(`http://localhost:3001/portalConfig`, formData);
-			toast.success("Portal settings updated successfully");
+			await axios.put("/admission/portal/config", {
+				sessionId: config.sessionId,
+				onlinePortalEnabled: form.onlinePortalEnabled,
+				onlinePortalSlug: makeSlug(form.onlinePortalSlug),
+				onlinePortalOpensAt: form.onlinePortalOpensAt
+					? new Date(form.onlinePortalOpensAt).toISOString()
+					: null,
+				onlinePortalClosesAt: form.onlinePortalClosesAt
+					? new Date(form.onlinePortalClosesAt).toISOString()
+					: null,
+				fields: fields.map((field) => ({
+					fieldKey: field.fieldKey,
+					portal: {
+						isShown: Boolean(field.portal?.isShown),
+						isRequired: Boolean(field.portal?.isRequired),
+					},
+				})),
+			});
+			toast.success("Online portal settings saved.");
 			onUpdate();
-		} catch (error) {
-			toast.error("Failed to update settings");
 		} finally {
 			setIsSaving(false);
 		}
@@ -58,91 +160,160 @@ export default function PortalSettingsTab({ config, onUpdate }: PortalSettingsTa
 		<div className="space-y-6">
 			<Card>
 				<CardHeader>
-					<CardTitle>Important Dates</CardTitle>
-					<CardDescription>Configure the timeline for the online admission process.</CardDescription>
+					<CardTitle>{t("settingsCardTitle")}</CardTitle>
+					<CardDescription>
+						{t("settingsCardDesc")}
+					</CardDescription>
 				</CardHeader>
-				<CardContent className="grid gap-6 sm:grid-cols-2">
-					<div className="space-y-2">
-						<Label>Application Open Date</Label>
-						<div className="relative">
-							<Input
-								type="date"
-								value={formData.openDate}
-								onChange={(e) => setFormData({ ...formData, openDate: e.target.value })}
-							/>
+				<CardContent className="grid gap-5 md:grid-cols-2">
+					<div className="flex items-center justify-between rounded-lg border p-4 md:col-span-2">
+						<div>
+						<div className="font-medium">{t("portalOpenTitle")}</div>
+						<div className="text-muted-foreground text-sm">
+							{t("portalOpenDesc")}
 						</div>
-					</div>
-					<div className="space-y-2">
-						<Label>Application Close Date</Label>
-						<Input
-							type="date"
-							value={formData.closeDate}
-							onChange={(e) => setFormData({ ...formData, closeDate: e.target.value })}
+						</div>
+						<Switch
+							checked={form.onlinePortalEnabled}
+							onCheckedChange={(checked) =>
+								setForm((current) => ({ ...current, onlinePortalEnabled: checked }))
+							}
 						/>
 					</div>
 					<div className="space-y-2">
-						<Label>Admission Exam Date (Optional)</Label>
+						<Label>Portal Slug</Label>
 						<Input
-							type="date"
-							value={formData.examDate}
-							onChange={(e) => setFormData({ ...formData, examDate: e.target.value })}
+							placeholder="e.g. model-school-admission"
+							value={form.onlinePortalSlug}
+							onChange={(event) =>
+								setForm((current) => ({
+									...current,
+									onlinePortalSlug: makeSlug(event.target.value),
+								}))
+							}
 						/>
 					</div>
 					<div className="space-y-2">
-						<Label>Result Publication Date</Label>
+						<Label>Opening Date & Time</Label>
 						<Input
-							type="date"
-							value={formData.resultDate}
-							onChange={(e) => setFormData({ ...formData, resultDate: e.target.value })}
+							type="datetime-local"
+							placeholder="Select opening date"
+							value={form.onlinePortalOpensAt}
+							onChange={(event) =>
+								setForm((current) => ({
+									...current,
+									onlinePortalOpensAt: event.target.value,
+								}))
+							}
+						/>
+					</div>
+					<div className="space-y-2">
+						<Label>Closing Date & Time</Label>
+						<Input
+							type="datetime-local"
+							placeholder="Select closing date"
+							value={form.onlinePortalClosesAt}
+							onChange={(event) =>
+								setForm((current) => ({
+									...current,
+									onlinePortalClosesAt: event.target.value,
+								}))
+							}
 						/>
 					</div>
 				</CardContent>
 			</Card>
 
-			<div className="grid gap-6 md:grid-cols-2">
-				<Card>
+			{groupedFields.map(([section, sectionFields]) => (
+				<Card key={section} className="gap-4 py-4">
 					<CardHeader>
-						<CardTitle>Allowed Classes</CardTitle>
-						<CardDescription>Select which classes are open for new admissions.</CardDescription>
+						<CardTitle className="text-lg">{portalSections[section] || sectionTitle(section)}</CardTitle>
+						<CardDescription>
+							{t("fieldsCardDesc")}
+						</CardDescription>
 					</CardHeader>
-					<CardContent>
-						<div className="grid grid-cols-2 gap-4">
-							{AVAILABLE_CLASSES.map((cls) => (
-								<div key={cls} className="flex items-center space-x-2">
-									<Checkbox
-										id={`class-${cls}`}
-										checked={formData.allowedClasses.includes(cls)}
-										onCheckedChange={(checked) => handleClassToggle(cls, checked as boolean)}
-									/>
-									<Label htmlFor={`class-${cls}`} className="font-normal cursor-pointer">
-										{cls}
-									</Label>
-								</div>
-							))}
-						</div>
+					<CardContent className="p-0">
+						<Table>
+							<TableHeader>
+								<TableRow className="bg-muted/50 border-t">
+									<TableHead className="pl-6">{t("tableFieldName")}</TableHead>
+									<TableHead>{t("tableType")}</TableHead>
+									<TableHead>{t("tableShown")}</TableHead>
+									<TableHead>{t("tableRequired")}</TableHead>
+								</TableRow>
+							</TableHeader>
+							<TableBody>
+								{sectionFields.map((field) => {
+									const label = field.label;
+									const shown = Boolean(field.portal?.isShown);
+									const required = Boolean(field.portal?.isRequired);
+									return (
+										<TableRow key={field.fieldKey}>
+											<TableCell className="pl-6 font-medium">
+												<div className="flex items-center gap-2">
+													{label}
+													{field.isSystem && (
+														<Badge variant="secondary" className="h-4 text-[10px]">
+															System
+														</Badge>
+													)}
+												</div>
+											</TableCell>
+											<TableCell className="text-muted-foreground capitalize">
+												{field.fieldType}
+											</TableCell>
+											<TableCell>
+												<div className="flex items-center gap-2">
+													<Switch
+														checked={shown}
+														onCheckedChange={(checked) =>
+															setPortalFlag(field.fieldKey, "isShown", checked)
+														}
+													/>
+													<span
+														className={
+															shown
+																? "text-sm font-medium text-green-600"
+																: "text-muted-foreground text-sm"
+														}
+													>
+														{shown ? "Shown" : "Hidden"}
+													</span>
+												</div>
+											</TableCell>
+											<TableCell>
+												<div className="flex items-center gap-2">
+													<Switch
+														checked={required}
+														disabled={!shown}
+														onCheckedChange={(checked) =>
+															setPortalFlag(field.fieldKey, "isRequired", checked)
+														}
+													/>
+													<span
+														className={
+															required
+																? "text-sm font-medium text-blue-600"
+																: "text-muted-foreground text-sm"
+														}
+													>
+														{required ? "Required" : "Optional"}
+													</span>
+												</div>
+											</TableCell>
+										</TableRow>
+									);
+								})}
+							</TableBody>
+						</Table>
 					</CardContent>
 				</Card>
+			))}
 
-				<Card>
-					<CardHeader>
-						<CardTitle>Portal Guidelines</CardTitle>
-						<CardDescription>Instructions shown to parents before they start the application.</CardDescription>
-					</CardHeader>
-					<CardContent>
-						<Textarea
-							className="min-h-[200px]"
-							placeholder="Enter instructions, required documents list, etc..."
-							value={formData.guidelines}
-							onChange={(e) => setFormData({ ...formData, guidelines: e.target.value })}
-						/>
-					</CardContent>
-				</Card>
-			</div>
-
-			<div className="flex justify-end">
+			<div className="bg-card sticky bottom-4 z-20 flex justify-end rounded-lg border p-4">
 				<Button onClick={handleSave} disabled={isSaving}>
 					<Save className="h-4 w-4" />
-					{isSaving ? "Saving..." : "Save Settings"}
+					{isSaving ? t("saving") : t("saveConfig")}
 				</Button>
 			</div>
 		</div>

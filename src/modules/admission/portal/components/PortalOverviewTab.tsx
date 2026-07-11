@@ -1,7 +1,5 @@
 "use client";
 
-
-
 import { Badge } from "@/shared/components/ui/badge";
 import { Button } from "@/shared/components/ui/button";
 import {
@@ -13,9 +11,9 @@ import {
 } from "@/shared/components/ui/card";
 import { Input } from "@/shared/components/ui/input";
 import { Switch } from "@/shared/components/ui/switch";
-import axios from "axios";
-import { CheckCircle2, Copy, Globe, QrCode, Users } from "lucide-react";
-import { useState } from "react";
+import axios from "@/shared/lib/axios";
+import { CheckCircle2, Clock, Copy, ExternalLink, Globe, Users } from "lucide-react";
+import { useTranslations } from "next-intl";
 import { toast } from "sonner";
 
 interface PortalOverviewTabProps {
@@ -23,131 +21,128 @@ interface PortalOverviewTabProps {
 	onUpdate: () => void;
 }
 
+function formatDate(value?: string | null) {
+	if (!value) return "Not set";
+	return new Intl.DateTimeFormat("en-BD", {
+		dateStyle: "medium",
+		timeStyle: "short",
+	}).format(new Date(value));
+}
+
 export default function PortalOverviewTab({ config, onUpdate }: PortalOverviewTabProps) {
-	const [isUpdating, setIsUpdating] = useState(false);
+	const t = useTranslations("Portal");
+	const slug = config.onlinePortalSlug || "";
+	const publicPath = `/admission-form?tenant=${encodeURIComponent(slug)}&slug=${encodeURIComponent(slug)}`;
+	const publicUrl =
+		typeof window === "undefined" ? publicPath : `${window.location.origin}${publicPath}`;
+	const isLive = Boolean(config.onlinePortalEnabled);
 
 	const handleStatusToggle = async (checked: boolean) => {
-		try {
-			setIsUpdating(true);
-			await axios.patch(`http://localhost:3001/portalConfig`, {
-				isActive: checked,
-			});
-			toast.success(`Online Admission Portal is now ${checked ? "Active" : "Inactive"}`);
-			onUpdate();
-		} catch (error) {
-			toast.error("Failed to update portal status");
-		} finally {
-			setIsUpdating(false);
-		}
+		await axios.put("/admission/portal/config", {
+			sessionId: config.sessionId,
+			onlinePortalEnabled: checked,
+			onlinePortalSlug: slug,
+			onlinePortalOpensAt: config.onlinePortalOpensAt,
+			onlinePortalClosesAt: config.onlinePortalClosesAt,
+		});
+		toast.success(`Online admission portal is now ${checked ? "open" : "closed"}.`);
+		onUpdate();
 	};
 
-	const copyLink = () => {
-		navigator.clipboard.writeText("https://school.edu.bd/apply");
-		toast.success("Public Portal link copied to clipboard");
+	const copyLink = async () => {
+		await navigator.clipboard.writeText(publicUrl);
+		toast.success("Public portal link copied.");
 	};
 
 	return (
 		<div className="space-y-6">
-			{/* Master Switch */}
-			<Card className="border-primary/20 bg-primary/5">
-				<CardContent className="flex items-center justify-between p-6">
+			<Card>
+				<CardContent className="flex flex-col gap-4 px-6 md:flex-row md:items-center md:justify-between">
 					<div className="space-y-1">
 						<div className="flex items-center gap-2">
-							<h3 className="text-lg font-semibold">Portal Status</h3>
-							<Badge variant={config.isActive ? "default" : "secondary"}>
-								{config.isActive ? "Live" : "Offline"}
+							<CardTitle className="text-lg">{t("portalStatus")}</CardTitle>
+							<Badge variant={isLive ? "default" : "secondary"}>
+								{isLive ? "Open" : "Closed"}
 							</Badge>
 						</div>
-						<p className="text-muted-foreground text-sm">
-							Enable or disable the public admission portal. When offline, parents
-							cannot submit new applications.
-						</p>
+						<CardDescription>{t("portalStatusDesc")}</CardDescription>
 					</div>
-					<Switch
-						checked={config.isActive}
-						onCheckedChange={handleStatusToggle}
-						disabled={isUpdating}
-						className="data-[state=checked]:bg-primary"
-					/>
+					<Switch checked={isLive} onCheckedChange={handleStatusToggle} />
 				</CardContent>
 			</Card>
 
-			<div className="grid gap-6 md:grid-cols-2">
-				{/* Quick Links */}
+			<div className="grid gap-4 md:grid-cols-4">
 				<Card>
-					<CardHeader>
-						<CardTitle className="text-lg">Public Portal URL</CardTitle>
-						<CardDescription>
-							Share this link on your school&apos;s website or Facebook page.
+					<CardHeader className="pb-2">
+						<CardDescription className="flex items-center gap-2">
+							<Globe className="h-4 w-4" /> {t("statOnline")}
 						</CardDescription>
+						<CardTitle>{config.stats?.onlineApplications || 0}</CardTitle>
 					</CardHeader>
-					<CardContent className="space-y-4">
-						<div className="flex space-x-2">
-							<Input readOnly value="https://school.edu.bd/apply" />
-							<Button variant="secondary" onClick={copyLink}>
-								<Copy className="h-4 w-4" />
-								Copy
-							</Button>
-						</div>
-						<div className="flex items-center gap-4 pt-4">
-							<div className="bg-muted flex h-24 w-24 items-center justify-center rounded-lg border-2 border-dashed">
-								<QrCode className="text-muted-foreground h-10 w-10" />
-							</div>
-							<div className="space-y-2">
-								<h4 className="text-sm font-medium">QR Code</h4>
-								<p className="text-muted-foreground text-xs">
-									Print this QR code on admission flyers or banners for easy
-									mobile access.
-								</p>
-								<Button size="sm" variant="outline">
-									Download QR
-								</Button>
-							</div>
-						</div>
-					</CardContent>
 				</Card>
-
-				{/* Quick Stats */}
 				<Card>
-					<CardHeader>
-						<CardTitle className="text-lg">Admission Stats</CardTitle>
-						<CardDescription>
-							Overview of the current online admission session.
+					<CardHeader className="pb-2">
+						<CardDescription className="flex items-center gap-2">
+							<Users className="h-4 w-4" /> {t("statManual")}
 						</CardDescription>
+						<CardTitle>{config.stats?.manualApplications || 0}</CardTitle>
 					</CardHeader>
-					<CardContent>
-						<div className="grid gap-4 sm:grid-cols-2">
-							<div className="rounded-lg border p-3">
-								<div className="text-muted-foreground flex items-center gap-2">
-									<Globe className="h-4 w-4" />
-									<span className="text-sm font-medium">Total Received</span>
-								</div>
-								<div className="mt-2 text-2xl font-bold">
-									{config.stats.totalApplications}
-								</div>
-							</div>
-							<div className="rounded-lg border p-3">
-								<div className="flex items-center gap-2 text-orange-500">
-									<Users className="h-4 w-4" />
-									<span className="text-sm font-medium">Pending Review</span>
-								</div>
-								<div className="mt-2 text-2xl font-bold text-orange-500">
-									{config.stats.pendingReview}
-								</div>
-							</div>
-							<div className="rounded-lg border p-3 sm:col-span-2">
-								<div className="flex items-center gap-2 text-green-600">
-									<CheckCircle2 className="h-4 w-4" />
-									<span className="text-sm font-medium">Approved & Admitted</span>
-								</div>
-								<div className="mt-2 text-2xl font-bold text-green-600">
-									{config.stats.approved}
-								</div>
-							</div>
-						</div>
-					</CardContent>
+				</Card>
+				<Card>
+					<CardHeader className="pb-2">
+						<CardDescription className="flex items-center gap-2">
+							<Clock className="h-4 w-4" /> {t("statPending")}
+						</CardDescription>
+						<CardTitle>{config.stats?.pendingOnlineApplications || 0}</CardTitle>
+					</CardHeader>
+				</Card>
+				<Card>
+					<CardHeader className="pb-2">
+						<CardDescription className="flex items-center gap-2">
+							<CheckCircle2 className="h-4 w-4" /> {t("statApproved")}
+						</CardDescription>
+						<CardTitle>{config.stats?.approvedOnlineApplications || 0}</CardTitle>
+					</CardHeader>
 				</Card>
 			</div>
+
+			<Card>
+				<CardHeader>
+					<CardTitle className="text-lg">{t("publicUrlTitle")}</CardTitle>
+					<CardDescription>{t("publicUrlDesc")}</CardDescription>
+				</CardHeader>
+				<CardContent className="space-y-4">
+					<div className="flex gap-2">
+						<Button
+							type="button"
+							variant="outline"
+							onClick={() => window.open(publicUrl, "_blank", "noopener,noreferrer")}
+						>
+							<ExternalLink className="h-4 w-4" />
+							Open
+						</Button>
+						<Input value={publicUrl} readOnly />
+						<Button type="button" variant="secondary" onClick={copyLink}>
+							<Copy className="h-4 w-4" />
+							Copy
+						</Button>
+					</div>
+					<div className="grid gap-3 text-sm md:grid-cols-2">
+						<div className="rounded-lg border p-3">
+							<div className="text-muted-foreground">{t("openingTime")}</div>
+							<div className="font-medium">
+								{formatDate(config.onlinePortalOpensAt)}
+							</div>
+						</div>
+						<div className="rounded-lg border p-3">
+							<div className="text-muted-foreground">{t("closingTime")}</div>
+							<div className="font-medium">
+								{formatDate(config.onlinePortalClosesAt)}
+							</div>
+						</div>
+					</div>
+				</CardContent>
+			</Card>
 		</div>
 	);
 }

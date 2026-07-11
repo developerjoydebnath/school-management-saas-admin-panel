@@ -47,8 +47,8 @@ export default function SectionSelect({
 			<SelectContent className="p-1">
 				{sections.map((section: any) => (
 					<SelectItem
-						key={section.name}
-						value={section.name}
+						key={section.id || section.name}
+						value={section.id}
 						className="cursor-pointer py-2"
 					>
 						{typeof section.name === "object"

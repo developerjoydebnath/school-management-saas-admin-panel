@@ -1,16 +1,189 @@
 "use client";
 
+import ConfirmationModal from "@/shared/components/custom/ConfirmationModal";
+import { ProgressiveImage } from "@/shared/components/media/ProgressiveImage";
 import { Badge } from "@/shared/components/ui/badge";
+import { Button } from "@/shared/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/shared/components/ui/card";
+import { Input } from "@/shared/components/ui/input";
+import {
+	Select,
+	SelectContent,
+	SelectItem,
+	SelectTrigger,
+	SelectValue,
+} from "@/shared/components/ui/select";
+import {
+	Sheet,
+	SheetContent,
+	SheetDescription,
+	SheetHeader,
+	SheetTitle,
+} from "@/shared/components/ui/sheet";
 import { useSWR } from "@/shared/hooks/use-swr";
+import axios from "@/shared/lib/axios";
 import { cn } from "@/shared/lib/utils";
-import { BookOpen, Info, Loader2, MapPin, User, Users } from "lucide-react";
-import { useTranslations } from "next-intl";
+import { AlertTriangle, CheckCircle2, FileText, Loader2, UserRound } from "lucide-react";
+import { useState } from "react";
+import { toast } from "sonner";
+import StudentRollList from "./StudentRollList";
+
+const sectionLabels: Record<string, string> = {
+	student_info: "Student Information",
+	academic_info: "Academic Information",
+	parent_info: "Parent Information",
+	guardian_info: "Guardian Information",
+	address: "Address",
+	health_info: "Health Information",
+	payment: "Payment",
+	documents: "Documents",
+	additional_info: "Additional Information",
+};
+
+const statuses = [
+	{ value: "pending", label: "Pending" },
+	{ value: "under_review", label: "Under Review" },
+	{ value: "approved", label: "Approved" },
+	{ value: "waitlisted", label: "Waitlisted" },
+	{ value: "rejected", label: "Rejected" },
+];
+
+function ProgressBar({ completion }: { completion?: any }) {
+	const percent = Number(completion?.completionPercent || 0);
+	return (
+		<div className="space-y-2">
+			<div className="flex items-center justify-between gap-3">
+				<span className="text-muted-foreground text-sm">
+					{completion?.completedFields || 0} of {completion?.totalFields || 0} fields completed
+				</span>
+				<span className="text-sm font-medium">{percent}%</span>
+			</div>
+			<div className="bg-muted h-2 overflow-hidden rounded-full">
+				<div
+					className={cn(
+						"h-full rounded-full",
+						percent >= 80 ? "bg-green-500" : percent >= 50 ? "bg-amber-500" : "bg-red-500"
+					)}
+					style={{ width: `${Math.min(percent, 100)}%` }}
+				/>
+			</div>
+		</div>
+	);
+}
+
+function StatusPill({ status }: { status: string }) {
+	return (
+		<Badge
+			variant="outline"
+			className={cn(
+				"rounded-full px-3 py-0.5 capitalize",
+				status === "approved" && "border-green-500/30 bg-green-500/10 text-green-600",
+				status === "rejected" && "border-red-500/30 bg-red-500/10 text-red-600",
+				status === "pending" && "border-orange-500/30 bg-orange-500/10 text-orange-600",
+				status === "waitlisted" && "border-blue-500/30 bg-blue-500/10 text-blue-600"
+			)}
+		>
+			{status.replace("_", " ")}
+		</Badge>
+	);
+}
+
+function mediaMetaFromField(field: any) {
+	const value = field?.value;
+	if (!value) return null;
+
+	if (typeof value === "string") {
+		const isUrl = value.startsWith("/") || value.startsWith("http");
+		return isUrl ? { url: value, name: field.displayValue || "Uploaded file" } : null;
+	}
+
+	if (typeof value !== "object") return null;
+
+	const url =
+		value.url ||
+		value.fileUrl ||
+		value.documentUrl ||
+		value.photoUrl ||
+		value.path ||
+		value.src;
+	if (!url) return null;
+
+	return {
+		url,
+		placeholder: value.placeholder || value.placeholderUrl || value.photoPlaceholder,
+		name: value.originalName || value.name || value.fileName || field.displayValue || "Uploaded file",
+		type: value.mimeType || value.type || value.contentType,
+		size: value.size,
+	};
+}
+
+function isImageMedia(media: any) {
+	const marker = `${media?.type || ""} ${media?.url || ""}`.toLowerCase();
+	return (
+		marker.includes("image/") ||
+		/\.(png|jpe?g|webp|gif|avif|svg)(\?|$)/i.test(String(media?.url || ""))
+	);
+}
+
+function FieldDisplay({
+	field,
+	onOpenMedia,
+}: {
+	field: any;
+	onOpenMedia: (media: any) => void;
+}) {
+	const media = mediaMetaFromField(field);
+	if (media) {
+		if (isImageMedia(media)) {
+			return (
+				<button
+					type="button"
+					className="mt-2 block w-full text-left"
+					onClick={() => onOpenMedia(media)}
+				>
+					<ProgressiveImage
+						src={media.url}
+						alt={media.name}
+						placeholderBase64={media.placeholder}
+						width={360}
+						height={180}
+						className="h-full w-full object-cover"
+						wrapperClassName="h-32 w-full rounded-md border bg-muted"
+					/>
+					<p className="text-muted-foreground mt-2 truncate text-xs">{media.name}</p>
+				</button>
+			);
+		}
+
+		return (
+			<button
+				type="button"
+				onClick={() => onOpenMedia(media)}
+				className="bg-muted/40 hover:bg-muted mt-2 flex items-center gap-3 rounded-md border p-3 transition-colors"
+			>
+				<FileText className="text-muted-foreground size-5 shrink-0" />
+				<span className="min-w-0">
+					<span className="block truncate text-sm font-medium">{media.name}</span>
+					<span className="text-muted-foreground text-xs">Open document</span>
+				</span>
+			</button>
+		);
+	}
+
+	return (
+		<p className="mt-1 break-words text-sm font-medium">
+			{field.displayValue || "-"}
+		</p>
+	);
+}
 
 export default function ApplicationDetails({ id }: { id: string }) {
-	const t = useTranslations("Applications");
-	const { data: appResponse, isLoading } = useSWR(`/admissions/${id}`);
+	const { data: appResponse, isLoading, mutate } = useSWR(`/admissions/${id}`);
 	const app = appResponse?.data;
+	const [statusUpdate, setStatusUpdate] = useState<string | null>(null);
+	const [roll, setRoll] = useState("");
+	const [isUpdatingStatus, setIsUpdatingStatus] = useState(false);
+	const [previewMedia, setPreviewMedia] = useState<any | null>(null);
 
 	if (isLoading) {
 		return (
@@ -22,279 +195,260 @@ export default function ApplicationDetails({ id }: { id: string }) {
 
 	if (!app) {
 		return (
-			<div className="flex items-center justify-center p-8 text-center">
-				<p className="text-muted-foreground">{t("notFound")}</p>
+			<div className="text-muted-foreground flex items-center justify-center p-8 text-center">
+				Application not found.
 			</div>
 		);
 	}
 
-	let customData = app.customData;
-	if (typeof customData === "string") {
-		try {
-			customData = JSON.parse(customData);
-		} catch (e) {
-			customData = {};
+	const currentStatus = String(app.status || "pending").toLowerCase();
+	const completion = app.completion || {};
+	const percent = Number(completion.completionPercent || 0);
+
+	const handleStatusUpdate = async () => {
+		if (!statusUpdate) return;
+		if (statusUpdate === "approved" && !roll) {
+			toast.error("Roll number is required for approval");
+			return;
 		}
-	}
+
+		setIsUpdatingStatus(true);
+		try {
+			if (statusUpdate === "approved") {
+				await axios.post(`/admissions/${id}/approve`, {
+					rollNumber: roll.padStart(3, "0"),
+				});
+			} else if (statusUpdate === "rejected") {
+				await axios.post(`/admissions/${id}/reject`, {
+					rejectionReason: "Rejected from application details",
+				});
+			} else if (statusUpdate === "waitlisted") {
+				await axios.post(`/admissions/${id}/waitlist`, {});
+			} else {
+				await axios.patch(`/admissions/${id}`, { status: statusUpdate });
+			}
+			toast.success("Application status updated");
+			await mutate();
+		} catch (error: any) {
+			toast.error(error?.response?.data?.message || "Failed to update status");
+		} finally {
+			setIsUpdatingStatus(false);
+			setStatusUpdate(null);
+			setRoll("");
+		}
+	};
 
 	return (
 		<div className="grid grid-cols-1 gap-6 @5xl/main:grid-cols-12">
-			{/* Left Column: Profile and Academic Info */}
 			<div className="@5xl/main:col-span-4">
-				<div className="space-y-6 @5xl/main:sticky @5xl/main:top-20">
-					{/* Profile Card */}
-					<Card className="border-border/50 overflow-hidden shadow-none">
-						<CardContent className="pt-8 pb-6 text-center">
-							<div className="bg-muted text-muted-foreground/40 border-background mx-auto mb-4 flex h-28 w-28 items-center justify-center rounded-full border-4 text-3xl font-bold shadow-sm">
-								{app.fullName?.[0] || app.studentName?.[0]}
-							</div>
-							<h2 className="text-foreground/90 text-xl font-bold">
-								{app.fullName || app.studentName}
-							</h2>
-							<Badge
-								variant="outline"
-								className={cn(
-									"mt-3 rounded-full px-4 py-0.5 font-medium",
-									app.status === "approved"
-										? "border-green-200 bg-green-50 text-green-600"
-										: app.status === "rejected"
-											? "border-red-200 bg-red-50 text-red-600"
-											: "border-orange-200 bg-orange-50 text-orange-600"
+				<div className="space-y-4 @5xl/main:sticky @5xl/main:top-20">
+					<Card className="shadow-none">
+						<CardContent className="space-y-5 p-6">
+							<div className="flex items-start gap-4">
+								{app.photoUrl ? (
+									<ProgressiveImage
+										src={app.photoUrl}
+										alt={app.fullName || app.studentName || "Student photo"}
+										placeholderBase64={app.photoPlaceholder}
+										width={96}
+										height={96}
+										className="h-full w-full object-cover"
+										wrapperClassName="size-16 shrink-0 rounded-lg border bg-muted"
+									/>
+								) : (
+									<div className="bg-muted flex size-16 shrink-0 items-center justify-center rounded-lg">
+										<UserRound className="text-muted-foreground size-8" />
+									</div>
 								)}
-							>
-								{app.status || "pending"}
-							</Badge>
+								<div className="min-w-0 space-y-2">
+									<h2 className="truncate text-xl font-semibold">
+										{app.fullName || app.studentName || "-"}
+									</h2>
+									<div className="flex flex-wrap items-center gap-2">
+										<StatusPill status={currentStatus} />
+										<Badge variant="outline">{app.applicationNo || app.id}</Badge>
+									</div>
+								</div>
+							</div>
 
-							<div className="mt-8 grid grid-cols-2 gap-4 border-t border-dashed pt-6">
-								<div className="text-left">
-									<p className="text-muted-foreground mb-1 text-xs font-semibold tracking-wider uppercase">
-										Class
-									</p>
-									<p className="text-foreground/80 font-bold">{app.class}</p>
+							<div className="grid grid-cols-2 gap-3 border-t pt-4 text-sm">
+								<div>
+									<p className="text-muted-foreground text-xs">Class</p>
+									<p className="font-medium">{app.class || "-"}</p>
 								</div>
-								<div className="border-l pl-4 text-left">
-									<p className="text-muted-foreground mb-1 text-xs font-semibold tracking-wider uppercase">
-										Section
-									</p>
-									<p className="text-foreground/80 font-bold">
-										{app.section || "A"}
-									</p>
+								<div>
+									<p className="text-muted-foreground text-xs">Section</p>
+									<p className="font-medium">{app.section || "-"}</p>
 								</div>
+								<div>
+									<p className="text-muted-foreground text-xs">Source</p>
+									<p className="font-medium capitalize">{String(app.source || "-").replace("_", " ")}</p>
+								</div>
+								<div>
+									<p className="text-muted-foreground text-xs">Payment</p>
+									<p className="font-medium capitalize">{app.paymentStatus || "-"}</p>
+								</div>
+							</div>
+
+							<div className="space-y-2 border-t pt-4">
+								<p className="text-sm font-medium">Status</p>
+								<Select
+									value={currentStatus}
+									onValueChange={(value) => {
+										if (value !== currentStatus) setStatusUpdate(value);
+									}}
+									disabled={currentStatus === "approved"}
+								>
+									<SelectTrigger className="w-full">
+										<SelectValue />
+									</SelectTrigger>
+									<SelectContent className="p-1">
+										{statuses.map((status) => (
+											<SelectItem
+												key={status.value}
+												value={status.value}
+												className="cursor-pointer py-2"
+											>
+												{status.label}
+											</SelectItem>
+										))}
+									</SelectContent>
+								</Select>
 							</div>
 						</CardContent>
 					</Card>
 
-					{/* Academic Information Card */}
-					<Card className="gap-0 py-0 shadow-none">
-						<CardHeader className="flex flex-row items-center gap-2 space-y-0 border-b bg-blue-100/10 pt-5 pb-5! dark:bg-black/200">
-							<BookOpen className="text-primary size-4" />
-							<CardTitle className="text-base font-bold">
-								{t("academicInfo")}
-							</CardTitle>
+					<Card className="shadow-none">
+						<CardHeader className="pb-3">
+							<CardTitle className="text-base">Profile Completion</CardTitle>
 						</CardHeader>
-						<CardContent className="pt-5 pb-6">
-							<dl className="space-y-4">
-								<div className="group flex items-center justify-between text-sm">
-									<dt className="text-muted-foreground group-hover:text-foreground transition-colors">
-										{t("admissionType")}
-									</dt>
-									<dd className="text-foreground/80 font-bold capitalize">
-										{app.admissionType || "-"}
-									</dd>
+						<CardContent className="space-y-4">
+							<ProgressBar completion={completion} />
+							{percent < 100 && (
+								<div className="border-amber-500/30 bg-amber-500/10 text-amber-700 dark:text-amber-300 flex gap-2 rounded-md border p-3 text-sm">
+									<AlertTriangle className="mt-0.5 size-4 shrink-0" />
+									<span>
+										This application is {percent}% complete. Complete the missing profile information as soon as possible.
+									</span>
 								</div>
-								<div className="group flex items-center justify-between text-sm">
-									<dt className="text-muted-foreground group-hover:text-foreground transition-colors">
-										{t("previousSchool")}
-									</dt>
-									<dd className="text-foreground/80 font-bold">
-										{app.previousSchoolName || app.previousSchool || "-"}
-									</dd>
+							)}
+							{percent >= 100 && (
+								<div className="border-green-500/30 bg-green-500/10 text-green-700 dark:text-green-300 flex gap-2 rounded-md border p-3 text-sm">
+									<CheckCircle2 className="mt-0.5 size-4 shrink-0" />
+									<span>All configured admission information has been completed.</span>
 								</div>
-								<div className="group flex items-center justify-between text-sm">
-									<dt className="text-muted-foreground group-hover:text-foreground transition-colors">
-										{t("tcNumber")}
-									</dt>
-									<dd className="text-foreground/80 font-bold">
-										{app.transferCertificateNo || app.tcNumber || "-"}
-									</dd>
-								</div>
-								<div className="group flex items-center justify-between text-sm">
-									<dt className="text-muted-foreground group-hover:text-foreground transition-colors">
-										{t("lastResult")}
-									</dt>
-									<dd className="text-foreground/80 font-bold">
-										{app.lastExamResult || app.lastResult || "-"}
-									</dd>
-								</div>
-							</dl>
+							)}
 						</CardContent>
 					</Card>
 				</div>
 			</div>
 
-			{/* Right Column: Detailed Info Sections */}
-			<div className="space-y-6 @5xl/main:col-span-8">
-				{/* Student Information */}
-				<Card className="gap-0 py-0 shadow-none">
-					<CardHeader className="flex flex-row items-center gap-2 space-y-0 border-b bg-blue-100/10 pt-5 pb-5! dark:bg-black/200">
-						<User className="text-primary size-4" />
-						<CardTitle className="text-base font-bold">{t("studentInfo")}</CardTitle>
-					</CardHeader>
-					<CardContent className="px-6 pt-6 pb-8">
-						<div className="grid grid-cols-1 gap-x-12 gap-y-6 sm:grid-cols-2">
-							<div className="space-y-1">
-								<p className="text-muted-foreground text-xs font-semibold tracking-wider uppercase">
-									{t("applicationID")}
-								</p>
-								<p className="text-foreground/80 font-bold">{app.id}</p>
-							</div>
-							<div className="space-y-1">
-								<p className="text-muted-foreground text-xs font-semibold tracking-wider uppercase">
-									{t("session")}
-								</p>
-								<p className="text-foreground/80 font-bold">{app.session}</p>
-							</div>
-							<div className="space-y-1">
-								<p className="text-muted-foreground text-xs font-semibold tracking-wider uppercase">
-									{t("dob")}
-								</p>
-								<p className="text-foreground/80 font-bold">
-									{app.dateOfBirth || app.dob || "-"}
-								</p>
-							</div>
-							<div className="space-y-1">
-								<p className="text-muted-foreground text-xs font-semibold tracking-wider uppercase">
-									{t("gender")}
-								</p>
-								<p className="text-foreground/80 font-bold capitalize">
-									{app.gender || "-"}
-								</p>
-							</div>
-							<div className="space-y-1">
-								<p className="text-muted-foreground text-xs font-semibold tracking-wider uppercase">
-									{t("bloodGroup")}
-								</p>
-								<p className="text-foreground/80 font-bold">
-									{app.bloodGroup || "-"}
-								</p>
-							</div>
-							<div className="space-y-1">
-								<p className="text-muted-foreground text-xs font-semibold tracking-wider uppercase">
-									{t("religion")}
-								</p>
-								<p className="text-foreground/80 font-bold">
-									{app.religion || "-"}
-								</p>
-							</div>
-						</div>
-					</CardContent>
-				</Card>
-
-				{/* Parent / Guardian Information */}
-				<Card className="gap-0 py-0 shadow-none">
-					<CardHeader className="flex flex-row items-center gap-2 space-y-0 border-b bg-blue-100/10 pt-5 pb-5! dark:bg-black/200">
-						<Users className="text-primary size-4" />
-						<CardTitle className="text-base font-bold">{t("parentInfo")}</CardTitle>
-					</CardHeader>
-					<CardContent className="px-6 pt-6 pb-8">
-						<div className="grid grid-cols-1 gap-x-12 gap-y-6 sm:grid-cols-2">
-							<div className="space-y-1">
-								<p className="text-muted-foreground text-xs font-semibold tracking-wider uppercase">
-									{t("fatherName")}
-								</p>
-								<p className="text-foreground/80 font-bold">
-									{app.fatherName || "-"}
-								</p>
-							</div>
-							<div className="space-y-1">
-								<p className="text-muted-foreground text-xs font-semibold tracking-wider uppercase">
-									{t("fatherNid")}
-								</p>
-								<p className="text-foreground/80 font-bold">
-									{app.fatherNid || "-"}
-								</p>
-							</div>
-							<div className="space-y-1">
-								<p className="text-muted-foreground text-xs font-semibold tracking-wider uppercase">
-									{t("motherName")}
-								</p>
-								<p className="text-foreground/80 font-bold">
-									{app.motherName || "-"}
-								</p>
-							</div>
-							<div className="space-y-1">
-								<p className="text-muted-foreground text-xs font-semibold tracking-wider uppercase">
-									{t("motherNid")}
-								</p>
-								<p className="text-foreground/80 font-bold">
-									{app.motherNid || "-"}
-								</p>
-							</div>
-							<div className="space-y-1">
-								<p className="text-muted-foreground text-xs font-semibold tracking-wider uppercase">
-									{t("contactNumber")}
-								</p>
-								<p className="text-foreground/80 font-bold">
-									{app.mobile || app.contact || "-"}
-								</p>
-							</div>
-							<div className="space-y-1">
-								<p className="text-muted-foreground text-xs font-semibold tracking-wider uppercase">
-									{t("emergencyContact")}
-								</p>
-								<p className="text-foreground/80 font-bold">
-									{app.emergencyContactPhone || app.emergencyContact || "-"}
-								</p>
-							</div>
-						</div>
-					</CardContent>
-				</Card>
-
-				{/* Address Information */}
-				<Card className="gap-0 py-0 shadow-none">
-					<CardHeader className="flex flex-row items-center gap-2 space-y-0 border-b bg-blue-100/10 pt-5 pb-5! dark:bg-black/200">
-						<MapPin className="text-primary size-4" />
-						<CardTitle className="text-base font-bold">{t("address")}</CardTitle>
-					</CardHeader>
-					<CardContent className="px-6 pt-6 pb-8">
-						<div className="grid grid-cols-1 gap-x-12 gap-y-6 sm:grid-cols-2">
-							<div className="space-y-1">
-								<p className="text-muted-foreground text-xs font-semibold tracking-wider uppercase">
-									{t("presentAddress")}
-								</p>
-								<p className="text-foreground/80 leading-relaxed font-bold">
-									{app.presentAddress || "-"}
-								</p>
-							</div>
-							<div className="space-y-1">
-								<p className="text-muted-foreground text-xs font-semibold tracking-wider uppercase">
-									{t("permanentAddress")}
-								</p>
-								<p className="text-foreground/80 leading-relaxed font-bold">
-									{app.permanentAddress || "-"}
-								</p>
-							</div>
-						</div>
-					</CardContent>
-				</Card>
-
-				{/* Additional Custom Data */}
-				{customData && Object.keys(customData).length > 0 && (
-					<Card className="gap-0 py-0 shadow-none">
-						<CardHeader className="flex flex-row items-center gap-2 space-y-0 border-b bg-blue-100/10 pt-5 pb-5! dark:bg-black/200">
-							<Info className="text-primary size-4" />
-							<CardTitle className="text-base font-bold">
-								{t("additionalData")}
+			<div className="space-y-4 @5xl/main:col-span-8">
+				{(app.visibleFieldGroups || []).map((group: any) => (
+					<Card key={group.section} className="shadow-none">
+						<CardHeader className="border-b py-4">
+							<CardTitle className="text-base">
+								{sectionLabels[group.section] || group.section}
 							</CardTitle>
 						</CardHeader>
-						<CardContent className="bg-muted/5 px-6 pt-6 pb-6">
-							<pre className="bg-muted/40 border-border/50 scrollbar-thin max-h-60 overflow-auto rounded-lg border p-4 font-mono text-xs">
-								{JSON.stringify(customData, null, 2)}
-							</pre>
+						<CardContent className="grid grid-cols-1 gap-4 p-5 sm:grid-cols-2">
+							{(group.fields || []).map((field: any) => (
+								<div
+									key={`${group.section}-${field.fieldKey}`}
+									className={cn(
+										"rounded-md border p-3",
+										String(field.fieldType || "").toLowerCase() === "textarea" &&
+											"sm:col-span-2"
+									)}
+								>
+									<p className="text-muted-foreground text-xs">{field.label}</p>
+									<FieldDisplay field={field} onOpenMedia={setPreviewMedia} />
+								</div>
+							))}
 						</CardContent>
 					</Card>
-				)}
+				))}
 			</div>
+
+			<Sheet open={!!previewMedia} onOpenChange={(open) => !open && setPreviewMedia(null)}>
+				<SheetContent side="bottom" className="left-0 right-0 top-[100px] h-[calc(100vh-100px)]">
+					<SheetHeader className="border-b p-4">
+						<SheetTitle className="text-base">{previewMedia?.name || "Document"}</SheetTitle>
+						<SheetDescription>Review uploaded admission document.</SheetDescription>
+					</SheetHeader>
+					<div className="min-h-0 flex-1 overflow-auto p-4">
+						{previewMedia?.url && isImageMedia(previewMedia) ? (
+							<div className="mx-auto max-w-5xl">
+								<ProgressiveImage
+									src={previewMedia.url}
+									alt={previewMedia.name || "Document preview"}
+									placeholderBase64={previewMedia.placeholder}
+									width={1200}
+									height={800}
+									className="h-auto w-full object-contain"
+									wrapperClassName="w-full rounded-md border bg-muted"
+								/>
+							</div>
+						) : previewMedia?.url &&
+							/\.pdf(\?|$)/i.test(String(previewMedia.url)) ? (
+							<iframe
+								src={previewMedia.url}
+								title={previewMedia.name || "Document preview"}
+								className="h-full min-h-[600px] w-full rounded-md border"
+							/>
+						) : previewMedia?.url ? (
+							<div className="flex h-full min-h-[300px] items-center justify-center rounded-md border">
+								<Button asChild>
+									<a href={previewMedia.url} target="_blank" rel="noreferrer">
+										Open document
+									</a>
+								</Button>
+							</div>
+						) : null}
+					</div>
+				</SheetContent>
+			</Sheet>
+
+			<ConfirmationModal
+				open={!!statusUpdate}
+				onOpenChange={(open) => {
+					if (!open) {
+						setStatusUpdate(null);
+						setRoll("");
+					}
+				}}
+				onConfirm={handleStatusUpdate}
+				title="Change application status?"
+				description={`This will update the application status to ${statusUpdate?.replace("_", " ") || ""}.`}
+				body={
+					statusUpdate === "approved" ? (
+						<div className="space-y-4">
+							<div className="space-y-2">
+								<label className="text-muted-foreground text-xs font-medium">
+									Student Roll Number
+								</label>
+								<div className="flex items-center gap-2">
+									<Input
+										placeholder="e.g. 001"
+										value={roll}
+										onChange={(event) => setRoll(event.target.value.replace(/\D/g, ""))}
+										maxLength={3}
+									/>
+								</div>
+							</div>
+							<StudentRollList
+								classId={app.classId}
+								sessionId={app.sessionId}
+								section={app.sectionId}
+								onSuggestedRoll={(suggestedRoll) =>
+									setRoll((current) => current || suggestedRoll)
+								}
+							/>
+						</div>
+					) : null
+				}
+				isLoading={isUpdatingStatus}
+			/>
 		</div>
 	);
 }

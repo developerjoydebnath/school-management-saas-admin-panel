@@ -14,6 +14,7 @@ import {
 import { Switch } from "@/shared/components/ui/switch";
 import { Textarea } from "@/shared/components/ui/textarea";
 import { cn } from "@/shared/lib/utils";
+import type { ChangeEvent } from "react";
 import { useController, type UseControllerProps } from "react-hook-form";
 import { match } from "ts-pattern";
 import ClassRoomSelect from "./ClassRoomSelect";
@@ -77,6 +78,16 @@ export default function InputField({
 	...props
 }: FormFieldProps) {
 	const { field, fieldState } = useController(props);
+	const isPhoneInput = type === "tel" || type === "phone";
+
+	const handleNativeInputChange = (event: ChangeEvent<HTMLInputElement>) => {
+		if (isPhoneInput) {
+			field.onChange(event.target.value.replace(/\D/g, "").slice(0, 11));
+			return;
+		}
+		field.onChange(event);
+	};
+
 	return (
 		<div
 			className={cn(
@@ -115,6 +126,7 @@ export default function InputField({
 								"email",
 								"date",
 								"tel",
+								"phone",
 								"url",
 								"search",
 								"color",
@@ -571,6 +583,7 @@ export default function InputField({
 						"email",
 						"date",
 						"tel",
+						"phone",
 						"url",
 						"search",
 						"color",
@@ -579,9 +592,13 @@ export default function InputField({
 						() => (
 							<Input
 								id={field.name}
-								type={type}
+								type={isPhoneInput ? "tel" : type}
+								inputMode={isPhoneInput ? "numeric" : undefined}
+								pattern={isPhoneInput ? "[0-9]*" : undefined}
+								maxLength={isPhoneInput ? 11 : undefined}
 								placeholder={props.placeholder}
 								{...field}
+								onChange={handleNativeInputChange}
 								value={field.value ?? ""}
 								disabled={props.disabled}
 								className={cn(
