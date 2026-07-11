@@ -26,7 +26,7 @@ export default function ShiftSelect({
 	className,
 	disabled,
 }: ShiftSelectProps) {
-	const { data: response, isLoading } = useSWR("/shifts/active-list");
+	const { data: response, isLoading } = useSWR("/shifts/options");
 	const shifts = response?.data || response || [];
 
 	if (isLoading) return <Skeleton className="h-10 w-full" />;
@@ -42,8 +42,12 @@ export default function ShiftSelect({
 			</SelectTrigger>
 			<SelectContent className="p-1">
 				{shifts.map((shift: any) => (
-					<SelectItem key={shift.id} value={shift.id} className="cursor-pointer py-2">
-						{shift.name}
+					<SelectItem
+						key={shift.value}
+						value={shift.value}
+						className="cursor-pointer py-2"
+					>
+						{shift.label}
 					</SelectItem>
 				))}
 			</SelectContent>

@@ -1,7 +1,7 @@
 "use client";
 
-import InventoryFormPage from "@/modules/inventory/components/InventoryFormPage";
+import { ItemFormPage } from "@/modules/inventory/items/components/ItemFormPage";
 
 export default function InventoryItemCreatePage() {
-	return <InventoryFormPage moduleKey="items" />;
+	return <ItemFormPage />;
 }

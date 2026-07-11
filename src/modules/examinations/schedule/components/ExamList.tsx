@@ -20,7 +20,7 @@ import { PERMISSIONS } from "@/shared/configs/permissions.config";
 import { useAuthStore } from "@/shared/stores/authStore";
 import { hasAccess } from "@/shared/utils/permission";
 import { ColumnDef } from "@tanstack/react-table";
-import { Eye, Pencil, Trash2 } from "lucide-react";
+import { AlarmClockCheck, Eye, Pencil, Trash2 } from "lucide-react";
 import { useTranslations } from "next-intl";
 import Link from "next/link";
 import { useState } from "react";
@@ -238,6 +238,19 @@ export default function ExamList() {
 							]}
 						>
 							<ExamDetailsAction id={exam.id} />
+						</PermissionGuard>
+						<PermissionGuard
+							permissions={[
+								PERMISSIONS.EXAMINATIONS.SCHEDULE.VIEW,
+								PERMISSIONS.EXAMINATIONS.SCHEDULE.ALL,
+								PERMISSIONS.EXAMINATIONS.ALL,
+							]}
+						>
+							<Button asChild variant="outline" size="icon-sm" title={t("routine")}>
+								<Link href={PATHS.EXAMINATIONS.ROUTINE.EXAM(exam.id)}>
+									<AlarmClockCheck className="text-muted-foreground hover:text-foreground h-4 w-4" />
+								</Link>
+							</Button>
 						</PermissionGuard>
 						<PermissionGuard
 							permissions={[

@@ -154,6 +154,7 @@ export default function ExamForm({ id, defaultValues, isEdit = false }: Props) {
 						label="Classes"
 						type="classSelection"
 						placeholder="Select one or more classes"
+						skipLocalization
 						required
 					/>
 				</CardContent>

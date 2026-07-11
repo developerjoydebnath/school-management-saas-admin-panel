@@ -1,4 +1,5 @@
 "use client";
+import * as React from "react";
 import {
 	Collapsible,
 	CollapsibleContent,
@@ -24,6 +25,22 @@ import { usePathname, useRouter } from "next/navigation";
 
 export function NavMain() {
 	const items = SidebarMenu;
+	const { state } = useSidebar();
+
+	React.useEffect(() => {
+		if (state === "collapsed") return;
+		const timer = setTimeout(() => {
+			const activeEl = document.querySelector(".sidebar-active-item") || document.querySelector(".sidebar-active-group");
+			if (activeEl) {
+				activeEl.scrollIntoView({
+					behavior: "auto",
+					block: "center",
+				});
+			}
+		}, 150);
+		return () => clearTimeout(timer);
+	}, [state]);
+
 	return (
 		<SidebarGroup>
 			<SidebarGroupLabel>Menu</SidebarGroupLabel>
@@ -86,7 +103,7 @@ function RecursiveMenuItem({ item, level }: { item: SidebarMenuType; level: numb
 						<SidebarMenuButton
 							tooltip={t(item.name)}
 							isActive={isActive}
-							className={`h-auto rounded-none border-l-4 px-4 py-2.5 ${isActive ? "border-primary bg-sidebar-accent" : "border-transparent"}`}
+							className={`h-auto rounded-none border-l-4 px-4 py-2.5 ${isActive ? "border-primary bg-sidebar-accent sidebar-active-group" : "border-transparent"}`}
 						>
 							{item.icon && <item.icon className="size-3.5!" />}
 							<span className="text-xs font-medium tracking-wide">
@@ -122,7 +139,7 @@ function RecursiveMenuItem({ item, level }: { item: SidebarMenuType; level: numb
 					isActive={isActive}
 					onClick={handleNavigate}
 					asChild
-					className={`h-auto rounded-none border-l-4 px-4 py-2.5 ${isActive ? "border-primary bg-sidebar-accent" : "border-transparent"}`}
+					className={`h-auto rounded-none border-l-4 px-4 py-2.5 ${isActive ? "border-primary bg-sidebar-accent sidebar-active-item" : "border-transparent"}`}
 				>
 					<Link href={item.path} onClick={(e) => e.preventDefault()}>
 						{item.icon && <item.icon className="size-3.5!" />}
@@ -140,7 +157,7 @@ function RecursiveMenuItem({ item, level }: { item: SidebarMenuType; level: numb
 				isActive={isActive}
 				onClick={handleNavigate}
 				asChild
-				className={`h-auto rounded-none border-l-4 px-4 py-2.5 ${isActive ? "border-primary bg-sidebar-accent" : "border-transparent"}`}
+				className={`h-auto rounded-none border-l-4 px-4 py-2.5 ${isActive ? "border-primary bg-sidebar-accent sidebar-active-item" : "border-transparent"}`}
 			>
 				<Link href={item.path} onClick={(e) => e.preventDefault()}>
 					{item.icon && <item.icon className="size-3.5! scale-90" />}

@@ -18,12 +18,28 @@ import { useLocale, useTranslations } from "next-intl";
 interface FeeSessionSelectorProps {
 	session: string;
 	onSessionChange: (value: string) => void;
+	onCopyPrevious?: () => void;
+	isCopying?: boolean;
 }
 
-export function FeeSessionSelector({ session, onSessionChange }: FeeSessionSelectorProps) {
-	const { data: sessions, isLoading } = useSWR("/sessions");
+export function FeeSessionSelector({
+	session,
+	onSessionChange,
+	onCopyPrevious,
+	isCopying,
+}: FeeSessionSelectorProps) {
+	const { data: sessionsResponse, isLoading } = useSWR("/sessions");
 	const locale = useLocale();
 	const t = useTranslations("AdmissionSettings");
+	const sessions = Array.isArray(sessionsResponse)
+		? sessionsResponse
+		: Array.isArray(sessionsResponse?.data)
+			? sessionsResponse.data
+			: Array.isArray(sessionsResponse?.data?.items)
+				? sessionsResponse.data.items
+				: Array.isArray(sessionsResponse?.items)
+					? sessionsResponse.items
+					: [];
 
 	return (
 		<div className="bg-background flex flex-wrap items-center justify-between gap-4 rounded-lg border p-4">
@@ -42,7 +58,7 @@ export function FeeSessionSelector({ session, onSessionChange }: FeeSessionSelec
 						</SelectTrigger>
 						<SelectContent className="p-1">
 							{sessions
-								?.filter((s: any) => s.status === "ACTIVE")
+								.filter((s: any) => s.status === "ACTIVE")
 								.map((s: any) => (
 									<SelectItem
 										key={s.id}
@@ -61,7 +77,13 @@ export function FeeSessionSelector({ session, onSessionChange }: FeeSessionSelec
 				<span className="text-muted-foreground text-sm">{t("feeSessionNote")}</span>
 			</div>
 
-			<Button variant="outline" size="sm" className="h-8">
+			<Button
+				variant="outline"
+				size="sm"
+				className="h-8"
+				onClick={onCopyPrevious}
+				disabled={!session || isCopying}
+			>
 				<Copy className="h-4 w-4" />
 				{t("feeCopyPrevSession")}
 			</Button>

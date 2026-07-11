@@ -11,7 +11,7 @@ import { ColumnDef } from "@tanstack/react-table";
 import { Eye } from "lucide-react";
 import { useLocale, useTranslations } from "next-intl";
 import Link from "next/link";
-import { useMemo, useState } from "react";
+import { useState } from "react";
 
 interface StudentListTableProps {
 	classId: string;
@@ -28,18 +28,14 @@ export default function StudentListTable({ classId, session }: StudentListTableP
 		data: students,
 		meta,
 		isLoading,
-	} = useTableData("/students");
+	} = useTableData(`/students/by-class/${classId}`, {
+		page,
+		limit,
+		...(session ? { sessionId: session } : {}),
+	});
 
-	const { data: classData } = useSWR(`/classes/${classId}`);
-
-	const filteredStudents = useMemo(() => {
-		if (!students) return [];
-		return students.filter((s: any) => {
-			const matchesClass = s.class === classId || s.class === `class-${classId}`;
-			const matchesSession = !session || s.session === session;
-			return matchesClass && matchesSession;
-		});
-	}, [students, classId, session]);
+	const { data: classResponse } = useSWR(`/classes/${classId}`);
+	const classData = classResponse?.data;
 
 	const columns: ColumnDef<any>[] = [
 		{
@@ -143,20 +139,25 @@ export default function StudentListTable({ classId, session }: StudentListTableP
 			<CardHeader className="p-0 pb-4">
 				<div className="flex items-center gap-3">
 					<h2 className="text-lg font-semibold">
-						{classData ? getLocalizedName(classData.name, locale) : `Class ${classId}`}
+						{classData
+							? getLocalizedName(
+									classData.name || classData.enName || classData.bnName,
+									locale
+								)
+							: `Class ${classId}`}
 					</h2>
-					<Badge variant="outline">{filteredStudents.length} {t("studentName")}</Badge>
+					<Badge variant="outline">{meta.total} {t("studentName")}</Badge>
 				</div>
 			</CardHeader>
 			<CardContent className="space-y-4 p-0">
 				<DataTable
-					data={filteredStudents}
+					data={students}
 					isLoading={isLoading}
 					pagination={{
 						page: meta.page,
 						limit: meta.limit,
-						total: filteredStudents.length,
-						totalPages: Math.ceil(filteredStudents.length / limit),
+						total: meta.total,
+						totalPages: meta.totalPages,
 						onPageChange: setPage,
 						onLimitChange: setLimit,
 					}}

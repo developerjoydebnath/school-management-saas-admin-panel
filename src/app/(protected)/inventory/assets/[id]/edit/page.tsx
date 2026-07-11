@@ -1,6 +1,6 @@
 "use client";
 
-import InventoryFormPage from "@/modules/inventory/components/InventoryFormPage";
+import { AssetFormPage } from "@/modules/inventory/assets/components/AssetFormPage";
 import { use } from "react";
 
 export default function InventoryAssetEditPage({
@@ -9,5 +9,5 @@ export default function InventoryAssetEditPage({
 	params: Promise<{ id: string }>;
 }) {
 	const { id } = use(params);
-	return <InventoryFormPage moduleKey="assets" id={id} />;
+	return <AssetFormPage id={id} />;
 }

@@ -17,7 +17,28 @@ type Props = {
 };
 
 const format = (value?: string) =>
-	value ? value.replaceAll("_", " ").toLowerCase().replace(/\b\w/g, (char) => char.toUpperCase()) : "-";
+	value
+		? value
+				.replaceAll("_", " ")
+				.toLowerCase()
+				.replace(/\b\w/g, (char) => char.toUpperCase())
+		: "-";
+
+function getClassSortValue(name: string): number {
+	const normalized = name.toLowerCase().trim();
+
+	if (normalized.includes("play")) return 1;
+	if (normalized.includes("nursery")) return 2;
+	if (normalized.includes("kg") || normalized.includes("kindergarten")) return 3;
+	if (normalized.includes("lkg")) return 4;
+	if (normalized.includes("ukg")) return 5;
+	if (normalized.includes("prep")) return 6;
+
+	const match = normalized.match(/\d+/);
+	if (match) return 10 + parseInt(match[0], 10);
+
+	return 1000;
+}
 
 function Item({ label, value }: { label: string; value: React.ReactNode }) {
 	return (
@@ -35,7 +56,9 @@ export function ExamDetailsSheet({ id, open }: Props) {
 	return (
 		<SheetContent className="w-full gap-0 p-0 sm:max-w-none @3xl/body:w-[64vw]">
 			<SheetHeader className="border-b p-4">
-				<SheetTitle className="text-base leading-6 font-normal">{t("detailsTitle")}</SheetTitle>
+				<SheetTitle className="text-base leading-6 font-normal">
+					{t("detailsTitle")}
+				</SheetTitle>
 				<SheetDescription className="text-xs">{t("detailsDescription")}</SheetDescription>
 			</SheetHeader>
 			<ScrollArea className="h-[calc(100vh-73px)]">
@@ -47,7 +70,7 @@ export function ExamDetailsSheet({ id, open }: Props) {
 						</div>
 					) : (
 						<>
-							<section className="rounded-md border bg-card p-4">
+							<section className="bg-card rounded-md border p-4">
 								<h3 className="text-sm font-normal">{t("examInformation")}</h3>
 								<p className="text-muted-foreground mt-1 text-xs">
 									{t("examInformationDescription")}
@@ -64,38 +87,70 @@ export function ExamDetailsSheet({ id, open }: Props) {
 									<Item label="Syllabuses" value={data._count?.syllabuses || 0} />
 								</div>
 							</section>
-							<section className="rounded-md border bg-card p-4">
+							<section className="bg-card rounded-md border p-4">
 								<h3 className="text-sm font-normal">{t("classes")}</h3>
 								<p className="text-muted-foreground mt-1 text-xs">
 									{t("classesDescription")}
 								</p>
 								<div className="mt-3 flex flex-wrap gap-2">
-									{data.classes?.map((item: any) => (
-										<span key={item.classId} className="rounded-md border px-2 py-1 text-xs">
-											{item.class?.enName}
-										</span>
-									))}
+									{[...(data.classes || [])]
+										.sort((a: any, b: any) => getClassSortValue(a.class?.enName || "") - getClassSortValue(b.class?.enName || ""))
+										.map((item: any) => (
+											<span
+												key={item.classId}
+												className="rounded-md border px-2 py-1 text-xs"
+											>
+												{item.class?.enName}
+											</span>
+										))}
 								</div>
 							</section>
-							<section className="rounded-md border bg-card p-4">
+							<section className="bg-card rounded-md border p-4">
 								<h3 className="text-sm font-normal">{t("subjects")}</h3>
 								<p className="text-muted-foreground mt-1 text-xs">
 									{t("subjectsDescription")}
 								</p>
-								<div className="mt-3 overflow-hidden rounded-md border">
-									{data.subjects?.map((item: any) => (
-										<div
-											key={item.id}
-											className="grid grid-cols-1 gap-2 border-b px-3 py-2 text-sm last:border-b-0 @xl/body:grid-cols-4"
-										>
-											<span>{item.subject?.enName}</span>
-											<span>{item.class?.enName}</span>
-											<span>
-												{item.passMarks} / {item.totalMarks}
-											</span>
-											<span>{format(item.markDivision)}</span>
-										</div>
-									))}
+								<div className="mt-3 space-y-4">
+									{Object.entries(
+										data.subjects?.reduce(
+											(acc: any, item: any) => {
+												const className =
+													item.class?.enName || "Unknown Class";
+												if (!acc[className]) {
+													acc[className] = [];
+												}
+												acc[className].push(item);
+												return acc;
+											},
+											{} as Record<string, any[]>
+										) || {}
+									)
+										.sort(([classA], [classB]) => getClassSortValue(classA) - getClassSortValue(classB))
+										.map(([className, subjects]: [string, any]) => (
+											<div key={className} className="space-y-1.5">
+												<h4 className="text-muted-foreground px-1 text-xs font-semibold tracking-wider uppercase">
+													{className}
+												</h4>
+												<div className="bg-background/20 overflow-hidden rounded-md border">
+													{subjects.map((item: any) => (
+														<div
+															key={item.id}
+															className="hover:bg-muted/5 grid grid-cols-1 gap-2 border-b px-3 py-2 text-sm transition-colors last:border-b-0 @xl/body:grid-cols-3"
+														>
+															<span className="text-foreground font-medium">
+																{item.subject?.enName}
+															</span>
+															<span className="text-muted-foreground">
+																{item.passMarks} / {item.totalMarks}
+															</span>
+															<span className="text-muted-foreground">
+																{format(item.markDivision)}
+															</span>
+														</div>
+													))}
+												</div>
+											</div>
+										))}
 								</div>
 							</section>
 						</>

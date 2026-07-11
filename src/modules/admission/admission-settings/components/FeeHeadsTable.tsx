@@ -35,13 +35,14 @@ import { FeeHead, FeeType } from "../types/types";
 import { AddFeeHeadDialog } from "./AddFeeHeadForm";
 
 interface FeeHeadsTableProps {
+	sessionId?: string;
 	fees: FeeHead[];
 	onUpdate: (id: string, updates: Partial<FeeHead>) => void;
 	onDelete: (id: string) => void;
 	onAdd: (fee: FeeHead) => void;
 }
 
-export function FeeHeadsTable({ fees, onUpdate, onDelete, onAdd }: FeeHeadsTableProps) {
+export function FeeHeadsTable({ sessionId, fees, onUpdate, onDelete, onAdd }: FeeHeadsTableProps) {
 	const t = useTranslations("AdmissionSettings");
 
 	return (
@@ -56,7 +57,7 @@ export function FeeHeadsTable({ fees, onUpdate, onDelete, onAdd }: FeeHeadsTable
 						</CardDescription>
 					</div>
 				</div>
-				<AddFeeHeadDialog onAdd={onAdd} />
+				<AddFeeHeadDialog sessionId={sessionId} onAdd={onAdd} />
 			</CardHeader>
 
 			<CardContent className="p-0">
@@ -80,10 +81,10 @@ export function FeeHeadsTable({ fees, onUpdate, onDelete, onAdd }: FeeHeadsTable
 						</TableRow>
 					</TableHeader>
 					<TableBody>
-						{fees.map((fee) => (
-							<FeeTableRow
-								key={fee.id}
-								fee={fee}
+					{fees.map((fee) => (
+						<FeeTableRow
+							key={fee.id}
+							fee={fee}
 								onUpdate={onUpdate}
 								onDelete={onDelete}
 							/>
@@ -106,6 +107,8 @@ interface FeeTableRowProps {
 function FeeTableRow({ fee, onUpdate, onDelete }: FeeTableRowProps) {
 	const t = useTranslations("AdmissionSettings");
 	const isMandatoryLocked = fee.isSystem && fee.name === "Admission Fee";
+	const typeLabel =
+		fee.type === "one_time" ? "One-time" : fee.type === "monthly" ? "Monthly" : "Yearly";
 
 	return (
 		<TableRow>
@@ -138,12 +141,12 @@ function FeeTableRow({ fee, onUpdate, onDelete }: FeeTableRowProps) {
 					onValueChange={(val) => val && onUpdate(fee.id, { type: val as FeeType })}
 				>
 					<SelectTrigger className="hover:border-input focus:border-input focus:ring-ring h-8 border-transparent bg-transparent shadow-none transition-colors focus:ring-1">
-						<SelectValue />
+						<SelectValue>{typeLabel}</SelectValue>
 					</SelectTrigger>
 					<SelectContent className="p-1">
-						<SelectItem value="One-time">One-time</SelectItem>
-						<SelectItem value="Monthly">Monthly</SelectItem>
-						<SelectItem value="Yearly">Yearly</SelectItem>
+						<SelectItem value="one_time">One-time</SelectItem>
+						<SelectItem value="monthly">Monthly</SelectItem>
+						<SelectItem value="yearly">Yearly</SelectItem>
 					</SelectContent>
 				</Select>
 			</TableCell>

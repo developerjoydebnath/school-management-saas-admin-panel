@@ -17,7 +17,8 @@ export default function EditAdmissionPage() {
   const id = params?.id as string;
   const tNav = useTranslations("Navigation");
 
-  const { data: application, isLoading } = useSWR(`/admissions/${id}`);
+  const { data: applicationResponse, isLoading } = useSWR(`/admissions/${id}`);
+  const application = applicationResponse?.data;
 
   useEffect(() => {
     if (id) {
@@ -48,7 +49,7 @@ export default function EditAdmissionPage() {
         routeName="ApplicationEdit" 
       />
       
-      <div className="max-w-4xl mx-auto">
+      <div className="mx-auto max-w-7xl">
         <NewAdmissionForm 
           id={id}
           initialData={application}

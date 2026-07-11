@@ -1,6 +1,7 @@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/shared/components/ui/tabs";
 import { useTranslations } from "next-intl";
 import AdmissionSettingsForm from "./AdmissionSettingsForm";
+import DiscountSettings from "./DiscountSettings";
 import FeeStructureSettings from "./FeeStructureSettings";
 
 export default function AdmissionSettingsTabs() {
@@ -15,12 +16,18 @@ export default function AdmissionSettingsTabs() {
 					<TabsTrigger value="fee-structure" className="h-10 cursor-pointer px-4">
 						{t("feeStructure")}
 					</TabsTrigger>
+					<TabsTrigger value="discounts" className="h-10 cursor-pointer px-4">
+						Discounts
+					</TabsTrigger>
 				</TabsList>
 				<TabsContent value="field-configuration">
 					<AdmissionSettingsForm />
 				</TabsContent>
 				<TabsContent value="fee-structure">
 					<FeeStructureSettings />
+				</TabsContent>
+				<TabsContent value="discounts">
+					<DiscountSettings />
 				</TabsContent>
 			</Tabs>
 		</div>

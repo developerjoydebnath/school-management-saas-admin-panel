@@ -1,13 +1,13 @@
-"use client";
-
-import InventoryFormPage from "@/modules/inventory/components/InventoryFormPage";
+import { getTranslations } from "next-intl/server";
+import { LocationFormPage } from "@/modules/inventory/locations/components/LocationFormPage";
 import { use } from "react";
 
-export default function InventoryLocationEditPage({
-	params,
-}: {
-	params: Promise<{ id: string }>;
-}) {
+export async function generateMetadata() {
+	const t = await getTranslations("Inventory");
+	return { title: t("editTitle") };
+}
+
+export default function InventoryLocationEditPage({ params }: { params: Promise<{ id: string }> }) {
 	const { id } = use(params);
-	return <InventoryFormPage moduleKey="locations" id={id} />;
+	return <LocationFormPage id={id} />;
 }

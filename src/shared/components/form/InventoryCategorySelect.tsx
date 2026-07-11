@@ -26,11 +26,8 @@ export default function InventoryCategorySelect({
 	className,
 	disabled,
 }: Props) {
-	const { data: response, isLoading } = useSWR("/inventory/categories", {
-		page: 1,
-		limit: 100,
-	});
-	const categories = response?.data?.items || response?.items || [];
+	const { data: response, isLoading } = useSWR("/inventory/categories/options");
+	const categories = response?.data || [];
 
 	if (isLoading) return <Skeleton className="h-10 w-full" />;
 
@@ -45,8 +42,8 @@ export default function InventoryCategorySelect({
 			</SelectTrigger>
 			<SelectContent className="p-1">
 				{categories.map((category: any) => (
-					<SelectItem key={category.id} value={category.id} className="cursor-pointer py-2">
-						{category.name}
+					<SelectItem key={category.value} value={category.value} className="cursor-pointer py-2">
+						{category.label}
 					</SelectItem>
 				))}
 			</SelectContent>

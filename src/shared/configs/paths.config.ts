@@ -354,6 +354,10 @@ export const PATHS = {
 			CREATE: "/examinations/schedule/create",
 			EDIT: (id: number | string) => `/examinations/schedule/${id}/edit`,
 		},
+		ROUTINE: {
+			ROOT: "/examinations/routine",
+			EXAM: (id: number | string) => `/examinations/routine/${id}`,
+		},
 		MARKS: {
 			ROOT: "/examinations/marks",
 			CREATE: "/examinations/marks/create",

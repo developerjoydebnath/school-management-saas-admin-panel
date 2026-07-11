@@ -1,7 +1,7 @@
 "use client";
 
-import InventoryPageShell from "@/modules/inventory/components/InventoryPageShell";
+import InventoryOverviewPage from "@/modules/inventory/overview/components/InventoryOverviewPage";
 
-export default function InventoryOverviewPage() {
-	return <InventoryPageShell overview />;
+export default function InventoryOverviewRoutePage() {
+	return <InventoryOverviewPage />;
 }

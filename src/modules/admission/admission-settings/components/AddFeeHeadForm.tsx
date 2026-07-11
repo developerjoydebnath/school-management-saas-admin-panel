@@ -23,11 +23,12 @@ import { FeeHead } from "../types/types";
 
 // ─── Props ────────────────────────────────────────────────────────────────────
 interface AddFeeHeadDialogProps {
+	sessionId?: string;
 	onAdd: (fee: FeeHead) => void;
 }
 
 // ─── Component ────────────────────────────────────────────────────────────────
-export function AddFeeHeadDialog({ onAdd }: AddFeeHeadDialogProps) {
+export function AddFeeHeadDialog({ sessionId, onAdd }: AddFeeHeadDialogProps) {
 	const [isOpen, setIsOpen] = useState(false);
 	const t = useTranslations("AdmissionSettings");
 
@@ -39,14 +40,21 @@ export function AddFeeHeadDialog({ onAdd }: AddFeeHeadDialogProps) {
 			placeholder: t("feeNamePlaceholder"),
 		},
 		{
+			name: "nameBn" as const,
+			label: "Bangla Name (Optional)",
+			type: "text",
+			placeholder: "e.g. ভর্তি ফি",
+		},
+		{
 			name: "type" as const,
 			label: t("feeTypeLabel"),
 			type: "select",
 			options: [
-				{ label: "One-time", value: "One-time" },
-				{ label: "Monthly", value: "Monthly" },
-				{ label: "Yearly", value: "Yearly" },
+				{ label: "One-time", value: "one_time" },
+				{ label: "Monthly", value: "monthly" },
+				{ label: "Yearly", value: "yearly" },
 			],
+			placeholder: "Select fee type",
 		},
 		{
 			name: "amount" as const,
@@ -65,7 +73,8 @@ export function AddFeeHeadDialog({ onAdd }: AddFeeHeadDialogProps) {
 		resolver: zodResolver(feeHeadSchema as any),
 		defaultValues: {
 			name: "",
-			type: "One-time",
+			nameBn: "",
+			type: "one_time",
 			amount: 0,
 			isRequired: false,
 		} as FeeHeadFormValues,
@@ -73,15 +82,19 @@ export function AddFeeHeadDialog({ onAdd }: AddFeeHeadDialogProps) {
 
 	const onSubmit = useCallback(
 		async (data: FeeHeadFormValues) => {
+			if (!sessionId) {
+				toast.error("Select a session first.");
+				return;
+			}
 			try {
-				const response = await axios.post("/feeHeads", {
+				const response = await axios.post(`/admission/settings/${sessionId}/fee-heads`, {
 					...data,
 					amount: Number(data.amount), // coerce: HTML number input returns string
 					isShown: true,
 					isSystem: false,
 				});
 
-				onAdd(response.data as FeeHead);
+				onAdd(response.data?.data as FeeHead);
 				toast.success("Fee head added successfully!");
 				form.reset();
 				setIsOpen(false);
@@ -89,7 +102,7 @@ export function AddFeeHeadDialog({ onAdd }: AddFeeHeadDialogProps) {
 				toast.error("Failed to save fee head. Please try again.");
 			}
 		},
-		[form, onAdd]
+		[form, onAdd, sessionId]
 	);
 
 	return (

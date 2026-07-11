@@ -7,6 +7,7 @@ import {
 	CreditCard,
 	Database,
 	FileText,
+	Info,
 	MapPin,
 	UserPlus,
 } from "lucide-react";
@@ -25,7 +26,6 @@ export default function AdmissionStepper({
 	currentStepIndex,
 	isPreviewStep,
 	onStepClick,
-	isEditMode,
 }: AdmissionStepperProps) {
 	const tc = useTranslations("AdmissionSettings.categories");
 	const t = useTranslations("AdmissionNew");
@@ -39,6 +39,8 @@ export default function AdmissionStepper({
 				return <CheckCircle2 className={iconClass} />;
 			case "parent_info":
 				return <UserPlus className={iconClass} />;
+			case "guardian_info":
+				return <UserPlus className={iconClass} />;
 			case "address":
 				return <MapPin className={iconClass} />;
 			case "documents":
@@ -47,6 +49,8 @@ export default function AdmissionStepper({
 				return <AlertCircle className={iconClass} />;
 			case "payment":
 				return <CreditCard className={iconClass} />;
+			case "additional_info":
+				return <Info className={iconClass} />;
 			default:
 				return <FileText className={iconClass} />;
 		}
@@ -70,12 +74,8 @@ export default function AdmissionStepper({
 					<button
 						key={cat}
 						type="button"
-						onClick={() => isEditMode && onStepClick?.(idx)}
-						disabled={!isEditMode}
-						className={cn(
-							"group flex flex-col items-center",
-							isEditMode ? "cursor-pointer" : "cursor-default opacity-80"
-						)}
+						onClick={() => onStepClick?.(idx)}
+						className="group flex cursor-pointer flex-col items-center"
 					>
 						<div
 							className={cn(
@@ -101,12 +101,8 @@ export default function AdmissionStepper({
 				))}
 				<button
 					type="button"
-					onClick={() => isEditMode && onStepClick?.(categories.length)}
-					disabled={!isEditMode}
-					className={cn(
-						"group flex flex-col items-center",
-						isEditMode ? "cursor-pointer" : "cursor-default opacity-80"
-					)}
+					onClick={() => onStepClick?.(categories.length)}
+					className="group flex cursor-pointer flex-col items-center"
 				>
 					<div
 						className={cn(

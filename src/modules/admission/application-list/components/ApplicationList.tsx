@@ -27,7 +27,7 @@ import { useTableData } from "@/shared/hooks/use-table-data";
 import axios from "@/shared/lib/axios";
 import { cn } from "@/shared/lib/utils";
 import { ColumnDef } from "@tanstack/react-table";
-import { AlertCircle, Eye, List, Pencil, Trash2 } from "lucide-react";
+import { Eye, List, Pencil, Trash2 } from "lucide-react";
 import { useTranslations } from "next-intl";
 import Link from "next/link";
 import { useState } from "react";
@@ -63,12 +63,11 @@ export default function ApplicationList() {
 		isLoading,
 		mutate,
 	} = useTableData("/admissions", {
-		// page,
-		// limit,
-		// ...filter,
+		page,
+		limit,
+		search: filter.search,
+		status: filter.status.join(","),
 	});
-
-	const { data: students, mutate: mutateStudents } = useTableData("/students");
 
 	const selectedApplication = statusUpdate
 		? (applications as any[])?.find((a: any) => a.id === statusUpdate.id)
@@ -77,52 +76,29 @@ export default function ApplicationList() {
 	const handleStatusUpdate = async () => {
 		if (!statusUpdate || !selectedApplication) return;
 
-		if (statusUpdate.status === "Approved") {
+		if (statusUpdate.status === "approved") {
 			if (!roll) {
 				toast.error("Roll number is required for approval");
-				return;
-			}
-
-			// Check if roll is already taken
-			const formattedRoll = roll.padStart(3, "0");
-			const isTaken = (students as any[])?.some(
-				(s: any) =>
-					s.roll === formattedRoll &&
-					s.session === selectedApplication?.session &&
-					s.class === selectedApplication?.class &&
-					s.section === selectedApplication?.section
-			);
-
-			if (isTaken) {
-				toast.error("This roll number is already taken in this session");
 				return;
 			}
 		}
 
 		setIsUpdatingStatus(true);
 		try {
-			// Update admission status
-			await axios.patch(`/admissions/${statusUpdate.id}`, { status: statusUpdate.status });
-
-			// If approved, add to students
-			if (statusUpdate.status === "Approved" && selectedApplication) {
-				// Prepare student data
-				const formattedRoll = roll.padStart(3, "0");
-				const sessionName = selectedApplication.session?.replace("session-", "") || "0000";
-				const studentId = `STU-${sessionName}-${formattedRoll}`;
-				const studentData = {
-					...selectedApplication,
-					studentId,
-					qrCode: studentId,
-					barCode: studentId,
-					admissionId: selectedApplication.id,
-					roll: formattedRoll,
-					status: "ACTIVE",
-					joinedDate: new Date().toISOString(),
-				};
-				// Remove the id from application to let json-server generate a new one
-				const { id, ...rest } = studentData;
-				await axios.post("/students", rest);
+			if (statusUpdate.status === "approved") {
+				await axios.post(`/admissions/${statusUpdate.id}/approve`, {
+					rollNumber: roll.padStart(3, "0"),
+				});
+			} else if (statusUpdate.status === "rejected") {
+				await axios.post(`/admissions/${statusUpdate.id}/reject`, {
+					rejectionReason: "Rejected from application list",
+				});
+			} else if (statusUpdate.status === "waitlisted") {
+				await axios.post(`/admissions/${statusUpdate.id}/waitlist`, {});
+			} else {
+				await axios.patch(`/admissions/${statusUpdate.id}`, {
+					status: statusUpdate.status,
+				});
 			}
 
 			toast.success(t("statusUpdateSuccess", { status: statusUpdate.status }));
@@ -191,36 +167,43 @@ export default function ApplicationList() {
 			header: t("status"),
 			cell: ({ row }) => {
 				const app = row.original;
-				const status = app.status || "Pending";
+				const status = String(app.status || "pending").toLowerCase();
+				const statusLabel = status.replace("_", " ");
 
 				return (
 					<Select
 						value={status}
 						onValueChange={(val) => setStatusUpdate({ id: app.id, status: val })}
-						disabled={status === "Approved"}
+						disabled={status === "approved"}
 					>
 						<SelectTrigger
 							className={cn(
 								"h-8 w-[120px] rounded-full border-none px-3 text-xs font-medium shadow-none ring-0",
-								status === "Approved"
+								status === "approved"
 									? "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400"
 									: "cursor-pointer",
-								status === "Rejected" &&
+								status === "rejected" &&
 									"bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400",
-								status === "Pending" &&
+								status === "pending" &&
 									"bg-orange-100 text-orange-800 dark:bg-orange-900/30 dark:text-orange-400"
 							)}
 						>
-							<SelectValue />
+							<SelectValue>{statusLabel}</SelectValue>
 						</SelectTrigger>
 						<SelectContent className="p-1">
-							<SelectItem className="cursor-pointer py-2 text-xs" value="Pending">
+							<SelectItem className="cursor-pointer py-2 text-xs" value="pending">
 								Pending
 							</SelectItem>
-							<SelectItem className="cursor-pointer py-2 text-xs" value="Approved">
+							<SelectItem className="cursor-pointer py-2 text-xs" value="under_review">
+								Under Review
+							</SelectItem>
+							<SelectItem className="cursor-pointer py-2 text-xs" value="approved">
 								Approved
 							</SelectItem>
-							<SelectItem className="cursor-pointer py-2 text-xs" value="Rejected">
+							<SelectItem className="cursor-pointer py-2 text-xs" value="waitlisted">
+								Waitlisted
+							</SelectItem>
+							<SelectItem className="cursor-pointer py-2 text-xs" value="rejected">
 								Rejected
 							</SelectItem>
 						</SelectContent>
@@ -310,7 +293,7 @@ export default function ApplicationList() {
 					status: statusUpdate?.status ?? "",
 				})}
 				body={
-					statusUpdate?.status === "Approved" ? (
+					statusUpdate?.status === "approved" ? (
 						<div className="space-y-4">
 							<div className="flex flex-col gap-2">
 								<label className="text-muted-foreground text-xs font-medium">
@@ -328,7 +311,6 @@ export default function ApplicationList() {
 										open={showRollList}
 										onOpenChange={(open) => {
 											setShowRollList(open);
-											if (open) mutateStudents();
 										}}
 									>
 										<DialogTrigger asChild>
@@ -342,26 +324,13 @@ export default function ApplicationList() {
 												<DialogTitle>{t("rollListTitle")}</DialogTitle>
 											</DialogHeader>
 											<StudentRollList
-												classId={selectedApplication?.class}
+												classId={selectedApplication?.classId}
 												sessionId={selectedApplication?.session}
-												section={selectedApplication?.section}
+												section={selectedApplication?.sectionId}
 											/>
 										</DialogContent>
 									</Dialog>
 								</div>
-								{roll &&
-									(students as any[])?.some(
-										(s: any) =>
-											s.roll === roll.padStart(3, "0") &&
-											s.session === selectedApplication?.session &&
-											s.class === selectedApplication?.class &&
-											s.section === selectedApplication?.section
-									) && (
-										<div className="flex items-center gap-1.5 text-xs text-red-500">
-											<AlertCircle className="h-3.5 w-3.5" />
-											<span>{t("rollAlreadyTaken")}</span>
-										</div>
-									)}
 							</div>
 						</div>
 					) : null

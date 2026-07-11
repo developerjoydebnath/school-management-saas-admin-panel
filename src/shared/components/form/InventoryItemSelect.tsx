@@ -26,11 +26,8 @@ export default function InventoryItemSelect({
 	className,
 	disabled,
 }: Props) {
-	const { data: response, isLoading } = useSWR("/inventory/items", {
-		page: 1,
-		limit: 100,
-	});
-	const items = response?.data?.items || response?.items || [];
+	const { data: response, isLoading } = useSWR("/inventory/items/options");
+	const items = response?.data || [];
 
 	if (isLoading) return <Skeleton className="h-10 w-full" />;
 
@@ -45,8 +42,8 @@ export default function InventoryItemSelect({
 			</SelectTrigger>
 			<SelectContent className="p-1">
 				{items.map((item: any) => (
-					<SelectItem key={item.id} value={item.id} className="cursor-pointer py-2">
-						{item.code ? `${item.code} - ${item.name}` : item.name}
+					<SelectItem key={item.value} value={item.value} className="cursor-pointer py-2">
+						{item.label}
 					</SelectItem>
 				))}
 			</SelectContent>

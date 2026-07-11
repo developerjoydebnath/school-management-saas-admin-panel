@@ -1,7 +1,7 @@
 "use client";
 
-import InventoryFormPage from "@/modules/inventory/components/InventoryFormPage";
+import { MaintenanceFormPage } from "@/modules/inventory/maintenance/components/MaintenanceFormPage";
 
 export default function InventoryMaintenanceCreatePage() {
-	return <InventoryFormPage moduleKey="maintenance" />;
+	return <MaintenanceFormPage />;
 }

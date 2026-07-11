@@ -17,17 +17,26 @@ import { useTranslations } from "next-intl";
 import { useCallback, useState } from "react";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
-import { AdmissionField } from "../constants/admission-fields";
 import { ADD_CUSTOM_FIELD_FORM_FIELDS } from "../constants/admission-settings.constant";
 import { CustomFieldFormValues, customFieldSchema } from "../dto/admission-settings.dto";
-import { useAdmissionSettingsStore } from "../stores/admission-settings-store";
 
 const generateCustomFieldId = (label: string) => {
 	return `custom_${label.toLowerCase().replace(/\s+/g, "_")}_${Date.now()}`;
 };
 
-export function AddCustomFieldDialog() {
-	const { addCustomField } = useAdmissionSettingsStore();
+export function AddCustomFieldDialog({
+	onAdd,
+	triggerLabel,
+	defaultCategory = "student_info",
+	defaultType = "text",
+	lockCategoryType = false,
+}: {
+	onAdd?: (field: CustomFieldFormValues & { id: string }) => Promise<void> | void;
+	triggerLabel?: string;
+	defaultCategory?: CustomFieldFormValues["category"];
+	defaultType?: CustomFieldFormValues["type"];
+	lockCategoryType?: boolean;
+}) {
 	const [isOpen, setIsOpen] = useState(false);
 	const t = useTranslations("AdmissionSettings");
 
@@ -35,27 +44,25 @@ export function AddCustomFieldDialog() {
 		resolver: zodResolver(customFieldSchema as any),
 		defaultValues: {
 			label: "",
-			category: "student_info",
-			type: "text",
+			category: defaultCategory,
+			type: defaultType,
 			isStep1: false,
 		},
 	});
 
 	const onSubmit = useCallback(
-		(data: CustomFieldFormValues) => {
+		async (data: CustomFieldFormValues) => {
 			const id = generateCustomFieldId(data.label);
 
-			addCustomField({
-				...data,
-				id,
-				isCustom: true,
-			} as AdmissionField);
+			if (onAdd) {
+				await onAdd({ ...data, id });
+			}
 
 			form.reset();
 			setIsOpen(false);
 			toast.success(t("addSuccess"));
 		},
-		[addCustomField, form, t]
+		[form, onAdd, t]
 	);
 
 	return (
@@ -63,7 +70,7 @@ export function AddCustomFieldDialog() {
 			<DialogTrigger asChild>
 				<Button variant="outline">
 					<Plus className="h-4 w-4" />
-					{t("addCustomField")}
+					{triggerLabel || t("addCustomField")}
 				</Button>
 			</DialogTrigger>
 			<DialogContent className="gap-4">
@@ -74,7 +81,11 @@ export function AddCustomFieldDialog() {
 
 				<form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
 					<div className="grid gap-4">
-						{ADD_CUSTOM_FIELD_FORM_FIELDS.map((field) => (
+						{ADD_CUSTOM_FIELD_FORM_FIELDS.filter(
+							(field) =>
+								!lockCategoryType ||
+								!["category", "type"].includes(String(field.name))
+						).map((field) => (
 							<InputField
 								key={field.name}
 								control={form.control}

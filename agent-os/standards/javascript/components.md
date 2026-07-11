@@ -138,7 +138,12 @@ Do not use narrower page-form caps such as `max-w-5xl` unless the user explicitl
 
 ### Server-Backed Select Fields
 
-Do not call option-list APIs directly inside form components when the data is only used to fill a select box. Create a reusable select component in `src/shared/components/form`, make that component fetch its own options, and expose it through `InputField` as a custom field type.
+Do not call full list APIs or option-list APIs directly inside form components when the data is only used to fill a select box. The required flow is:
+
+1. Create a backend option API that returns only short option data, normally `{ label, value }`.
+2. Create a reusable select component in `src/shared/components/form` that fetches that option API.
+3. Register that component in `src/shared/components/form/InputField.tsx` as a custom field type.
+4. Use the custom `InputField` type inside create/update forms.
 
 ```tsx
 <InputField
@@ -152,7 +157,23 @@ Do not call option-list APIs directly inside form components when the data is on
 
 Examples include `sessionSelect`, `schoolSelect`, and `subscriptionPlanSelect`.
 
-**Why:** Forms stay focused on submit logic and validation, while server-backed select options become reusable across create/update pages and other modules.
+Filter bars that need server-fetched options must use the same short option APIs. Do not fetch full paginated list APIs just to build filter options.
+
+**Why:** Forms stay focused on submit logic and validation, filter bars stay lightweight, and server-backed select options become reusable across create/update pages and other modules.
+
+### Dependent Location Selects
+
+Location fields must always follow the same dependency flow:
+
+1. Division selection loads district options.
+2. District selection loads upazila options.
+3. When division changes, clear district and upazila values.
+4. When district changes, clear upazila value.
+5. If a "same as present address" field is enabled, disable and clear the permanent address, permanent division, permanent district, and permanent upazila fields.
+
+Use the shared location select components through `InputField` with `dependencyId`; do not keep stale child values after a parent location changes.
+
+**Why:** Address data must stay internally consistent, and users should not accidentally submit a district/upazila that belongs to a previously selected division.
 
 ---
 

@@ -1,7 +1,7 @@
 "use client";
 
-import InventoryFormPage from "@/modules/inventory/components/InventoryFormPage";
+import { MovementFormPage } from "@/modules/inventory/movements/components/MovementFormPage";
 
 export default function InventoryMovementCreatePage() {
-	return <InventoryFormPage moduleKey="movements" />;
+	return <MovementFormPage />;
 }

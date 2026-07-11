@@ -26,11 +26,8 @@ export default function InventoryLocationSelect({
 	className,
 	disabled,
 }: Props) {
-	const { data: response, isLoading } = useSWR("/inventory/locations", {
-		page: 1,
-		limit: 100,
-	});
-	const locations = response?.data?.items || response?.items || [];
+	const { data: response, isLoading } = useSWR("/inventory/locations/options");
+	const locations = response?.data || [];
 
 	if (isLoading) return <Skeleton className="h-10 w-full" />;
 
@@ -45,8 +42,8 @@ export default function InventoryLocationSelect({
 			</SelectTrigger>
 			<SelectContent className="p-1">
 				{locations.map((location: any) => (
-					<SelectItem key={location.id} value={location.id} className="cursor-pointer py-2">
-						{location.code ? `${location.code} - ${location.name}` : location.name}
+					<SelectItem key={location.value} value={location.value} className="cursor-pointer py-2">
+						{location.label}
 					</SelectItem>
 				))}
 			</SelectContent>

@@ -1,11 +1,13 @@
 export type AdmissionFieldCategory =
 	| "student_info"
 	| "parent_info"
+	| "guardian_info"
 	| "address"
 	| "academic_info"
 	| "documents"
 	| "health_info"
-	| "payment";
+	| "payment"
+	| "additional_info";
 
 export interface AdmissionField {
 	id: string;
@@ -14,7 +16,7 @@ export interface AdmissionField {
 	isStep1: boolean; // True if it's minimal critical data (Step 1)
 	isFixed?: boolean; // True if it cannot be disabled
 	isCustom?: boolean; // True if it's a field added by the user
-	type: "text" | "date" | "select" | "file" | "number";
+	type: "text" | "date" | "select" | "file" | "number" | "textarea" | "checkbox" | "phone";
 }
 
 export const ADMISSION_FIELDS: AdmissionField[] = [

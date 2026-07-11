@@ -1,13 +1,7 @@
 "use client";
 
-import InventoryFormPage from "@/modules/inventory/components/InventoryFormPage";
-import { use } from "react";
+import { MaintenanceEditFormPage } from "@/modules/inventory/maintenance/components/MaintenanceEditFormPage";
 
-export default function InventoryMaintenanceEditPage({
-	params,
-}: {
-	params: Promise<{ id: string }>;
-}) {
-	const { id } = use(params);
-	return <InventoryFormPage moduleKey="maintenance" id={id} />;
+export default function InventoryMaintenanceEditPage({ params }: { params: { id: string } }) {
+	return <MaintenanceEditFormPage id={params.id} />;
 }

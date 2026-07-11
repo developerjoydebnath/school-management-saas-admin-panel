@@ -5,13 +5,15 @@ export const customFieldSchema = z.object({
 	category: z.enum([
 		"student_info",
 		"parent_info",
+		"guardian_info",
 		"address",
 		"academic_info",
 		"documents",
 		"health_info",
 		"payment",
+		"additional_info",
 	]),
-	type: z.enum(["text", "number", "date", "select", "file"]),
+	type: z.enum(["text", "number", "date", "select", "textarea", "checkbox", "phone", "file"]),
 	isStep1: z.boolean(),
 });
 
@@ -19,10 +21,10 @@ export type CustomFieldFormValues = z.infer<typeof customFieldSchema>;
 
 export const feeHeadSchema = z.object({
 	name: z.string().min(1, "Fee head name is required"),
-	type: z.enum(["One-time", "Monthly", "Yearly"]),
-	amount: z.number().min(0, "Amount must be 0 or greater"),
+	nameBn: z.string().optional(),
+	type: z.enum(["one_time", "monthly", "yearly"]),
+	amount: z.coerce.number().min(0, "Amount must be 0 or greater"),
 	isRequired: z.boolean(),
 });
 
 export type FeeHeadFormValues = z.infer<typeof feeHeadSchema>;
-

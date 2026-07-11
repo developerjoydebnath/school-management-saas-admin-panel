@@ -32,7 +32,7 @@ export default function NewAdmissionPage() {
         routeName="AdmissionNew" 
       />
       
-      <div className="max-w-4xl mx-auto">
+      <div className="mx-auto max-w-7xl">
         <NewAdmissionForm onSuccess={handleSuccess} />
       </div>
     </div>

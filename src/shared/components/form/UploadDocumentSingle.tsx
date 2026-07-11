@@ -4,6 +4,8 @@ import React, { useCallback, useEffect, useState } from "react";
 import { useDropzone } from "react-dropzone";
 import { Button } from "@/shared/components/ui/button";
 import { PDFDocument } from "pdf-lib";
+import { ProgressiveImage } from "@/shared/components/media/ProgressiveImage";
+import { appConfig } from "@/shared/configs/app.config";
 
 function formatBytes(bytes: number, decimals = 2) {
 	if (!+bytes) return "0 Bytes";
@@ -43,6 +45,9 @@ const UploadDocumentSingle = React.forwardRef<
 		onDrop,
 		maxFiles: 1,
 		accept: {
+			"image/jpeg": [".jpg", ".jpeg"],
+			"image/png": [".png"],
+			"image/webp": [".webp"],
 			"application/pdf": [".pdf"],
 			"text/csv": [".csv"],
 			"application/vnd.ms-excel": [".xls"],
@@ -74,17 +79,35 @@ const UploadDocumentSingle = React.forwardRef<
 	let name = "Document";
 	let size = "";
 	let type = "Unknown Type";
+	let previewUrl = "";
+	let placeholder = "";
 
 	if (isFile) {
 		name = value.name;
 		size = formatBytes(value.size);
 		type = value.type || "Document";
+		if (value.type.startsWith("image/")) {
+			previewUrl = URL.createObjectURL(value);
+		}
 	} else if (value && typeof value === "object") {
 		// Existing file from backend
 		name = value.originalName || value.url || "Document";
 		size = value.fileSize ? formatBytes(value.fileSize) : "";
 		type = value.mimeType || value.type || "Document";
+		placeholder = value.placeholder || value.placeholderUrl || "";
+		if (value.url) {
+			previewUrl =
+				value.url.startsWith("http") ||
+				value.url.startsWith("blob:") ||
+				value.url.startsWith("data:")
+					? value.url
+					: `${appConfig.API_URL}${value.url.startsWith("/") ? "" : "/"}${value.url}`;
+		}
 	}
+
+	const isImagePreview =
+		type?.startsWith("image/") ||
+		/\.(png|jpe?g|webp|gif|bmp|svg)$/i.test(previewUrl || name);
 
 	return (
 		<div
@@ -100,13 +123,34 @@ const UploadDocumentSingle = React.forwardRef<
 
 			{showPreview ? (
 				<div className="flex items-center gap-3 bg-card p-3 rounded border shadow-sm absolute inset-2">
-					<FileIcon className="h-8 w-8 shrink-0 text-primary" />
+					{isImagePreview && previewUrl ? (
+						<div className="relative h-14 w-16 shrink-0 overflow-hidden rounded border bg-muted">
+							{!isFile ? (
+								<ProgressiveImage
+									src={previewUrl}
+									placeholderBase64={placeholder}
+									alt={name}
+									fill
+									className="object-cover"
+								/>
+							) : (
+								// eslint-disable-next-line @next/next/no-img-element
+								<img
+									src={previewUrl}
+									alt={name}
+									className="h-full w-full object-cover"
+								/>
+							)}
+						</div>
+					) : (
+						<FileIcon className="h-8 w-8 shrink-0 text-primary" />
+					)}
 					<div className="flex flex-col truncate flex-1 text-left min-w-0">
 						<span className="truncate font-medium text-foreground" title={name}>
 							{name}
 						</span>
 						<span className="text-xs text-muted-foreground truncate">
-							{name?.split('.').pop()?.toUpperCase()} {size ? `• ${size}` : ""} {pageCount ? `• ${pageCount} pages` : ""}
+							{name?.split(".").pop()?.toUpperCase()} {size ? `- ${size}` : ""} {pageCount ? `- ${pageCount} pages` : ""}
 						</span>
 					</div>
 					<Button
@@ -126,7 +170,7 @@ const UploadDocumentSingle = React.forwardRef<
 					Click or drag file here
 					<br />
 					<span className="text-xs text-muted-foreground font-normal mt-1 block">
-						PDF, CSV, Excel, Word
+						Image, PDF, CSV, Excel, Word
 					</span>
 				</p>
 			)}

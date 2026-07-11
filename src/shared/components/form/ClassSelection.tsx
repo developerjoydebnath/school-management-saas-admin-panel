@@ -12,9 +12,10 @@ interface ClassSelectionProps {
   onChange: (value: string[]) => void;
   placeholder?: string;
   className?: string;
+  skipLocalization?: boolean;
 }
 
-export default function ClassSelection({ value = [], onChange, placeholder, className }: ClassSelectionProps) {
+export default function ClassSelection({ value = [], onChange, placeholder, className, skipLocalization = false }: ClassSelectionProps) {
   const { data: classResponse, isLoading } = useSWR("/classes/active-list");
   const locale = useLocale();
 
@@ -58,7 +59,7 @@ export default function ClassSelection({ value = [], onChange, placeholder, clas
                 )}
                 onClick={() => toggleClass(cls.id)}
               >
-                {getLocalizedName(cls.name, locale)}
+                {skipLocalization ? (cls.name?.en || cls.name) : getLocalizedName(cls.name, locale)}
               </Badge>
             );
           })}

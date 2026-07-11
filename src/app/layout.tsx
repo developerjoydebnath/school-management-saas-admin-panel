@@ -5,6 +5,7 @@ import { NextIntlClientProvider } from "next-intl";
 import { getLocale, getMessages } from "next-intl/server";
 import { Geist, Geist_Mono, Inter } from "next/font/google";
 import "./globals.css";
+import "yet-another-react-lightbox/styles.css";
 
 const inter = Inter({ subsets: ["latin"], variable: "--font-sans" });
 

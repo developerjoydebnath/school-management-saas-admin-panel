@@ -1,7 +1,11 @@
-"use client";
+import { getTranslations } from "next-intl/server";
+import { LocationFormPage } from "@/modules/inventory/locations/components/LocationFormPage";
 
-import InventoryFormPage from "@/modules/inventory/components/InventoryFormPage";
+export async function generateMetadata() {
+	const t = await getTranslations("Inventory");
+	return { title: t("createTitle") };
+}
 
 export default function InventoryLocationCreatePage() {
-	return <InventoryFormPage moduleKey="locations" />;
+	return <LocationFormPage />;
 }

@@ -3,11 +3,13 @@ import { FeeHead } from "../types/types";
 export const ADMISSION_FIELD_CATEGORIES = [
 	{ label: "Student Info", value: "student_info" },
 	{ label: "Parent Info", value: "parent_info" },
+	{ label: "Guardian Info", value: "guardian_info" },
 	{ label: "Address", value: "address" },
 	{ label: "Academic Info", value: "academic_info" },
 	{ label: "Documents", value: "documents" },
 	{ label: "Health Info", value: "health_info" },
 	{ label: "Payment", value: "payment" },
+	{ label: "Additional Info", value: "additional_info" },
 ];
 
 export const ADMISSION_FIELD_TYPES = [
@@ -15,6 +17,9 @@ export const ADMISSION_FIELD_TYPES = [
 	{ label: "Number", value: "number" },
 	{ label: "Date", value: "date" },
 	{ label: "Dropdown", value: "select" },
+	{ label: "Long Text", value: "textarea" },
+	{ label: "Checkbox", value: "checkbox" },
+	{ label: "Phone", value: "phone" },
 	{ label: "File Upload", value: "file" },
 ];
 
@@ -54,7 +59,7 @@ export const DEMO_FEES: FeeHead[] = [
 	{
 		id: "f1",
 		name: "Admission Fee",
-		type: "One-time",
+		type: "one_time",
 		amount: 500,
 		isShown: true,
 		isRequired: true,
@@ -63,7 +68,7 @@ export const DEMO_FEES: FeeHead[] = [
 	{
 		id: "f2",
 		name: "Registration Fee",
-		type: "One-time",
+		type: "one_time",
 		amount: 300,
 		isShown: true,
 		isRequired: false,
@@ -72,7 +77,7 @@ export const DEMO_FEES: FeeHead[] = [
 	{
 		id: "f3",
 		name: "Session Fee",
-		type: "Yearly",
+		type: "yearly",
 		amount: 1200,
 		isShown: true,
 		isRequired: false,
@@ -81,7 +86,7 @@ export const DEMO_FEES: FeeHead[] = [
 	{
 		id: "f4",
 		name: "ID Card Fee",
-		type: "One-time",
+		type: "one_time",
 		amount: 150,
 		isShown: true,
 		isRequired: false,
@@ -90,7 +95,7 @@ export const DEMO_FEES: FeeHead[] = [
 	{
 		id: "f5",
 		name: "Library Security Fee",
-		type: "One-time",
+		type: "one_time",
 		amount: 200,
 		isShown: false,
 		isRequired: false,

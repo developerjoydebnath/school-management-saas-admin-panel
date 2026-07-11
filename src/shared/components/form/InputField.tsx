@@ -23,6 +23,7 @@ import DatePicker from "./DatePicker";
 import DepartmentSelect from "./DepartmentSelect";
 import DesignationSelect from "./DesignationSelect";
 import ExamSelect from "./ExamSelect";
+import GeoLocationSelect from "./GeoLocationSelect";
 import InventoryCategorySelect from "./InventoryCategorySelect";
 import InventoryItemSelect from "./InventoryItemSelect";
 import InventoryLocationSelect from "./InventoryLocationSelect";
@@ -64,6 +65,7 @@ interface FormFieldProps extends UseControllerProps {
 	placeholderBase64?: string | null;
 	disabled?: boolean;
 	fieldClass?: string;
+	skipLocalization?: boolean;
 }
 
 export default function InputField({
@@ -91,6 +93,7 @@ export default function InputField({
 							id={field.name}
 							checked={!!field.value}
 							onCheckedChange={field.onChange}
+							disabled={props.disabled}
 							className={className}
 						/>
 					)}
@@ -146,6 +149,7 @@ export default function InputField({
 							{...field}
 							value={field.value ?? ""}
 							placeholder={props?.placeholder}
+							disabled={props.disabled}
 							className={cn("h-32", className)}
 						/>
 					))
@@ -269,6 +273,7 @@ export default function InputField({
 							name={field.name}
 							value={field.value?.toString()}
 							onChange={field.onChange}
+							disabled={props.disabled}
 							className={cn("h-10", className)}
 						>
 							{props?.options?.map((opt) => (
@@ -316,6 +321,7 @@ export default function InputField({
 							onChange={field.onChange}
 							placeholder={props.placeholder}
 							className={className}
+							skipLocalization={props.skipLocalization}
 						/>
 					))
 
@@ -391,6 +397,42 @@ export default function InputField({
 							onChange={field.onChange}
 							placeholder={props.placeholder}
 							className={className}
+							disabled={props.disabled}
+						/>
+					))
+
+					// geo location selects
+					.with("divisionSelect", () => (
+						<GeoLocationSelect
+							type="division"
+							value={field.value}
+							onChange={field.onChange}
+							placeholder={props.placeholder}
+							className={className}
+							disabled={props.disabled}
+						/>
+					))
+
+					.with("districtSelect", () => (
+						<GeoLocationSelect
+							type="district"
+							value={field.value}
+							onChange={field.onChange}
+							placeholder={props.placeholder}
+							className={className}
+							dependencyId={props.dependencyId}
+							disabled={props.disabled}
+						/>
+					))
+
+					.with("upazilaSelect", () => (
+						<GeoLocationSelect
+							type="upazila"
+							value={field.value}
+							onChange={field.onChange}
+							placeholder={props.placeholder}
+							className={className}
+							dependencyId={props.dependencyId}
 							disabled={props.disabled}
 						/>
 					))
@@ -541,6 +583,7 @@ export default function InputField({
 								placeholder={props.placeholder}
 								{...field}
 								value={field.value ?? ""}
+								disabled={props.disabled}
 								className={cn(
 									fieldState.error ? "border-red-500 focus:ring-red-500" : "",
 									"focus:border-primary focus:ring-primary h-10 rounded-md shadow-none",

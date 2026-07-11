@@ -22,8 +22,8 @@ interface StudentRollListProps {
 export default function StudentRollList({ classId, sessionId, section }: StudentRollListProps) {
 	const t = useTranslations("Applications");
 	const { data: students, isLoading } = useTableData(
-		"/students",
-		{ class: classId, session: sessionId, section: section },
+		"/admissions/rolls",
+		{ classId, sessionId, sectionId: section },
 		{ revalidateOnMount: true }
 	);
 
@@ -49,9 +49,9 @@ export default function StudentRollList({ classId, sessionId, section }: Student
 					{Array.isArray(students) && students.length > 0 ? (
 						students.map((s: any) => (
 							<TableRow key={s.id}>
-								<TableCell className="text-xs">{s.studentId}</TableCell>
-								<TableCell className="font-bold">{s.roll}</TableCell>
-								<TableCell>{s.fullName}</TableCell>
+								<TableCell className="text-xs">{s.studentIdNo}</TableCell>
+								<TableCell className="font-bold">{s.rollNumber || "-"}</TableCell>
+								<TableCell>{s.fullNameEn}</TableCell>
 							</TableRow>
 						))
 					) : (

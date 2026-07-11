@@ -1075,7 +1075,7 @@ export default function TeacherForm({ id, defaultValues, isEdit = false }: Props
 				</CardContent>
 			</Card>
 
-			<div className="bg-background/80 sticky bottom-4 z-10 flex items-center justify-end gap-4 rounded-lg border p-4 shadow-sm backdrop-blur-md">
+			<div className="bg-background/80 sticky bottom-4 z-[1200] flex items-center justify-end gap-4 rounded-lg border p-4 shadow-sm backdrop-blur-md">
 				<Button
 					type="button"
 					variant="outline"

@@ -1,0 +1,214 @@
+<!doctype html>
+<html lang="en">
+	<head>
+		<meta charset="utf-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1" />
+		<title>Admission Application</title>
+		<style>
+			:root {
+				color-scheme: light dark;
+				font-family: Inter, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+			}
+			body {
+				margin: 0;
+				background: #202020;
+				color: #f8fafc;
+			}
+			main {
+				max-width: 960px;
+				margin: 0 auto;
+				padding: 32px 16px 64px;
+			}
+			.card {
+				background: #141414;
+				border: 1px solid #333;
+				border-radius: 10px;
+				padding: 20px;
+				margin-top: 18px;
+			}
+			.grid {
+				display: grid;
+				gap: 16px;
+				grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+			}
+			label {
+				display: flex;
+				flex-direction: column;
+				gap: 8px;
+				font-size: 14px;
+				color: #cbd5e1;
+			}
+			input,
+			select,
+			textarea,
+			button {
+				border-radius: 8px;
+				border: 1px solid #3f3f46;
+				background: #232323;
+				color: #fff;
+				padding: 11px 12px;
+				font: inherit;
+			}
+			button {
+				cursor: pointer;
+				background: #f8fafc;
+				color: #111827;
+				font-weight: 700;
+			}
+			.muted {
+				color: #94a3b8;
+			}
+			.notice {
+				border-color: #365314;
+				background: #1a2e05;
+				color: #d9f99d;
+			}
+			.error {
+				border-color: #7f1d1d;
+				background: #450a0a;
+				color: #fecaca;
+			}
+		</style>
+	</head>
+	<body>
+		<main>
+			<h1>Admission Application</h1>
+			<p class="muted">Complete the form and submit your application for review.</p>
+			<div id="status" class="card muted">Loading admission portal...</div>
+			<form id="form" class="card" hidden>
+				<div id="fields" class="grid"></div>
+				<div id="fee" class="card muted"></div>
+				<div class="grid">
+					<label>
+						Reference Name
+						<input name="referenceName" placeholder="Enter reference name" />
+					</label>
+					<label>
+						Reference Mobile
+						<input name="referenceMobile" placeholder="e.g. 01712345678" />
+					</label>
+				</div>
+				<div style="margin-top: 18px">
+					<button type="submit">Submit Application</button>
+				</div>
+			</form>
+		</main>
+		<script>
+			const params = new URLSearchParams(location.search);
+			const slug = params.get("slug");
+			const tenant = params.get("tenant") || slug;
+			const statusEl = document.getElementById("status");
+			const form = document.getElementById("form");
+			const fieldsEl = document.getElementById("fields");
+			const feeEl = document.getElementById("fee");
+			let config = null;
+
+			function portalHeaders(extra = {}) {
+				return {
+					...extra,
+					...(tenant ? { "x-tenant-slug": tenant } : {}),
+				};
+			}
+
+			function setStatus(message, type = "") {
+				statusEl.className = `card ${type}`;
+				statusEl.textContent = message;
+			}
+
+			function fieldInput(field) {
+				if (field.fieldKey === "sessionId") return null;
+				const label = document.createElement("label");
+				label.textContent = field.label + (field.isRequired ? " *" : "");
+				let input;
+				const options = field.fieldKey === "applyingClassId"
+					? config.classes || []
+					: Array.isArray(field.options)
+					? field.options
+					: Array.isArray(field.options?.options)
+						? field.options.options
+						: [];
+				if ((field.fieldType === "select" || field.fieldType === "dynamic_select") && options.length) {
+					input = document.createElement("select");
+					input.innerHTML = `<option value="">${field.placeholder || "Select option"}</option>`;
+					options.forEach((option) => {
+						const item = document.createElement("option");
+						item.value = option.value;
+						item.textContent = option.label;
+						input.appendChild(item);
+					});
+				} else if (field.fieldType === "textarea") {
+					input = document.createElement("textarea");
+				} else if (field.fieldType === "file") {
+					return null;
+				} else {
+					input = document.createElement("input");
+					input.type = field.fieldType === "date" ? "date" : field.fieldType === "number" ? "number" : "text";
+				}
+				input.name = field.fieldKey;
+				input.placeholder = field.placeholder || `Enter ${field.label}`;
+				input.required = !!field.isRequired;
+				label.appendChild(input);
+				return label;
+			}
+
+			async function load() {
+				if (!slug) {
+					setStatus("Missing portal slug. Open this page with ?slug=your-school-slug", "error");
+					return;
+				}
+				try {
+					const response = await fetch(`/api/proxy/public/admission/${encodeURIComponent(slug)}/config`, {
+						headers: portalHeaders(),
+					});
+					const json = await response.json();
+					if (!json.success) throw new Error(json.message || "Portal unavailable");
+					config = json.data;
+					fieldsEl.innerHTML = "";
+					config.fields.forEach((field) => {
+						const input = fieldInput(field);
+						if (input) fieldsEl.appendChild(input);
+					});
+					feeEl.textContent = "Select class to calculate the admission fee.";
+					form.hidden = false;
+					setStatus("Portal is open. Public submissions are rate limited for protection.", "notice");
+				} catch (error) {
+					setStatus(error.message || "Failed to load portal.", "error");
+				}
+			}
+
+			form.addEventListener("change", async () => {
+				const data = new FormData(form);
+				const classId = data.get("applyingClassId");
+				const query = new URLSearchParams({ classId: classId || "" });
+				const response = await fetch(`/api/proxy/public/admission/${encodeURIComponent(slug)}/fee?${query.toString()}`, {
+					headers: portalHeaders(),
+				});
+				const json = await response.json();
+				if (json.success) {
+					feeEl.textContent = `Required total: BDT ${json.data.requiredTotal}. Discount: BDT ${json.data.discountAmount || 0}. Payable: BDT ${json.data.payableAmount || json.data.requiredTotal}.`;
+				}
+			});
+
+			form.addEventListener("submit", async (event) => {
+				event.preventDefault();
+				const payload = Object.fromEntries(new FormData(form).entries());
+				payload.sessionId = config.sessionId;
+				try {
+					const response = await fetch(`/api/proxy/public/admission/${encodeURIComponent(slug)}/applications`, {
+						method: "POST",
+						headers: portalHeaders({ "Content-Type": "application/json" }),
+						body: JSON.stringify(payload),
+					});
+					const json = await response.json();
+					if (!json.success) throw new Error(json.message || "Submission failed");
+					form.reset();
+					setStatus("Application submitted successfully. Please wait for administration review.", "notice");
+				} catch (error) {
+					setStatus(error.message || "Submission failed", "error");
+				}
+			});
+
+			load();
+		</script>
+	</body>
+</html>

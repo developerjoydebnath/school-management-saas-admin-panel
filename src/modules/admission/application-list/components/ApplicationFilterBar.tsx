@@ -18,9 +18,12 @@ export default function ApplicationFilterBar({ filter, setFilter }: Props) {
 			onSelect: (opt: any) => setFilter({ ...filter, status: opt }),
 			clearFilter: () => setFilter({ ...filter, status: [] }),
 			options: [
-				{ label: "Pending", value: "Pending" },
-				{ label: "Approved", value: "Approved" },
-				{ label: "Rejected", value: "Rejected" },
+				{ label: "Pending", value: "pending" },
+				{ label: "Under Review", value: "under_review" },
+				{ label: "Approved", value: "approved" },
+				{ label: "Rejected", value: "rejected" },
+				{ label: "Waitlisted", value: "waitlisted" },
+				{ label: "Cancelled", value: "cancelled" },
 			],
 		},
 	];

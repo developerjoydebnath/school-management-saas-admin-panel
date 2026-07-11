@@ -3,6 +3,10 @@ export const PERMISSIONS = {
 		VIEW: "dashboard.view",
 	},
 	INVENTORY: {
+		AUDIT_LOGS: {
+			ALL: 'inventory.audit_logs.all',
+			VIEW: 'inventory.audit_logs.view',
+		},
 		VIEW: "inventory.view",
 		ALL: "inventory.all",
 		CATEGORIES: {

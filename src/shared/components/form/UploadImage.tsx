@@ -23,7 +23,15 @@ const UploadImage = React.forwardRef<
 		[onChange]
 	);
 
-	const { getRootProps, getInputProps, isDragActive } = useDropzone({ onDrop });
+	const { getRootProps, getInputProps, isDragActive } = useDropzone({
+		onDrop,
+		maxFiles: 1,
+		accept: {
+			"image/jpeg": [".jpg", ".jpeg"],
+			"image/png": [".png"],
+			"image/webp": [".webp"],
+		},
+	});
 
 	const isFile = value instanceof File;
 	const isString = typeof value === "string" && value.length > 0;

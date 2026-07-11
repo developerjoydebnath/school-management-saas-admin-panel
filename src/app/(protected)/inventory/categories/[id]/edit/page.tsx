@@ -1,6 +1,6 @@
 "use client";
 
-import InventoryFormPage from "@/modules/inventory/components/InventoryFormPage";
+import { CategoryFormPage } from "@/modules/inventory/categories/components/CategoryFormPage";
 import { use } from "react";
 
 export default function InventoryCategoryEditPage({
@@ -9,5 +9,5 @@ export default function InventoryCategoryEditPage({
 	params: Promise<{ id: string }>;
 }) {
 	const { id } = use(params);
-	return <InventoryFormPage moduleKey="categories" id={id} />;
+	return <CategoryFormPage id={id} />;
 }

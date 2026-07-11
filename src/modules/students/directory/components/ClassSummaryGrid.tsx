@@ -24,7 +24,7 @@ import { getLocalizedName } from "@/shared/utils/localization";
 import { ArrowRight, GraduationCap, LayoutGrid, List, Users } from "lucide-react";
 import { useLocale, useTranslations } from "next-intl";
 import Link from "next/link";
-import { useMemo, useState } from "react";
+import { useState } from "react";
 
 type ViewMode = "grid" | "list";
 
@@ -34,38 +34,15 @@ export default function ClassSummaryGrid() {
 	const [selectedSession, setSelectedSession] = useState<string>("all");
 	const [viewMode, setViewMode] = useState<ViewMode>("grid");
 
-	const { data: classes, isLoading: isLoadingClasses } = useSWR("/classes");
-	const { data: students, isLoading: isLoadingStudents } = useSWR("/students");
-	const { data: sessions, isLoading: isLoadingSessions } = useSWR("/sessions");
+	const { data: classSummaryResponse, isLoading: isLoadingClasses } = useSWR(
+		"/students/classes-summary",
+		selectedSession === "all" ? {} : { sessionId: selectedSession }
+	);
+	const classSummaries = classSummaryResponse?.data || [];
+	const { data: sessionsResponse, isLoading: isLoadingSessions } = useSWR("/sessions");
+	const sessions = sessionsResponse?.data?.items || [];
 
-	const isLoading = isLoadingClasses || isLoadingStudents || isLoadingSessions;
-
-	const classSummaries = useMemo(() => {
-		if (!classes || !students) return [];
-
-		return classes.map((cls: any) => {
-			const sections = cls.sections || [];
-			const filteredStudents = students.filter((s: any) => {
-				const matchesClass = s.class === cls.id || s.class === `class-${cls.id}`;
-				const matchesSession = selectedSession === "all" || s.session === selectedSession;
-				return matchesClass && matchesSession;
-			});
-
-			const sectionCounts = sections.map((sec: any) => ({
-				name: typeof sec === "string" ? sec : sec.name || sec,
-				count: filteredStudents.filter(
-					(s: any) => s.section === (typeof sec === "string" ? sec : sec.name || sec)
-				).length,
-			}));
-
-			return {
-				id: cls.id,
-				name: cls.name,
-				totalStudents: filteredStudents.length,
-				sections: sectionCounts,
-			};
-		});
-	}, [classes, students, selectedSession]);
+	const isLoading = isLoadingClasses || isLoadingSessions;
 
 	return (
 		<div className="space-y-6">
@@ -114,7 +91,7 @@ export default function ClassSummaryGrid() {
 								<SelectItem value="all" className="p-2">
 									{t("allSessions")}
 								</SelectItem>
-								{sessions?.map((session: any) => (
+								{sessions.map((session: any) => (
 									<SelectItem key={session.id} value={session.id} className="p-2">
 										{getLocalizedName(session.name, locale)}
 									</SelectItem>

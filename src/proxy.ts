@@ -6,7 +6,7 @@ import { getCurrentSession } from "./shared/utils/server-only/session";
 const authPaths = ["/login", "/forgot-password"];
 
 // Define paths that are always public (no auth needed)
-const publicPaths = ["/login", "/forgot-password", "/register"];
+const publicPaths = ["/login", "/forgot-password", "/register", "/admission-form"];
 
 export async function proxy(request: NextRequest) {
 	const { pathname } = request.nextUrl;

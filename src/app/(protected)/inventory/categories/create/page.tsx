@@ -1,7 +1,7 @@
 "use client";
 
-import InventoryFormPage from "@/modules/inventory/components/InventoryFormPage";
+import { CategoryFormPage } from "@/modules/inventory/categories/components/CategoryFormPage";
 
 export default function InventoryCategoryCreatePage() {
-	return <InventoryFormPage moduleKey="categories" />;
+	return <CategoryFormPage />;
 }

@@ -129,9 +129,11 @@ export function TimetableGrid({
 				<tbody>
 					{days.map((day, dayIndex) => (
 						<tr key={day} className="hover:bg-accent/5 group border-b last:border-0">
-							<td className="bg-background text-muted-foreground group-hover:text-foreground sticky left-0 z-10 border-r p-2 text-center text-[11px] font-bold tracking-widest uppercase shadow-[1px_0_0_0_hsl(var(--border))] transition-colors">
+							<th
+								className="bg-background text-muted-foreground group-hover:text-foreground sticky left-0 z-10 border-r p-2 text-center text-[11px] font-bold tracking-widest uppercase shadow-[1px_0_0_0_var(--border)] transition-colors"
+							>
 								{t(day.toLowerCase()) || day}
-							</td>
+							</th>
 							{periods.map((p) => {
 								const assignmentList = assignments[`${day}_${p.id}`] || [];
 

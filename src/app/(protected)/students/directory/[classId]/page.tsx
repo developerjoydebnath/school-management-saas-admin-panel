@@ -24,8 +24,11 @@ export default function StudentListPage() {
 	const classId = params.classId as string;
 	const session = searchParams.get("session") || undefined;
 
-	const { data: classData } = useSWR(`/classes/${classId}`);
-	const className = classData ? getLocalizedName(classData.name, locale) : classId;
+	const { data: classResponse } = useSWR(`/classes/${classId}`);
+	const classData = classResponse?.data;
+	const className = classData
+		? getLocalizedName(classData.name || classData.enName || classData.bnName, locale)
+		: classId;
 
 	useEffect(() => {
 		setBreadcrumbs([

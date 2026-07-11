@@ -21,7 +21,3 @@ export function useInventoryDetails(
 ) {
 	return useSWR(id ? `/inventory/${resource}/${id}` : null);
 }
-
-export function useInventoryOverview() {
-	return useSWR("/inventory/overview");
-}

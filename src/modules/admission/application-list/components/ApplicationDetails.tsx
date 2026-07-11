@@ -9,7 +9,8 @@ import { useTranslations } from "next-intl";
 
 export default function ApplicationDetails({ id }: { id: string }) {
 	const t = useTranslations("Applications");
-	const { data: app, isLoading } = useSWR(`/admissions/${id}`);
+	const { data: appResponse, isLoading } = useSWR(`/admissions/${id}`);
+	const app = appResponse?.data;
 
 	if (isLoading) {
 		return (
@@ -54,14 +55,14 @@ export default function ApplicationDetails({ id }: { id: string }) {
 								variant="outline"
 								className={cn(
 									"mt-3 rounded-full px-4 py-0.5 font-medium",
-									app.status === "Approved"
+									app.status === "approved"
 										? "border-green-200 bg-green-50 text-green-600"
-										: app.status === "Rejected"
+										: app.status === "rejected"
 											? "border-red-200 bg-red-50 text-red-600"
 											: "border-orange-200 bg-orange-50 text-orange-600"
 								)}
 							>
-								{app.status || "Pending"}
+								{app.status || "pending"}
 							</Badge>
 
 							<div className="mt-8 grid grid-cols-2 gap-4 border-t border-dashed pt-6">
@@ -106,7 +107,7 @@ export default function ApplicationDetails({ id }: { id: string }) {
 										{t("previousSchool")}
 									</dt>
 									<dd className="text-foreground/80 font-bold">
-										{app.previousSchool || "-"}
+										{app.previousSchoolName || app.previousSchool || "-"}
 									</dd>
 								</div>
 								<div className="group flex items-center justify-between text-sm">
@@ -114,7 +115,7 @@ export default function ApplicationDetails({ id }: { id: string }) {
 										{t("tcNumber")}
 									</dt>
 									<dd className="text-foreground/80 font-bold">
-										{app.tcNumber || "-"}
+										{app.transferCertificateNo || app.tcNumber || "-"}
 									</dd>
 								</div>
 								<div className="group flex items-center justify-between text-sm">
@@ -122,7 +123,7 @@ export default function ApplicationDetails({ id }: { id: string }) {
 										{t("lastResult")}
 									</dt>
 									<dd className="text-foreground/80 font-bold">
-										{app.lastResult || "-"}
+										{app.lastExamResult || app.lastResult || "-"}
 									</dd>
 								</div>
 							</dl>
@@ -157,7 +158,9 @@ export default function ApplicationDetails({ id }: { id: string }) {
 								<p className="text-muted-foreground text-xs font-semibold tracking-wider uppercase">
 									{t("dob")}
 								</p>
-								<p className="text-foreground/80 font-bold">{app.dob || "-"}</p>
+								<p className="text-foreground/80 font-bold">
+									{app.dateOfBirth || app.dob || "-"}
+								</p>
 							</div>
 							<div className="space-y-1">
 								<p className="text-muted-foreground text-xs font-semibold tracking-wider uppercase">
@@ -240,7 +243,7 @@ export default function ApplicationDetails({ id }: { id: string }) {
 									{t("emergencyContact")}
 								</p>
 								<p className="text-foreground/80 font-bold">
-									{app.emergencyContact || "-"}
+									{app.emergencyContactPhone || app.emergencyContact || "-"}
 								</p>
 							</div>
 						</div>

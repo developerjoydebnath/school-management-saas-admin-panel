@@ -29,9 +29,13 @@ export default function StudentProfilePage() {
 	const classId = params.classId as string;
 	const studentId = params.studentId as string;
 
-	const { data: student, isLoading } = useSWR(`/students/${studentId}`);
-	const { data: classData } = useSWR(`/classes/${classId}`);
-	const className = classData ? getLocalizedName(classData.name, locale) : classId;
+	const { data: studentResponse, isLoading } = useSWR(`/students/${studentId}`);
+	const student = studentResponse?.data;
+	const { data: classResponse } = useSWR(`/classes/${classId}`);
+	const classData = classResponse?.data;
+	const className = classData
+		? getLocalizedName(classData.name || classData.enName || classData.bnName, locale)
+		: classId;
 
 	useEffect(() => {
 		setBreadcrumbs([

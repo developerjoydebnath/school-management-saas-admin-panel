@@ -1,6 +1,6 @@
 "use client";
 
-import InventoryFormPage from "@/modules/inventory/components/InventoryFormPage";
+import { StockFormPage } from "@/modules/inventory/stock/components/StockFormPage";
 import { use } from "react";
 
 export default function InventoryStockEditPage({
@@ -9,5 +9,5 @@ export default function InventoryStockEditPage({
 	params: Promise<{ id: string }>;
 }) {
 	const { id } = use(params);
-	return <InventoryFormPage moduleKey="stock" id={id} />;
+	return <StockFormPage id={id} />;
 }
