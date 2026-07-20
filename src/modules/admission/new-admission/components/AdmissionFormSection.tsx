@@ -51,7 +51,14 @@ function AdmissionPhotoField({
 	const [isUploading, setIsUploading] = useState(false);
 	const fieldKey = field.fieldKey || field.id;
 	const photoValue = useWatch({ control, name: fieldKey });
+	const photoUrl = useWatch({ control, name: "photoUrl" });
 	const placeholder = useWatch({ control, name: "photoPlaceholder" });
+	const previewValue =
+		typeof photoValue === "string" && photoValue
+			? photoValue
+			: typeof photoUrl === "string" && photoUrl
+				? photoUrl
+				: undefined;
 
 	useEffect(() => {
 		if (!(photoValue instanceof File)) return;
@@ -94,7 +101,7 @@ function AdmissionPhotoField({
 				placeholder={field.placeholder || `Upload ${field.label}`}
 				required={required}
 				defaultPreview={
-					typeof photoValue === "string" ? getMediaUrl(photoValue) : undefined
+					previewValue ? getMediaUrl(previewValue) : undefined
 				}
 				placeholderBase64={placeholder}
 				className="h-44 sm:h-52"
@@ -208,6 +215,12 @@ function AdmissionConfiguredField({
 	const fieldType = field.fieldType || field.type;
 	const label = field.label;
 	const lowerKey = fieldKey.toLowerCase();
+	const selectedSessionIdValue = useWatch({ control, name: "sessionId" });
+	const selectedSessionValue = useWatch({ control, name: "session" });
+	const selectedSessionYearValue = useWatch({ control, name: "sessionYear" });
+	const selectedSessionId = (selectedSessionIdValue ||
+		selectedSessionValue ||
+		selectedSessionYearValue) as string | undefined;
 	const isPermanentAddressField = [
 		"permanentAddress",
 		"permanentDivisionId",
@@ -311,6 +324,9 @@ function AdmissionConfiguredField({
 	if (fieldKey === "shift" || fieldKey === "shiftId" || optionSource === "shifts") {
 		inputType = "shiftSelect";
 	}
+	if (fieldKey === "paymentMethod" || optionSource === "payment_methods") {
+		inputType = "paymentMethodSelect";
+	}
 
 	const shouldSpanFull =
 		category !== "documents" &&
@@ -325,6 +341,11 @@ function AdmissionConfiguredField({
 	const dependencyId =
 		fieldKey === "section" || fieldKey === "sectionId"
 			? selectedClassId
+			: fieldKey === "class" ||
+				  fieldKey === "classId" ||
+				  fieldKey === "applyingClassId" ||
+				  optionSource === "classes"
+				? selectedSessionId
 			: field.dependsOnFieldKey || fallbackDependsOnFieldKey
 				? (dependencyValue as string | undefined)
 				: undefined;
@@ -365,11 +386,46 @@ function AdmissionConfiguredField({
 							: undefined
 					}
 					dependencyId={dependencyId}
+					sessionId={
+						fieldKey === "section" || fieldKey === "sectionId"
+							? selectedSessionId
+							: undefined
+					}
 					disabled={isPermanentAddressField && !!permanentSameAsPresent}
 				/>
 			)}
 		</div>
 	);
+}
+
+function getAdmissionFieldKey(field: any) {
+	return field.fieldKey || field.id;
+}
+
+function getAcademicFieldOrder(field: any) {
+	const fieldKey = getAdmissionFieldKey(field);
+	const optionSource = field.options?.source;
+
+	if (fieldKey === "session" || fieldKey === "sessionId" || fieldKey === "sessionYear" || optionSource === "sessions") {
+		return 0;
+	}
+	if (
+		fieldKey === "class" ||
+		fieldKey === "classId" ||
+		fieldKey === "applyingClassId" ||
+		optionSource === "classes"
+	) {
+		return 1;
+	}
+	if (fieldKey === "section" || fieldKey === "sectionId" || optionSource === "sections_by_class") {
+		return 2;
+	}
+	if (fieldKey === "admissionType") return 3;
+	if (fieldKey === "mediumOrVersion") return 4;
+	if (fieldKey === "shift" || fieldKey === "shiftId" || optionSource === "shifts") return 5;
+	if (fieldKey === "group" || fieldKey === "department" || fieldKey === "groupDepartment") return 6;
+
+	return 100 + (field.sortOrder || 0);
 }
 
 export default function AdmissionFormSection({
@@ -383,12 +439,20 @@ export default function AdmissionFormSection({
 	beforeFields,
 }: AdmissionFormSectionProps) {
 	const tc = useTranslations("AdmissionSettings.categories");
-	const fieldsInCategory = admissionFields.filter((f) => f.category === category);
+	const fieldsInCategory = admissionFields
+		.filter((f) => f.category === category)
+		.sort((a, b) => {
+			if (category === "academic_info") {
+				return getAcademicFieldOrder(a) - getAcademicFieldOrder(b);
+			}
+			return (a.sortOrder || 0) - (b.sortOrder || 0);
+		});
 	const presentDivisionId = useWatch({ control, name: "presentDivisionId" });
 	const presentDistrictId = useWatch({ control, name: "presentDistrictId" });
 	const permanentDivisionId = useWatch({ control, name: "permanentDivisionId" });
 	const permanentDistrictId = useWatch({ control, name: "permanentDistrictId" });
 	const permanentSameAsPresent = useWatch({ control, name: "permanentSameAsPresent" });
+	const hasHydratedAddressValues = useRef(false);
 	const previousAddressValues = useRef({
 		presentDivisionId,
 		presentDistrictId,
@@ -398,6 +462,16 @@ export default function AdmissionFormSection({
 
 	useEffect(() => {
 		if (category !== "address") return;
+		if (!hasHydratedAddressValues.current) {
+			hasHydratedAddressValues.current = true;
+			previousAddressValues.current = {
+				presentDivisionId,
+				presentDistrictId,
+				permanentDivisionId,
+				permanentDistrictId,
+			};
+			return;
+		}
 		const previous = previousAddressValues.current;
 		if (previous.presentDivisionId !== presentDivisionId) {
 			setValue("presentDistrictId", "", { shouldDirty: true, shouldValidate: true });

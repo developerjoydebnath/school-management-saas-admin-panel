@@ -58,6 +58,14 @@ const initialFilters: ApplicationFilter = {
 	dateTo: "",
 };
 
+function formatStatusLabel(status: string) {
+	return status
+		.split("_")
+		.filter(Boolean)
+		.map((part) => part.charAt(0).toUpperCase() + part.slice(1))
+		.join(" ");
+}
+
 export default function ApplicationList() {
 	const [applicationToDelete, setApplicationToDelete] = useState<string | null>(null);
 	const [isDeleting, setIsDeleting] = useState(false);
@@ -108,27 +116,41 @@ export default function ApplicationList() {
 
 		setIsUpdatingStatus(true);
 		try {
+			let response: any;
 			if (statusUpdate.status === "approved") {
-				await axios.post(`/admissions/${statusUpdate.id}/approve`, {
+				response = await axios.post(`/admissions/${statusUpdate.id}/approve`, {
 					rollNumber: roll.padStart(3, "0"),
 				});
 			} else if (statusUpdate.status === "rejected") {
-				await axios.post(`/admissions/${statusUpdate.id}/reject`, {
+				response = await axios.post(`/admissions/${statusUpdate.id}/reject`, {
 					rejectionReason: "Rejected from application list",
 				});
 			} else if (statusUpdate.status === "waitlisted") {
-				await axios.post(`/admissions/${statusUpdate.id}/waitlist`, {});
+				response = await axios.post(`/admissions/${statusUpdate.id}/waitlist`, {});
+			} else if (statusUpdate.status === "eligible_for_payment") {
+				response = await axios.post(
+					`/admissions/${statusUpdate.id}/eligible-for-payment`,
+					{}
+				);
 			} else {
-				await axios.patch(`/admissions/${statusUpdate.id}`, {
+				response = await axios.patch(`/admissions/${statusUpdate.id}`, {
 					status: statusUpdate.status,
 				});
 			}
 
-			toast.success(t("statusUpdateSuccess", { status: statusUpdate.status }));
+			toast.success(
+				response?.data?.message ||
+					t("statusUpdateSuccess", { status: statusUpdate.status })
+			);
+			if (response?.data?.data?.mailSkipped) {
+				toast.warning(response.data.data.mailMessage || "Mail was not sent");
+			} else if (response?.data?.data?.emailQueued) {
+				toast.success("Payment email queued");
+			}
 			mutate();
 			setRoll("");
 		} catch (err: any) {
-			toast.error(tc("updateFailed"));
+			toast.error(err?.response?.data?.message || tc("updateFailed"));
 		} finally {
 			setIsUpdatingStatus(false);
 			setStatusUpdate(null);
@@ -245,7 +267,7 @@ export default function ApplicationList() {
 			cell: ({ row }) => {
 				const app = row.original;
 				const status = String(app.status || "pending").toLowerCase();
-				const statusLabel = status.replace("_", " ");
+				const statusLabel = formatStatusLabel(status);
 
 				return (
 					<Select
@@ -264,7 +286,9 @@ export default function ApplicationList() {
 								status === "rejected" &&
 									"bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400",
 								status === "pending" &&
-									"bg-orange-100 text-orange-800 dark:bg-orange-900/30 dark:text-orange-400"
+									"bg-orange-100 text-orange-800 dark:bg-orange-900/30 dark:text-orange-400",
+								status === "eligible_for_payment" &&
+									"bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400"
 							)}
 						>
 							<SelectValue>{statusLabel}</SelectValue>
@@ -278,6 +302,12 @@ export default function ApplicationList() {
 								value="under_review"
 							>
 								Under Review
+							</SelectItem>
+							<SelectItem
+								className="cursor-pointer py-2 text-xs"
+								value="eligible_for_payment"
+							>
+								Eligible For Payment
 							</SelectItem>
 							<SelectItem className="cursor-pointer py-2 text-xs" value="approved">
 								Approved
@@ -298,6 +328,7 @@ export default function ApplicationList() {
 			header: t("actions"),
 			cell: ({ row }) => {
 				const app = row.original;
+				const isApproved = String(app.status || "").toLowerCase() === "approved";
 				return (
 					<div className="flex items-center gap-2">
 						<Link href={PATHS.ADMISSION.LIST.DETAILS(app.id)} passHref>
@@ -307,13 +338,15 @@ export default function ApplicationList() {
 								</span>
 							</Button>
 						</Link>
-						<Link href={PATHS.ADMISSION.LIST.EDIT(app.id)} passHref>
-							<Button variant="outline" size="icon-sm">
-								<span>
-									<Pencil className="text-muted-foreground hover:text-foreground h-4 w-4" />
-								</span>
-							</Button>
-						</Link>
+						{!isApproved && (
+							<Link href={PATHS.ADMISSION.LIST.EDIT(app.id)} passHref>
+								<Button variant="outline" size="icon-sm">
+									<span>
+										<Pencil className="text-muted-foreground hover:text-foreground h-4 w-4" />
+									</span>
+								</Button>
+							</Link>
+						)}
 						<ConfirmationModal
 							onConfirm={() => confirmDelete(app.id)}
 							title={t("deleteTitle")}

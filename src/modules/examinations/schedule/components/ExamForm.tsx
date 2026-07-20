@@ -20,6 +20,7 @@ import { PATHS } from "@/shared/configs/paths.config";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useTranslations } from "next-intl";
 import { useRouter } from "next/navigation";
+import { useEffect, useMemo } from "react";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
 
@@ -39,16 +40,37 @@ const statusOptions = Object.values(ExamStatusEnum).map((value) => ({
 	value,
 }));
 
+const toDateInputValue = (date: Date) => {
+	const year = date.getFullYear();
+	const month = String(date.getMonth() + 1).padStart(2, "0");
+	const day = String(date.getDate()).padStart(2, "0");
+
+	return `${year}-${month}-${day}`;
+};
+
 export default function ExamForm({ id, defaultValues, isEdit = false }: Props) {
 	const router = useRouter();
 	const t = useTranslations("Exams");
 	const ft = useTranslations("Forms");
+	const today = useMemo(() => toDateInputValue(new Date()), []);
 
 	const form = useForm<ExamFormValues>({
 		resolver: zodResolver(examSchema as any),
 		shouldFocusError: false,
 		defaultValues,
 	});
+
+	const startDate = form.watch("startDate");
+	const endDate = form.watch("endDate");
+
+	useEffect(() => {
+		if (startDate && endDate && new Date(endDate) < new Date(startDate)) {
+			form.setValue("endDate", "", {
+				shouldDirty: true,
+				shouldValidate: true,
+			});
+		}
+	}, [endDate, form, startDate]);
 
 	const onSubmit = async (data: ExamFormValues) => {
 		try {
@@ -129,6 +151,7 @@ export default function ExamForm({ id, defaultValues, isEdit = false }: Props) {
 						label="Start Date"
 						type="date"
 						placeholder="Select start date"
+						min={today}
 						required
 					/>
 					<InputField
@@ -136,7 +159,9 @@ export default function ExamForm({ id, defaultValues, isEdit = false }: Props) {
 						name="endDate"
 						label="End Date"
 						type="date"
-						placeholder="Select end date"
+						placeholder={startDate ? "Select end date" : "Select start date first"}
+						min={startDate || undefined}
+						disabled={!startDate}
 						required
 					/>
 				</CardContent>
@@ -186,7 +211,7 @@ export default function ExamForm({ id, defaultValues, isEdit = false }: Props) {
 						control={form.control}
 						name="instructions"
 						label="Instructions"
-						type="textarea"
+						type="textEditor"
 						placeholder="Add exam instructions"
 					/>
 					<InputField

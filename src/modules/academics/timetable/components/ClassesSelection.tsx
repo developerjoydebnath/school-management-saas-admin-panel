@@ -2,7 +2,7 @@
 
 import { Button } from "@/shared/components/ui/button";
 import { Card, CardContent } from "@/shared/components/ui/card";
-import { ScrollArea, ScrollBar } from "@/shared/components/ui/scroll-area";
+
 import { ClassModel } from "@/shared/models/class.model";
 import { LayoutGrid } from "lucide-react";
 import { useTranslations } from "next-intl";
@@ -23,27 +23,24 @@ export function ClassesSelection({ classes, selectedClass, onSelectClass }: Clas
 						<LayoutGrid className="text-primary size-4" />
 						<span>{t("selectClass")}</span>
 					</div>
-					<ScrollArea className="w-full">
-						<div className="mt-2 flex gap-2">
-							{classes.map((cls) => (
-								<Button
-									key={cls.id}
-									variant={selectedClass === cls.id ? "default" : "outline"}
-									size="sm"
-									onClick={() => onSelectClass(cls.id)}
-									className="rounded-full shadow-none"
-								>
-									<span>{getEnglishName(cls.name)}</span>
-								</Button>
-							))}
-							{classes.length === 0 && (
-								<p className="text-muted-foreground py-1 text-xs">
-									No classes found
-								</p>
-							)}
-						</div>
-						<ScrollBar orientation="horizontal" />
-					</ScrollArea>
+					<div className="mt-2 flex flex-wrap gap-2">
+						{classes.map((cls) => (
+							<Button
+								key={cls.id}
+								variant={selectedClass === cls.id ? "default" : "outline"}
+								size="sm"
+								onClick={() => onSelectClass(cls.id)}
+								className="rounded-full shadow-none"
+							>
+								<span>{getEnglishName(cls.name)}</span>
+							</Button>
+						))}
+						{classes.length === 0 && (
+							<p className="text-muted-foreground py-1 text-xs">
+								No classes found
+							</p>
+						)}
+					</div>
 				</div>
 			</CardContent>
 		</Card>

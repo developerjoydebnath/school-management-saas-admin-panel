@@ -18,8 +18,6 @@ type Props = {
 	open: boolean;
 };
 
-const formatValue = (value?: string | number | null) => value ?? "-";
-
 function CompactPair({ label, value }: { label: string; value?: React.ReactNode }) {
 	return (
 		<div className="min-w-0">
@@ -29,8 +27,25 @@ function CompactPair({ label, value }: { label: string; value?: React.ReactNode 
 	);
 }
 
-function CompactChip({ children }: { children: React.ReactNode }) {
-	return <span className="rounded-md border px-2 py-0.5 text-xs leading-5">{children}</span>;
+function statusText(status?: string) {
+	return status?.toUpperCase() === StatusEnum.INACTIVE ? "Inactive" : "Active";
+}
+
+function setupSectionName(item: any) {
+	return item?.section?.name || item?.section?.bnName || "Class Group";
+}
+
+function setupRoomName(item: any) {
+	if (!item?.room) return "-";
+	return [item.room.roomNo, item.room.name].filter(Boolean).join(" - ") || "-";
+}
+
+function setupRoomBuilding(item: any) {
+	return item?.room?.building || "-";
+}
+
+function setupRoomFloor(item: any) {
+	return item?.room?.floor || "-";
 }
 
 function ClassDetailsSkeleton() {
@@ -62,9 +77,8 @@ export function ClassDetailsSheet({ id, open }: Props) {
 			return <ClassDetailsSkeleton />;
 		}
 
-		const sections = cls.sections || [];
-		const hasSections = sections.length > 0;
-		const status = cls.status === StatusEnum.ACTIVE ? "Active" : "Inactive";
+		const sessionSetups = cls.original?.sessionSections || [];
+		const status = statusText(cls.status);
 
 		return (
 			<div className="space-y-4 p-4">
@@ -73,69 +87,44 @@ export function ClassDetailsSheet({ id, open }: Props) {
 					<div className="mt-3 grid grid-cols-1 gap-x-4 gap-y-3 @xl/body:grid-cols-2">
 						<CompactPair label="Class Name" value={getLocalizedName(cls.name, "en")} />
 						<CompactPair label="Status" value={status} />
-						<CompactPair label="Section Count" value={sections.length} />
-						<CompactPair
-							label="Capacity"
-							value={
-								hasSections
-									? sections.reduce(
-										(total, section: any) =>
-											total + Number(section.classRoom?.capacity || 0),
-										0
-									)
-									: cls.classRoom?.capacity || "-"
-							}
-						/>
+						<CompactPair label="Session Setup Count" value={sessionSetups.length} />
 					</div>
 				</div>
 
-				{hasSections ? (
-					<div className="rounded-md border bg-muted/20 p-4">
-						<h3 className="text-sm font-normal">{t("sectionAssignments")}</h3>
-						<div className="mt-3 space-y-3">
-							{sections.map((section: any) => {
-								const room = section.classRoom;
-								const shiftName =
-									section.shift?.name ||
-									(typeof section.shift === "string" ? section.shift : "-");
-
-								return (
-									<div
-										key={section.id || section.name}
-										className="rounded-md border bg-popover p-3"
-									>
-										<div className="mb-3 flex flex-wrap gap-1.5">
-											<CompactChip>{section.name}</CompactChip>
-											<CompactChip>{shiftName}</CompactChip>
+				<div className="rounded-md border bg-muted/20 p-4">
+					<h3 className="text-sm font-normal">{t("sessionSetupNoteTitle")}</h3>
+					{sessionSetups.length > 0 ? (
+						<div className="mt-3 grid grid-cols-1 gap-3 @2xl/body:grid-cols-2">
+							{sessionSetups.map((item: any) => (
+								<div
+									key={item.id}
+									className="rounded-md border bg-background/45 p-3 transition-colors hover:bg-muted/20"
+								>
+									<div className="flex items-start justify-between gap-3 border-b pb-2">
+										<div>
+											<p className="text-muted-foreground text-[11px] leading-4">Section</p>
+											<p className="text-sm leading-5">{setupSectionName(item)}</p>
 										</div>
-										<div className="grid grid-cols-1 gap-x-4 gap-y-3 @xl/body:grid-cols-2">
-											<CompactPair label="Class Room" value={room?.name || room?.roomNo} />
-											<CompactPair label="Room No" value={room?.roomNo} />
-											<CompactPair label="Capacity" value={formatValue(room?.capacity)} />
-											<CompactPair label="Building" value={room?.building} />
-											<CompactPair label="Floor" value={room?.floor} />
+										<div className="rounded-full border px-2 py-0.5 text-xs">
+											{statusText(item.status)}
 										</div>
 									</div>
-								);
-							})}
+									<div className="mt-3 grid grid-cols-1 gap-3 @lg/body:grid-cols-2">
+										<CompactPair label="Capacity" value={item.capacity ?? "-"} />
+										<CompactPair label="Shift" value={item.shift?.name || "-"} />
+										<CompactPair label="Room" value={setupRoomName(item)} />
+										<CompactPair label="Building" value={setupRoomBuilding(item)} />
+										<CompactPair label="Floor" value={setupRoomFloor(item)} />
+									</div>
+								</div>
+							))}
 						</div>
-					</div>
-				) : (
-					<div className="rounded-md border bg-muted/20 p-4">
-						<h3 className="text-sm font-normal">{t("roomAndShift")}</h3>
-						<div className="mt-3 grid grid-cols-1 gap-x-4 gap-y-3 @xl/body:grid-cols-2">
-							<CompactPair
-								label="Class Room"
-								value={cls.classRoom?.name || cls.classRoom?.roomNo}
-							/>
-							<CompactPair label="Room No" value={cls.classRoom?.roomNo} />
-							<CompactPair label="Capacity" value={formatValue(cls.classRoom?.capacity)} />
-							<CompactPair label="Building" value={cls.classRoom?.building} />
-							<CompactPair label="Floor" value={cls.classRoom?.floor} />
-							<CompactPair label="Shift" value={cls.shift} />
-						</div>
-					</div>
-				)}
+					) : (
+						<p className="text-muted-foreground mt-2 text-sm leading-6">
+							{t("sessionSetupNoteDescription")}
+						</p>
+					)}
+				</div>
 			</div>
 		);
 	})();

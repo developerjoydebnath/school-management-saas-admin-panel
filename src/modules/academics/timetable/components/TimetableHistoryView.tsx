@@ -1,6 +1,7 @@
 "use client";
 
 import DateRangeFilter from "@/shared/components/form/DateRangeFilter";
+import FilterButton from "@/shared/components/form/FilterButton";
 import { Badge } from "@/shared/components/ui/badge";
 import { Button } from "@/shared/components/ui/button";
 import { Label } from "@/shared/components/ui/label";
@@ -21,7 +22,7 @@ import {
 } from "@/shared/components/ui/table";
 import { useSWR } from "@/shared/hooks/use-swr";
 import { cn } from "@/shared/lib/utils";
-import { ClassModel, Section } from "@/shared/models/class.model";
+import { ClassModel } from "@/shared/models/class.model";
 import { Eye, Printer, RotateCcw } from "lucide-react";
 import { useLocale, useTranslations } from "next-intl";
 import { useMemo, useState } from "react";
@@ -36,7 +37,7 @@ type TimetableHistoryViewProps = {
 };
 
 type HistoryFilter = {
-	sessionId: string;
+	sessionId: string[];
 	classId: string;
 	sectionId: string;
 	savedFrom: string;
@@ -44,7 +45,7 @@ type HistoryFilter = {
 };
 
 const emptyFilter: HistoryFilter = {
-	sessionId: "",
+	sessionId: [],
 	classId: "",
 	sectionId: "",
 	savedFrom: "",
@@ -64,26 +65,37 @@ export function TimetableHistoryView({
 	const [selectedHistoryId, setSelectedHistoryId] = useState<string | null>(null);
 	const [filter, setFilter] = useState<HistoryFilter>({
 		...emptyFilter,
-		sessionId: defaultSessionId || "",
+		sessionId: defaultSessionId ? [defaultSessionId] : [],
 		classId: defaultClassId || "",
 		sectionId: defaultSectionIds?.[0] || "",
 	});
 
 	const { data: classesRes } = useSWR("/classes/active-list");
 	const { data: sessionsRes } = useSWR("/sessions/active-list");
+	const sectionSessionId = filter.sessionId[0] || defaultSessionId || undefined;
+	const { data: sectionsRes } = useSWR(
+		filter.classId ? "/classes/sections/active-list" : null,
+		{ classId: filter.classId, sessionId: sectionSessionId }
+	);
 	const classes = useMemo(() => classesRes?.data || classesRes || [], [classesRes]);
 	const sessions = useMemo(() => sessionsRes?.data || sessionsRes || [], [sessionsRes]);
+	const sections = useMemo(() => sectionsRes?.data || sectionsRes || [], [sectionsRes]);
+	const sessionOptions = useMemo(
+		() =>
+			sessions.map((session: any) => ({
+				label: session.name,
+				value: session.id,
+			})),
+		[sessions]
+	);
 	const serializedClasses: ClassModel[] = useMemo(
 		() => classes.map((cls: any) => new ClassModel(cls)),
 		[classes]
 	);
-	const activeClass = serializedClasses.find((cls: ClassModel) => cls.id === filter.classId);
-	const sections = activeClass?.sections || [];
-
 	const historyResponse = useTimetableHistory({
 		page,
 		limit,
-		...(filter.sessionId ? { sessionId: filter.sessionId } : {}),
+		...(filter.sessionId.length ? { sessionId: filter.sessionId.join(",") } : {}),
 		...(filter.classId ? { classId: filter.classId } : {}),
 		...(filter.sectionId ? { sectionId: filter.sectionId } : {}),
 		...(filter.savedFrom ? { savedFrom: filter.savedFrom } : {}),
@@ -133,22 +145,13 @@ export function TimetableHistoryView({
 				<div className="bg-card rounded-md border p-4 space-y-4">
 					<div className="grid grid-cols-2 gap-3">
 						<div className="space-y-2">
-							<Label className="text-xs text-muted-foreground">Session</Label>
-							<Select
-								value={filter.sessionId || undefined}
-								onValueChange={(value) => updateFilter({ sessionId: value })}
-							>
-								<SelectTrigger className="w-full h-9!">
-									<SelectValue placeholder="Select session" />
-								</SelectTrigger>
-								<SelectContent>
-									{sessions.map((session: any) => (
-										<SelectItem className="py-1.5" key={session.id} value={session.id}>
-											{session.name}
-										</SelectItem>
-									))}
-								</SelectContent>
-							</Select>
+							<FilterButton
+								title="Session"
+								selected={filter.sessionId}
+								onSelect={(sessionId) => updateFilter({ sessionId })}
+								clearFilter={() => updateFilter({ sessionId: [] })}
+								options={sessionOptions}
+							/>
 						</div>
 
 						<div className="space-y-2">
@@ -188,12 +191,12 @@ export function TimetableHistoryView({
 								</SelectTrigger>
 								<SelectContent>
 									<SelectItem className="py-1.5" value="class">Class routine</SelectItem>
-									{sections.map((section: Section) => (
+									{sections.map((section: any) => (
 										<SelectItem className="py-1.5"
 											key={section.id || section.name}
 											value={section.id || section.name}
 										>
-											{getEnglishName(section.name)}
+											{section.label || getEnglishName(section.name)}
 										</SelectItem>
 									))}
 								</SelectContent>

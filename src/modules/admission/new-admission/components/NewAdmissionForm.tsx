@@ -9,6 +9,15 @@ import {
 	CardHeader,
 	CardTitle,
 } from "@/shared/components/ui/card";
+import {
+	Dialog,
+	DialogContent,
+	DialogDescription,
+	DialogFooter,
+	DialogHeader,
+	DialogTitle,
+} from "@/shared/components/ui/dialog";
+import { Input } from "@/shared/components/ui/input";
 import { Skeleton } from "@/shared/components/ui/skeleton";
 import { useSWR } from "@/shared/hooks/use-swr";
 import axios from "@/shared/lib/axios";
@@ -21,6 +30,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useForm, useWatch } from "react-hook-form";
 import { toast } from "sonner";
 import * as z from "zod";
+import StudentRollList from "../../application-list/components/StudentRollList";
 import { useAdmissionFormDraft } from "../hooks/useAdmissionFormDraft";
 import AdmissionFormSection from "./AdmissionFormSection";
 import AdmissionPreview from "./AdmissionPreview";
@@ -125,6 +135,54 @@ function normalizeQuotaValue(value: unknown) {
 	if (Array.isArray(value)) return value[0];
 	if (typeof value === "object") return (value as any)?.value || (value as any)?.quotaType;
 	return String(value);
+}
+
+function getMediaValueUrl(value: any) {
+	const candidate =
+		value?.url ||
+		value?.fileUrl ||
+		value?.documentUrl ||
+		value?.imageUrl ||
+		value?.path ||
+		value?.src;
+	if (typeof candidate === "string") return candidate;
+	if (candidate && typeof candidate === "object") {
+		const nested = candidate.url || candidate.path || candidate.src;
+		return typeof nested === "string" ? nested : "";
+	}
+	return "";
+}
+
+function normalizeDocumentValue(value: any) {
+	if (!value || typeof value !== "object" || value instanceof File) return value;
+	const url = getMediaValueUrl(value);
+	return {
+		...value,
+		url,
+		originalName:
+			value.originalName ||
+			value.name ||
+			value.fileName ||
+			(url ? url.split("/").pop() : undefined),
+	};
+}
+
+function normalizePhotoValue(value: any) {
+	if (!value || value instanceof File) return {};
+	if (typeof value === "string") {
+		return { url: value };
+	}
+	if (typeof value !== "object") return {};
+
+	return {
+		url: getMediaValueUrl(value),
+		placeholder:
+			value.placeholder ||
+			value.placeholderUrl ||
+			value.photoPlaceholder ||
+			value.imagePlaceholder,
+		mediaId: value.mediaId || value.photoMediaId || value.imageMediaId,
+	};
 }
 
 const bangladeshMobileRegex = /^01[3-9]\d{8}$/;
@@ -287,6 +345,13 @@ export default function NewAdmissionForm({
 	const [loading, setLoading] = useState(false);
 	const [step, setStep] = useState<"form" | "success">("form");
 	const [createdStudent, setCreatedStudent] = useState<any>(null);
+	const [rollDialogOpen, setRollDialogOpen] = useState(false);
+	const [directRoll, setDirectRoll] = useState("");
+	const [pendingAdmission, setPendingAdmission] = useState<{
+		payload: Record<string, any>;
+		values: Record<string, any>;
+	} | null>(null);
+	const lastFormHydrationKeyRef = useRef<string | null>(null);
 
 	const t = useTranslations("AdmissionNew");
 	const locale = useLocale();
@@ -311,10 +376,10 @@ export default function NewAdmissionForm({
 			.filter((field: any) =>
 				id
 					? (field.showInFastMode ?? field.isShown) ||
-						(field.showInFullMode ?? field.isShown)
+					(field.showInFullMode ?? field.isShown)
 					: admissionMode === "fast"
-					? (field.showInFastMode ?? field.isShown)
-					: (field.showInFullMode ?? field.isShown)
+						? (field.showInFastMode ?? field.isShown)
+						: (field.showInFullMode ?? field.isShown)
 			)
 			.sort((a: any, b: any) => (a.sortOrder || 0) - (b.sortOrder || 0))
 			.map((field: any) => ({
@@ -335,10 +400,10 @@ export default function NewAdmissionForm({
 			acc[field.fieldKey || field.id] = Boolean(
 				id
 					? (field.requiredInFastMode ?? field.isRequired) ||
-						(field.requiredInFullMode ?? field.isRequired)
+					(field.requiredInFullMode ?? field.isRequired)
 					: admissionMode === "fast"
-					? (field.requiredInFastMode ?? field.isRequired)
-					: (field.requiredInFullMode ?? field.isRequired)
+						? (field.requiredInFastMode ?? field.isRequired)
+						: (field.requiredInFullMode ?? field.isRequired)
 			);
 			return acc;
 		}, {});
@@ -359,9 +424,8 @@ export default function NewAdmissionForm({
 	const serializeValue = (value: any) => {
 		if (value instanceof File) return undefined;
 		if (typeof value === "object" && value !== null && !Array.isArray(value)) {
-			if (value.url || value.imageUrl || value.fileUrl || value.path) {
-				return value.url || value.imageUrl || value.fileUrl || value.path;
-			}
+			const mediaUrl = getMediaValueUrl(value);
+			if (mediaUrl) return mediaUrl;
 		}
 		return value;
 	};
@@ -414,7 +478,7 @@ export default function NewAdmissionForm({
 					item?.type === fieldKey ||
 					item?.documentType === fieldKey
 			);
-			if (document) return document;
+			if (document) return normalizeDocumentValue(document);
 
 			if (isPhotoField && initialData.photoUrl) {
 				return initialData.photoUrl;
@@ -574,6 +638,7 @@ export default function NewAdmissionForm({
 		defaultValues,
 		mode: "onSubmit",
 		reValidateMode: "onChange",
+		shouldUnregister: false,
 	});
 
 	useEffect(() => {
@@ -600,12 +665,25 @@ export default function NewAdmissionForm({
 		};
 	}, [form]);
 
-	// Reset form when defaultValues changes (important for async settings/initialData)
+	// Hydrate async defaults once per application/settings load. Re-running this
+	// after edits can wipe uploaded media metadata while users move between steps.
 	useEffect(() => {
-		if (initialData || !form.formState.isDirty) {
-			form.reset(defaultValues);
-		}
-	}, [defaultValues, form, initialData]);
+		const hydrationKey = `${id || "create"}:${initialData?.id || "new"}:${settings?.id || settings?.sessionId || "settings"}:${admissionFields.length}`;
+		if (lastFormHydrationKeyRef.current === hydrationKey) return;
+		if (lastFormHydrationKeyRef.current && form.formState.isDirty) return;
+
+		form.reset(defaultValues);
+		lastFormHydrationKeyRef.current = hydrationKey;
+	}, [
+		admissionFields.length,
+		defaultValues,
+		form,
+		form.formState.isDirty,
+		id,
+		initialData?.id,
+		settings?.id,
+		settings?.sessionId,
+	]);
 
 	useEffect(() => {
 		if (admissionMode !== "full" || categories.length === 0) return;
@@ -779,7 +857,6 @@ export default function NewAdmissionForm({
 			if (admissionMode === "full" && !isPreviewStep) {
 				return;
 			}
-			setLoading(true);
 			try {
 				const fixedData: Record<string, any> = {};
 				const customData: Record<string, any> = {};
@@ -799,14 +876,14 @@ export default function NewAdmissionForm({
 					if (serializedValue === undefined) return;
 					if (documentFieldKeys.has(key)) {
 						if (value && typeof value === "object" && !(value instanceof File)) {
-							const uploadedDocument = value as Record<string, any>;
+							const uploadedDocument = normalizeDocumentValue(value) as Record<string, any>;
 							documentsPayload.push({
 								fieldKey: key,
 								documentType: key,
 								type: uploadedDocument.type || key,
 								label: uploadedDocument.label || field?.label || key,
 								mediaId: uploadedDocument.mediaId,
-								url: uploadedDocument.url || serializedValue,
+								url: getMediaValueUrl(uploadedDocument) || serializedValue,
 								placeholder: uploadedDocument.placeholder,
 								originalName: uploadedDocument.originalName,
 								mimeType: uploadedDocument.mimeType,
@@ -856,6 +933,29 @@ export default function NewAdmissionForm({
 					fixedData.documents = documentsPayload;
 				}
 
+				const photoField = allFields.find((field) => {
+					const fieldKey = String(field.fieldKey || field.id || "").toLowerCase();
+					const label = String(field.label || "").toLowerCase();
+					return (field.fieldType || field.type) === "file" &&
+						(fieldKey.includes("photo") || label.includes("photo"));
+				});
+				const photoFieldKey = photoField?.fieldKey || photoField?.id;
+				const photoValue = photoFieldKey ? values[photoFieldKey] : undefined;
+				const normalizedPhoto = normalizePhotoValue(photoValue);
+				const normalizedPhotoUrl =
+					normalizedPhoto.url ||
+					(typeof values.photoUrl === "string" ? values.photoUrl : "");
+				if (normalizedPhotoUrl) {
+					fixedData.photoUrl = normalizedPhotoUrl;
+				}
+				if (normalizedPhoto.placeholder || values.photoPlaceholder) {
+					fixedData.photoPlaceholder =
+						normalizedPhoto.placeholder || values.photoPlaceholder;
+				}
+				if (normalizedPhoto.mediaId || values.photoMediaId) {
+					fixedData.photoMediaId = normalizedPhoto.mediaId || values.photoMediaId;
+				}
+
 				const payload = {
 					...fixedData,
 					specialQuota: selectedQuotaType || fixedData.specialQuota || fixedData.quota || null,
@@ -869,25 +969,23 @@ export default function NewAdmissionForm({
 				console.log("Submitting Admission Payload:", payload);
 
 				if (id) {
+					setLoading(true);
 					await axios.patch(`/admissions/${id}`, payload);
 					toast.success("Application updated successfully!");
 				} else {
-					const response = await axios.post("/admissions", payload);
-					clearDraft();
-					setCreatedStudent({
-						id: response.data?.data?.id || response.data?.id || generateStudentId(),
-						name: values.studentNameEn || values.fullName,
-						class: values.applyingClassId || values.class,
-						completion: admissionMode === "full" ? 100 : 42,
-					});
-					setStep("success");
-					toast.success("Student admission successful!");
+					setPendingAdmission({ payload, values });
+					setDirectRoll("");
+					setRollDialogOpen(true);
+					return;
 				}
 
 				onSuccess?.();
 			} catch (err) {
 				console.error("Error saving admission:", err);
-				toast.error("Failed to save application. Please try again.");
+				toast.error(
+					(err as any)?.response?.data?.message ||
+					"Failed to save application. Please try again."
+				);
 			} finally {
 				setLoading(false);
 			}
@@ -903,6 +1001,56 @@ export default function NewAdmissionForm({
 			selectedQuotaType,
 		]
 	);
+
+	const completeDirectAdmission = useCallback(async () => {
+		if (!pendingAdmission) return;
+		const rollNumber = directRoll.trim();
+		if (!rollNumber) {
+			toast.error("Roll number is required to approve this admission.");
+			return;
+		}
+
+		setLoading(true);
+		try {
+			const response = await axios.post("/admissions", {
+				...pendingAdmission.payload,
+				autoApprove: true,
+				rollNumber: rollNumber.padStart(3, "0"),
+			});
+			clearDraft();
+			setCreatedStudent({
+				id: response.data?.data?.studentId || response.data?.data?.id || generateStudentId(),
+				name: pendingAdmission.values.studentNameEn || pendingAdmission.values.fullName,
+				class:
+					pendingAdmission.values.applyingClassId ||
+					pendingAdmission.values.class ||
+					pendingAdmission.payload.applyingClassId,
+				completion: admissionMode === "full" ? 100 : 42,
+			});
+			setRollDialogOpen(false);
+			setPendingAdmission(null);
+			setDirectRoll("");
+			setStep("success");
+			toast.success(
+				response.data?.message || "Student admission completed successfully."
+			);
+			onSuccess?.();
+		} catch (err) {
+			console.error("Error completing admission:", err);
+			toast.error(
+				(err as any)?.response?.data?.message ||
+				"Failed to complete admission. Please try again."
+			);
+		} finally {
+			setLoading(false);
+		}
+	}, [
+		admissionMode,
+		clearDraft,
+		directRoll,
+		onSuccess,
+		pendingAdmission,
+	]);
 
 	if (step === "success" && createdStudent) {
 		return (
@@ -928,8 +1076,8 @@ export default function NewAdmissionForm({
 	}
 
 	return (
-		<div className="mx-auto max-w-7xl">
-			<Card className="gap-0 overflow-hidden py-0 shadow-none ring-0">
+		<div className="mx-auto max-w-5xl">
+			<Card className="gap-0 py-0 shadow-none ring-0">
 				<CardHeader className="space-y-1 border-b py-6 text-center">
 					<CardTitle className="text-2xl font-bold">{t("formTitle")}</CardTitle>
 					<CardDescription>{t("formDescription")}</CardDescription>
@@ -1064,7 +1212,7 @@ export default function NewAdmissionForm({
 							</div>
 						)}
 
-						<div className="flex flex-col items-stretch gap-4 sm:flex-row">
+						<div className="flex flex-col items-stretch gap-4 rounded-lg shadow-sm sm:flex-row">
 							{admissionMode === "full" && currentStepIndex > 0 && (
 								<Button
 									key="prev-button"
@@ -1131,6 +1279,76 @@ export default function NewAdmissionForm({
 					</form>
 				</CardContent>
 			</Card>
+			<Dialog
+				open={rollDialogOpen}
+				onOpenChange={(open) => {
+					if (loading) return;
+					setRollDialogOpen(open);
+				}}
+			>
+				<DialogContent className="max-w-2xl">
+					<DialogHeader>
+						<DialogTitle>Approve Admission</DialogTitle>
+						<DialogDescription>
+							Review existing students for this class and confirm the new student&apos;s roll number.
+						</DialogDescription>
+					</DialogHeader>
+
+					<div className="space-y-4">
+						<div className="rounded-lg border">
+							<StudentRollList
+								classId={pendingAdmission?.payload?.applyingClassId}
+								sessionId={pendingAdmission?.payload?.sessionId}
+								section={pendingAdmission?.payload?.sectionId}
+								onSuggestedRoll={(roll) => {
+									setDirectRoll((current) => current || roll);
+								}}
+							/>
+						</div>
+						<div className="space-y-2">
+							<label className="text-sm font-medium" htmlFor="direct-admission-roll">
+								Roll Number
+							</label>
+							<Input
+								id="direct-admission-roll"
+								value={directRoll}
+								onChange={(event) =>
+									setDirectRoll(event.target.value.replace(/\D/g, ""))
+								}
+								placeholder="e.g. 001"
+							/>
+							<p className="text-muted-foreground text-xs">
+								Roll must be unique for the selected session, class, and section.
+							</p>
+						</div>
+					</div>
+
+					<DialogFooter>
+						<Button
+							type="button"
+							variant="outline"
+							disabled={loading}
+							onClick={() => setRollDialogOpen(false)}
+						>
+							Cancel
+						</Button>
+						<Button
+							type="button"
+							disabled={loading}
+							onClick={completeDirectAdmission}
+						>
+							{loading ? (
+								<>
+									<Loader2 className="h-4 w-4 animate-spin" />
+									Approving...
+								</>
+							) : (
+								"Approve & Create Student"
+							)}
+						</Button>
+					</DialogFooter>
+				</DialogContent>
+			</Dialog>
 		</div>
 	);
 }

@@ -339,6 +339,10 @@ export const PERMISSIONS = {
 			EDIT: "finance.fees.edit",
 			DELETE: "finance.fees.delete",
 		},
+		STUDENT_PAYMENTS: {
+			ALL: "students.payments.all",
+			VIEW: "students.payments.view",
+		},
 		EXPENSES: {
 			ALL: "finance.expenses.all",
 			VIEW: "finance.expenses.view",
@@ -679,6 +683,18 @@ export const PERMISSIONS = {
 			CREATE: "settings.integrations.create",
 			EDIT: "settings.integrations.edit",
 			DELETE: "settings.integrations.delete",
+		},
+		PAYMENT_METHODS: {
+			ALL: "settings.payment_methods.all",
+			VIEW: "settings.payment_methods.view",
+			CREATE: "settings.payment_methods.create",
+			EDIT: "settings.payment_methods.edit",
+			DELETE: "settings.payment_methods.delete",
+		},
+		MAIL_SETTINGS: {
+			ALL: "settings.mail_settings.all",
+			VIEW: "settings.mail_settings.view",
+			EDIT: "settings.mail_settings.edit",
 		},
 		LOCALIZATION: {
 			ALL: "settings.localization.all",

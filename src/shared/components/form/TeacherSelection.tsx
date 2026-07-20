@@ -44,11 +44,42 @@ export default function TeacherSelection({
 	const serializedTeachers = teachers.map((t: any) => new Teacher(t));
 	const selectedTeacher = serializedTeachers.find((t: Teacher) => t.id === value);
 
-	const getSubjectNames = (subjectIds: string[]) => {
-		if (!subjectIds || subjectIds.length === 0) return "No subject assigned";
+	const getSubjectLabel = (subject: any) => {
+		if (!subject) return "";
+		return getLocalizedName(
+			{
+				en: subject.enName || subject.name?.en || subject.name || subject.code || "",
+				bn: subject.bnName || subject.name?.bn || subject.enName || subject.name || subject.code || "",
+			},
+			locale
+		);
+	};
+
+	const getSubjectNames = (teacher: Teacher) => {
+		const original = teacher.original || {};
+		const subjectItems = [
+			original.primarySubject,
+			...(Array.isArray(original.specializationSubjectItems)
+				? original.specializationSubjectItems
+				: []),
+		].filter(Boolean);
+		const seenSubjectKeys = new Set<string>();
+		const displayNames = subjectItems
+			.map((subject) => {
+				const label = getSubjectLabel(subject);
+				const key = subject.id || label.toLowerCase();
+				if (!label || seenSubjectKeys.has(key)) return "";
+				seenSubjectKeys.add(key);
+				return label;
+			})
+			.filter(Boolean);
+		if (displayNames.length) return displayNames.join(", ");
+
+		const subjectIds = teacher.subjects || [];
+		if (!subjectIds.length) return "No subject assigned";
 		if (!subjects) return subjectIds.join(", ");
 
-		const names = subjectIds.map((id) => {
+		const names = subjectIds.map((id: string) => {
 			const subject = subjects.find((s: any) => s.id === id);
 			return subject ? getLocalizedName(subject.name, locale) : id;
 		});
@@ -116,7 +147,7 @@ export default function TeacherSelection({
 														{getLocalizedName(teacher.name, locale)}
 													</span>
 													<span className="text-muted-foreground truncate text-xs">
-														{getSubjectNames(teacher.subjects)}
+														{getSubjectNames(teacher)}
 													</span>
 												</div>
 											</div>

@@ -22,9 +22,15 @@ type SubjectTeacher = {
 	id: string;
 	fullName: string;
 	primarySubject?: {
+		id?: string;
 		enName?: string;
 		bnName?: string;
 	};
+	specializationSubjectItems?: {
+		id?: string;
+		enName?: string;
+		bnName?: string;
+	}[];
 };
 
 interface SubjectTeacherSelectProps {
@@ -60,6 +66,28 @@ export default function SubjectTeacherSelect({
 	const locale = useLocale();
 	const teachers: SubjectTeacher[] = response?.data || response || [];
 	const selectedTeacher = teachers.find((teacher) => teacher.id === value);
+	const getTeacherSubjectNames = (teacher: SubjectTeacher) => {
+		const subjects = [
+			teacher.primarySubject,
+			...(teacher.specializationSubjectItems || []),
+		].filter(Boolean);
+		const seen = new Set<string>();
+
+		return subjects.reduce<string[]>((names, subject) => {
+			const name = getLocalizedName(
+				{
+					en: subject?.enName,
+					bn: subject?.bnName,
+				},
+				locale
+			);
+			const key = subject?.id || name;
+			if (!name || seen.has(key)) return names;
+			seen.add(key);
+			names.push(name);
+			return names;
+		}, []);
+	};
 
 	return (
 		<Popover open={open} onOpenChange={setOpen}>
@@ -100,20 +128,15 @@ export default function SubjectTeacherSelect({
 							<CommandEmpty>{emptyMessage}</CommandEmpty>
 							<CommandGroup>
 								{teachers.map((teacher) => {
-									const primarySubjectName = teacher.primarySubject
-										? getLocalizedName(
-												{
-													en: teacher.primarySubject.enName,
-													bn: teacher.primarySubject.bnName,
-												},
-												locale
-											)
-										: "No primary subject";
+									const subjectNames = getTeacherSubjectNames(teacher);
+									const subjectSummary = subjectNames.length
+										? subjectNames.join(", ")
+										: "No subject assigned";
 
 									return (
 										<CommandItem
 											key={teacher.id}
-											value={`${teacher.fullName} ${primarySubjectName}`}
+											value={`${teacher.fullName} ${subjectSummary}`}
 											onSelect={() => {
 												const nextValue =
 													teacher.id === value ? "" : teacher.id;
@@ -134,8 +157,8 @@ export default function SubjectTeacherSelect({
 											/>
 											<div className="min-w-0">
 												<div className="truncate">{teacher.fullName}</div>
-												<div className="text-muted-foreground truncate text-xs">
-													{primarySubjectName}
+												<div className="text-muted-foreground line-clamp-1 text-xs">
+													{subjectSummary}
 												</div>
 											</div>
 										</CommandItem>

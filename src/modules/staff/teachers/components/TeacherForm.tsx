@@ -1,6 +1,7 @@
 "use client";
 
 import { compressImage } from "@/lib/compressImage";
+import { SchoolLocationMap } from "@/modules/schools-management/schools/components/SchoolLocationMap";
 import { TeacherFormValues, teacherSchema } from "@/modules/staff/teachers/dto/teacher.dto";
 import { createTeacher, updateTeacher } from "@/modules/staff/teachers/hooks/use-teacher-mutations";
 import InputField from "@/shared/components/form/InputField";
@@ -13,8 +14,8 @@ import {
 	CardHeader,
 	CardTitle,
 } from "@/shared/components/ui/card";
-import { PATHS } from "@/shared/configs/paths.config";
 import { appConfig } from "@/shared/configs/app.config";
+import { PATHS } from "@/shared/configs/paths.config";
 import { uploadDocument, uploadImage } from "@/shared/services/uploadApi";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Loader2, Plus, Save, Trash2 } from "lucide-react";
@@ -23,7 +24,6 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { useFieldArray, useForm } from "react-hook-form";
 import { toast } from "sonner";
-import { SchoolLocationMap } from "@/modules/schools-management/schools/components/SchoolLocationMap";
 
 type Props = {
 	id?: string;
@@ -72,12 +72,25 @@ const documentTypeOptions = [
 	{ label: "Other", value: "other" },
 ];
 
-function normalizeNullableDefaults(value: any): any {
-	if (value === null) return "";
+const UUID_REGEX =
+	/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+const booleanDefaultFields = new Set([
+	"isHeadOfInstitution",
+	"isMpoListed",
+	"ntrcaRegistered",
+	"isHafiz",
+]);
+
+function normalizeNullableDefaults(value: any, key?: string): any {
+	if (value === null) return key && booleanDefaultFields.has(key) ? false : "";
 	if (Array.isArray(value)) return value.map((item) => normalizeNullableDefaults(item));
 	if (typeof value === "object" && value !== null && !(value instanceof File)) {
 		return Object.fromEntries(
-			Object.entries(value).map(([key, item]) => [key, normalizeNullableDefaults(item)])
+			Object.entries(value).map(([childKey, item]) => [
+				childKey,
+				normalizeNullableDefaults(item, childKey),
+			])
 		);
 	}
 	return value;
@@ -161,13 +174,35 @@ export default function TeacherForm({ id, defaultValues, isEdit = false }: Props
 				"joiningDate",
 			]);
 			Object.keys(payload).forEach((key) => {
-				if (payload[key] === "" && !requiredFields.has(key)) {
+				if ((payload[key] === "" || payload[key] === "null" || payload[key] === "undefined") && !requiredFields.has(key)) {
 					delete payload[key];
 				}
 			});
-			if (!payload.email) delete payload.email;
-			if (!payload.departmentId) delete payload.departmentId;
-			if (!payload.primarySubjectId) delete payload.primarySubjectId;
+			if (!payload.email || payload.email === "null" || payload.email === "undefined") delete payload.email;
+			const optionalUuidFields = [
+				"photoMediaId",
+				"departmentId",
+				"primarySubjectId",
+				"globalPersonId",
+				"joiningSessionId",
+				"ntrcaCertificateMediaId",
+			];
+			optionalUuidFields.forEach((key) => {
+				if (payload[key] instanceof File) return;
+				if (
+					!payload[key] ||
+					payload[key] === "null" ||
+					payload[key] === "undefined" ||
+					(typeof payload[key] === "string" && !UUID_REGEX.test(payload[key].trim()))
+				) {
+					delete payload[key];
+				}
+			});
+			booleanDefaultFields.forEach((key) => {
+				if (payload[key] === "" || payload[key] === null || payload[key] === undefined) {
+					payload[key] = false;
+				}
+			});
 			for (const key of ["specializationSubjects"]) {
 				if (typeof payload[key] === "string" && payload[key].trim()) {
 					try {
@@ -184,13 +219,13 @@ export default function TeacherForm({ id, defaultValues, isEdit = false }: Props
 			}
 			payload.qualificationDetails = Array.isArray(payload.qualificationDetails)
 				? payload.qualificationDetails.filter((item: any) =>
-						Object.values(item || {}).some((value) => value !== undefined && value !== null && value !== "")
-					)
+					Object.values(item || {}).some((value) => value !== undefined && value !== null && value !== "")
+				)
 				: [];
 			payload.professionalQualifications = Array.isArray(payload.professionalQualifications)
 				? payload.professionalQualifications.filter((item: any) =>
-						Object.values(item || {}).some((value) => value !== undefined && value !== null && value !== "")
-					)
+					Object.values(item || {}).some((value) => value !== undefined && value !== null && value !== "")
+				)
 				: [];
 
 			// Handle File uploads
@@ -225,7 +260,10 @@ export default function TeacherForm({ id, defaultValues, isEdit = false }: Props
 				for (const doc of payload.documents) {
 					if (doc.file instanceof File) {
 						try {
-							const res = await uploadDocument(doc.file, "staff_document");
+							const isImage = doc.file.type.startsWith("image/");
+							const res = isImage
+								? await uploadImage(doc.file, "staff_document")
+								: await uploadDocument(doc.file, "staff_document");
 							uploadedDocs.push({
 								type: doc.type || "other",
 								mediaId: res.mediaId,
@@ -620,7 +658,7 @@ export default function TeacherForm({ id, defaultValues, isEdit = false }: Props
 						{tForm("sections.subjectsQualifications.description")}
 					</CardDescription>
 				</CardHeader>
-				<CardContent className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
+				<CardContent className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-2">
 					<InputField
 						control={form.control}
 						name="primarySubjectId"
@@ -630,17 +668,18 @@ export default function TeacherForm({ id, defaultValues, isEdit = false }: Props
 					/>
 					<InputField
 						control={form.control}
-						name="specializationSubjects"
-						label="Specialization Subjects"
-						type="subjectSelection"
-						placeholder="Select Specialization Subjects"
-					/>
-					<InputField
-						control={form.control}
 						name="highestQualification"
 						label="Highest Qualification"
 						placeholder="e.g. Masters in Physics"
 						type="text"
+					/>
+					<InputField
+						fieldClass="col-span-full"
+						control={form.control}
+						name="specializationSubjects"
+						label="Specialization Subjects"
+						type="subjectSelection"
+						placeholder="Select Specialization Subjects"
 					/>
 					<div className="col-span-full space-y-4 rounded-lg border p-4">
 						<div className="flex items-center justify-between gap-3">
@@ -884,6 +923,8 @@ export default function TeacherForm({ id, defaultValues, isEdit = false }: Props
 					/>
 					<InputField
 						control={form.control}
+						fieldClass="col-span-full"
+						className="aspect-video h-full w-full sm:w-1/2"
 						name="ntrcaCertificateMediaId"
 						label="NTRCA Certificate"
 						type="file"
@@ -900,13 +941,6 @@ export default function TeacherForm({ id, defaultValues, isEdit = false }: Props
 					<CardDescription>Optional transfer and career history fields.</CardDescription>
 				</CardHeader>
 				<CardContent className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
-					<InputField
-						control={form.control}
-						name="globalPersonId"
-						label="Global Person ID"
-						placeholder="Enter global person UUID"
-						type="text"
-					/>
 					<InputField
 						control={form.control}
 						name="transferredFrom"
@@ -987,6 +1021,7 @@ export default function TeacherForm({ id, defaultValues, isEdit = false }: Props
 						<InputField
 							control={form.control}
 							name="photoMediaId"
+							className="h-40 w-40"
 							label="Photo"
 							type="file"
 							placeholder="Upload Photo"

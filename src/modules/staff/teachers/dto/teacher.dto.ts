@@ -42,7 +42,7 @@ export const teacherSchema = z.object({
 
   designationId: z.string().min(1, { message: 'Designation is required' }),
   departmentId: z.string().optional().nullable(),
-  isHeadOfInstitution: z.boolean().optional(),
+  isHeadOfInstitution: z.boolean().optional().nullable(),
   employmentType: z.string().optional(),
   status: z.string().optional(),
 
@@ -52,12 +52,12 @@ export const teacherSchema = z.object({
   retirementDate: z.string().optional().nullable(),
   exitReason: z.string().optional().nullable(),
 
-  isMpoListed: z.boolean().optional(),
+  isMpoListed: z.boolean().optional().nullable(),
   mpoIndexNo: z.string().optional(),
   mpoIncludedAt: z.string().optional().nullable(),
   mpoCategory: z.string().optional(),
 
-  ntrcaRegistered: z.boolean().optional(),
+  ntrcaRegistered: z.boolean().optional().nullable(),
   ntrcaRegNo: z.string().optional(),
   ntrcaRegYear: optionalNumber,
   ntrcaCertificateMediaId: z.any().optional().nullable(),

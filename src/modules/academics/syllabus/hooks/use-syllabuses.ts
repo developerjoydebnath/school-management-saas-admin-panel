@@ -5,7 +5,7 @@ type UseSyllabusesParams = {
 	page?: number;
 	limit?: number;
 	search?: string;
-	sessionId?: string;
+	sessionId?: string | string[];
 	examId?: string;
 	classId?: string;
 	sectionId?: string;
@@ -17,6 +17,7 @@ type UseSyllabusesParams = {
 export function useSyllabuses(params?: UseSyllabusesParams) {
 	const apiParams = {
 		...params,
+		sessionId: Array.isArray(params?.sessionId) ? params.sessionId.join(",") : params?.sessionId,
 		status: Array.isArray(params?.status) ? params.status.join(",") : params?.status,
 	};
 

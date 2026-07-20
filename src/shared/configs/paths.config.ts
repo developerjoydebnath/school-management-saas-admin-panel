@@ -52,6 +52,7 @@ export const PATHS = {
 			CREATE: "/schools-management/schools/create",
 			EDIT: (id: number | string) => `/schools-management/schools/${id}/edit`,
 			DETAILS: (id: number | string) => `/schools-management/schools/${id}/details`,
+			PAYMENT: (id: number | string) => `/schools-management/schools/${id}/payment`,
 		},
 		SUBSCRIPTION_PLANS: {
 			ROOT: "/schools-management/subscription-plans",
@@ -92,6 +93,14 @@ export const PATHS = {
 			ROOT: "/academics/classes",
 			CREATE: "/academics/classes/create",
 			EDIT: (id: number | string) => `/academics/classes/${id}/edit`,
+		},
+		SECTIONS: {
+			ROOT: "/academics/sections",
+			CREATE: "/academics/sections/create",
+			EDIT: (id: number | string) => `/academics/sections/${id}/edit`,
+		},
+		SESSION_CLASS_SETUP: {
+			ROOT: "/academics/session-class-setup",
 		},
 		CLASS_ROOMS: {
 			ROOT: "/academics/class-rooms",
@@ -282,6 +291,9 @@ export const PATHS = {
 			CREATE: "/finance/fees/create",
 			EDIT: (id: number | string) => `/finance/fees/${id}/edit`,
 			DETAILS: (id: number | string) => `/finance/fees/${id}/details`,
+		},
+		STUDENT_PAYMENTS: {
+			ROOT: "/finance/student-payments",
 		},
 		EXPENSES: {
 			ROOT: "/finance/expenses",
@@ -573,6 +585,30 @@ export const PATHS = {
 			CREATE: "/settings/integrations/create",
 			EDIT: (id: number | string) => `/settings/integrations/${id}/edit`,
 			DETAILS: (id: number | string) => `/settings/integrations/${id}/details`,
+		},
+		PAYMENT_METHODS: {
+			ROOT: "/settings/payment-methods",
+			CREATE: "/settings/payment-methods/create",
+			EDIT: (id: number | string) => `/settings/payment-methods/${id}/edit`,
+			DETAILS: (id: number | string) => `/settings/payment-methods/${id}/details`,
+		},
+		MAIL_SETTINGS: {
+			ROOT: "/settings/mail-settings",
+			CREATE: "/settings/mail-settings/create",
+			EDIT: (id: number | string) => `/settings/mail-settings/${id}/edit`,
+			DETAILS: (id: number | string) => `/settings/mail-settings/${id}/details`,
+		},
+		SCHOOL_MAIL: {
+			ROOT: "/settings/school-mail",
+			CREATE: "/settings/school-mail/create",
+			EDIT: (id: number | string) => `/settings/school-mail/${id}/edit`,
+			DETAILS: (id: number | string) => `/settings/school-mail/${id}/details`,
+		},
+		SOFTWARE_MAIL: {
+			ROOT: "/settings/software-mail",
+			CREATE: "/settings/software-mail/create",
+			EDIT: (id: number | string) => `/settings/software-mail/${id}/edit`,
+			DETAILS: (id: number | string) => `/settings/software-mail/${id}/details`,
 		},
 		LOCALIZATION: {
 			ROOT: "/settings/localization",

@@ -16,7 +16,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { Plus, Trash2 } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useRouter } from "next/navigation";
-import { useEffect, useRef } from "react";
+import { useEffect, useMemo, useRef } from "react";
 import { useFieldArray, useForm } from "react-hook-form";
 import { toast } from "sonner";
 import {
@@ -92,19 +92,53 @@ const normalizeSyllabusPayload = (data: SyllabusFormValues): SyllabusFormValues 
 
 function SectionSelection({
 	classId,
+	sessionId,
 	value,
 	onChange,
 }: {
 	classId: string;
+	sessionId?: string;
 	value: string[];
 	onChange: (value: string[]) => void;
 }) {
-	const { data: response } = useSWR("/classes/active-list");
-	const classes = response?.data || response || [];
-	const selectedClass = classes.find((item: any) => item.id === classId);
-	const sections = selectedClass?.sections || [];
+	const { data: response, isLoading } = useSWR(
+		classId && sessionId ? "/session-class-sections/setup" : null,
+		{ classId, sessionId }
+	);
+	const setup = response?.data || response || null;
+	const sections = useMemo(
+		() =>
+			(setup?.items || [])
+				.filter((item: any) => item.sectionId && item.section && item.status !== "INACTIVE")
+				.map((item: any) => ({
+					id: item.sectionId,
+					label: item.section?.name || item.section?.bnName || "Section",
+					value: item.sectionId,
+				})),
+		[setup]
+	);
+	const sectionKey = sections.map((section: any) => section.id).join(",");
 
-	if (!classId || sections.length === 0) {
+	useEffect(() => {
+		if (isLoading) return;
+		if (!value.length) return;
+		const next = value.filter((id) => sections.some((section: any) => section.id === id));
+		if (next.length !== value.length) onChange(next);
+	}, [isLoading, onChange, sectionKey, sections, value]);
+
+	if (!classId || !sessionId) {
+		return (
+			<p className="text-muted-foreground text-sm">
+				Select a session and class to load available sections.
+			</p>
+		);
+	}
+
+	if (isLoading) {
+		return <p className="text-muted-foreground text-sm">Loading sections...</p>;
+	}
+
+	if (!setup?.hasSections || sections.length === 0) {
 		return (
 			<p className="text-muted-foreground text-sm">
 				No section selection is needed for this class.
@@ -131,7 +165,7 @@ function SectionSelection({
 							)
 						}
 					>
-						{section.name}
+						{section.label || section.name}
 					</Button>
 				);
 			})}
@@ -156,12 +190,17 @@ export default function SyllabusForm({ id, defaultValues, isEdit = false }: Prop
 	});
 
 	const classId = form.watch("classId");
+	const sessionId = form.watch("sessionId");
 	const sectionIds = form.watch("sectionIds") || [];
 	const subjects = form.watch("subjects") || [];
 	const previousClassId = useRef(classId);
+	const previousSessionId = useRef(sessionId);
 
 	useEffect(() => {
-		if (previousClassId.current && previousClassId.current !== classId) {
+		if (
+			(previousClassId.current && previousClassId.current !== classId) ||
+			(previousSessionId.current && previousSessionId.current !== sessionId)
+		) {
 			form.setValue("sectionIds", [], { shouldValidate: true });
 			form.setValue(
 				"subjects",
@@ -174,7 +213,8 @@ export default function SyllabusForm({ id, defaultValues, isEdit = false }: Prop
 			);
 		}
 		previousClassId.current = classId;
-	}, [classId, form]);
+		previousSessionId.current = sessionId;
+	}, [classId, sessionId, form]);
 
 	const onSubmit = async (data: SyllabusFormValues) => {
 		try {
@@ -255,6 +295,7 @@ export default function SyllabusForm({ id, defaultValues, isEdit = false }: Prop
 						label="Class"
 						type="classSelect"
 						placeholder="Select class"
+						dependencyId={sessionId}
 						required
 						disabled={isEdit}
 					/>
@@ -294,6 +335,7 @@ export default function SyllabusForm({ id, defaultValues, isEdit = false }: Prop
 				<CardContent>
 					<SectionSelection
 						classId={classId}
+						sessionId={sessionId}
 						value={sectionIds}
 						onChange={(value) =>
 							form.setValue("sectionIds", value, { shouldValidate: true })

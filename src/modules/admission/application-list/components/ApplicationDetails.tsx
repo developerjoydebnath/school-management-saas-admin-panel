@@ -20,6 +20,7 @@ import {
 	SheetHeader,
 	SheetTitle,
 } from "@/shared/components/ui/sheet";
+import { appConfig } from "@/shared/configs/app.config";
 import { useSWR } from "@/shared/hooks/use-swr";
 import axios from "@/shared/lib/axios";
 import { cn } from "@/shared/lib/utils";
@@ -43,6 +44,7 @@ const sectionLabels: Record<string, string> = {
 const statuses = [
 	{ value: "pending", label: "Pending" },
 	{ value: "under_review", label: "Under Review" },
+	{ value: "eligible_for_payment", label: "Eligible For Payment" },
 	{ value: "approved", label: "Approved" },
 	{ value: "waitlisted", label: "Waitlisted" },
 	{ value: "rejected", label: "Rejected" },
@@ -80,6 +82,8 @@ function StatusPill({ status }: { status: string }) {
 				status === "approved" && "border-green-500/30 bg-green-500/10 text-green-600",
 				status === "rejected" && "border-red-500/30 bg-red-500/10 text-red-600",
 				status === "pending" && "border-orange-500/30 bg-orange-500/10 text-orange-600",
+				status === "eligible_for_payment" &&
+					"border-blue-500/30 bg-blue-500/10 text-blue-600",
 				status === "waitlisted" && "border-blue-500/30 bg-blue-500/10 text-blue-600"
 			)}
 		>
@@ -88,33 +92,57 @@ function StatusPill({ status }: { status: string }) {
 	);
 }
 
-function mediaMetaFromField(field: any) {
+function mediaMetaFromField(field: any): any {
 	const value = field?.value;
 	if (!value) return null;
 
+	if (Array.isArray(value)) {
+		const matched = value.find(
+			(item) =>
+				item?.fieldKey === field?.fieldKey ||
+				item?.type === field?.fieldKey ||
+				item?.documentType === field?.fieldKey
+		);
+		return matched ? mediaMetaFromField({ ...field, value: matched }) : null;
+	}
+
 	if (typeof value === "string") {
 		const isUrl = value.startsWith("/") || value.startsWith("http");
-		return isUrl ? { url: value, name: field.displayValue || "Uploaded file" } : null;
+		return isUrl
+			? { url: absoluteMediaUrl(value), name: field.displayValue || "Uploaded file" }
+			: null;
 	}
 
 	if (typeof value !== "object") return null;
 
-	const url =
+	const urlCandidate =
 		value.url ||
 		value.fileUrl ||
 		value.documentUrl ||
 		value.photoUrl ||
 		value.path ||
 		value.src;
+	const url =
+		typeof urlCandidate === "string"
+			? urlCandidate
+			: typeof urlCandidate === "object"
+				? urlCandidate?.url || urlCandidate?.path || urlCandidate?.src
+				: "";
 	if (!url) return null;
 
 	return {
-		url,
+		url: absoluteMediaUrl(url),
 		placeholder: value.placeholder || value.placeholderUrl || value.photoPlaceholder,
 		name: value.originalName || value.name || value.fileName || field.displayValue || "Uploaded file",
 		type: value.mimeType || value.type || value.contentType,
-		size: value.size,
+		size: value.fileSize || value.size,
 	};
+}
+
+function absoluteMediaUrl(url?: string | null) {
+	if (!url) return "";
+	if (url.startsWith("http") || url.startsWith("blob:") || url.startsWith("data:")) return url;
+	return `${appConfig.API_URL}${url.startsWith("/") ? "" : "/"}${url}`;
 }
 
 function isImageMedia(media: any) {
@@ -123,6 +151,56 @@ function isImageMedia(media: any) {
 		marker.includes("image/") ||
 		/\.(png|jpe?g|webp|gif|avif|svg)(\?|$)/i.test(String(media?.url || ""))
 	);
+}
+
+function formatFileSize(size?: number | string | null) {
+	const numericSize = Number(size || 0);
+	if (!numericSize || Number.isNaN(numericSize)) return "";
+	if (numericSize < 1024) return `${numericSize} B`;
+	if (numericSize < 1024 * 1024) return `${(numericSize / 1024).toFixed(1)} KB`;
+	return `${(numericSize / (1024 * 1024)).toFixed(1)} MB`;
+}
+
+function formatFileType(media: any) {
+	const type = String(media?.type || "").toLowerCase();
+	if (type.includes("pdf") || /\.pdf(\?|$)/i.test(String(media?.url || ""))) return "PDF";
+	if (type.includes("word") || /\.(docx?|doc)(\?|$)/i.test(String(media?.url || ""))) {
+		return "Word";
+	}
+	if (type.includes("spreadsheet") || /\.(xlsx?|csv)(\?|$)/i.test(String(media?.url || ""))) {
+		return "Spreadsheet";
+	}
+	if (type.includes("image") || isImageMedia(media)) return "Image";
+	return type ? type.split("/").pop()?.toUpperCase() || "File" : "File";
+}
+
+function fileMetaText(media: any) {
+	return [formatFileType(media), formatFileSize(media?.size)].filter(Boolean).join(" • ");
+}
+
+function isStudentPhotoField(field: any) {
+	const key = String(field?.fieldKey || "").toLowerCase();
+	const label = String(field?.label || "").toLowerCase();
+	return (
+		key === "photo" ||
+		key === "photourl" ||
+		key === "studentphoto" ||
+		key.includes("student_photo") ||
+		label.includes("student photo")
+	);
+}
+
+function formatDateValue(value: any) {
+	if (!value) return "-";
+	const date = value instanceof Date ? value : new Date(value);
+	if (Number.isNaN(date.getTime())) return String(value);
+	return date.toISOString().slice(0, 10);
+}
+
+function shouldFormatAsDate(field: any) {
+	const key = String(field?.fieldKey || "").toLowerCase();
+	const type = String(field?.fieldType || "").toLowerCase();
+	return type === "date" || key.includes("date") || key.endsWith("at");
 }
 
 function FieldDisplay({
@@ -147,7 +225,7 @@ function FieldDisplay({
 						placeholderBase64={media.placeholder}
 						width={360}
 						height={180}
-						className="h-full w-full object-cover"
+						className="h-full w-32! object-cover"
 						wrapperClassName="h-32 w-full rounded-md border bg-muted"
 					/>
 					<p className="text-muted-foreground mt-2 truncate text-xs">{media.name}</p>
@@ -159,12 +237,12 @@ function FieldDisplay({
 			<button
 				type="button"
 				onClick={() => onOpenMedia(media)}
-				className="bg-muted/40 hover:bg-muted mt-2 flex items-center gap-3 rounded-md border p-3 transition-colors"
+				className="bg-muted/40 hover:bg-muted mt-2 flex w-full items-center gap-3 rounded-md border p-3 text-left transition-colors"
 			>
 				<FileText className="text-muted-foreground size-5 shrink-0" />
 				<span className="min-w-0">
 					<span className="block truncate text-sm font-medium">{media.name}</span>
-					<span className="text-muted-foreground text-xs">Open document</span>
+					<span className="text-muted-foreground text-xs">{fileMetaText(media)}</span>
 				</span>
 			</button>
 		);
@@ -172,7 +250,9 @@ function FieldDisplay({
 
 	return (
 		<p className="mt-1 break-words text-sm font-medium">
-			{field.displayValue || "-"}
+			{shouldFormatAsDate(field) && field.value
+				? formatDateValue(field.value)
+				: field.displayValue || "-"}
 		</p>
 	);
 }
@@ -214,20 +294,28 @@ export default function ApplicationDetails({ id }: { id: string }) {
 
 		setIsUpdatingStatus(true);
 		try {
+			let response: any;
 			if (statusUpdate === "approved") {
-				await axios.post(`/admissions/${id}/approve`, {
+				response = await axios.post(`/admissions/${id}/approve`, {
 					rollNumber: roll.padStart(3, "0"),
 				});
 			} else if (statusUpdate === "rejected") {
-				await axios.post(`/admissions/${id}/reject`, {
+				response = await axios.post(`/admissions/${id}/reject`, {
 					rejectionReason: "Rejected from application details",
 				});
 			} else if (statusUpdate === "waitlisted") {
-				await axios.post(`/admissions/${id}/waitlist`, {});
+				response = await axios.post(`/admissions/${id}/waitlist`, {});
+			} else if (statusUpdate === "eligible_for_payment") {
+				response = await axios.post(`/admissions/${id}/eligible-for-payment`, {});
 			} else {
-				await axios.patch(`/admissions/${id}`, { status: statusUpdate });
+				response = await axios.patch(`/admissions/${id}`, { status: statusUpdate });
 			}
-			toast.success("Application status updated");
+			toast.success(response?.data?.message || "Application status updated");
+			if (response?.data?.data?.mailSkipped) {
+				toast.warning(response.data.data.mailMessage || "Mail was not sent");
+			} else if (response?.data?.data?.emailQueued) {
+				toast.success("Payment email queued");
+			}
 			await mutate();
 		} catch (error: any) {
 			toast.error(error?.response?.data?.message || "Failed to update status");
@@ -242,28 +330,30 @@ export default function ApplicationDetails({ id }: { id: string }) {
 		<div className="grid grid-cols-1 gap-6 @5xl/main:grid-cols-12">
 			<div className="@5xl/main:col-span-4">
 				<div className="space-y-4 @5xl/main:sticky @5xl/main:top-20">
-					<Card className="shadow-none">
+					<Card className="shadow-none p-0">
 						<CardContent className="space-y-5 p-6">
-							<div className="flex items-start gap-4">
+							<div className="flex flex-col items-center gap-4 text-center">
 								{app.photoUrl ? (
 									<ProgressiveImage
-										src={app.photoUrl}
+										src={absoluteMediaUrl(app.photoUrl)}
 										alt={app.fullName || app.studentName || "Student photo"}
 										placeholderBase64={app.photoPlaceholder}
-										width={96}
-										height={96}
+										width={240}
+										height={240}
 										className="h-full w-full object-cover"
-										wrapperClassName="size-16 shrink-0 rounded-lg border bg-muted"
+										wrapperClassName="size-40 shrink-0 rounded-2xl border bg-muted sm:size-44"
 									/>
 								) : (
-									<div className="bg-muted flex size-16 shrink-0 items-center justify-center rounded-lg">
-										<UserRound className="text-muted-foreground size-8" />
+									<div className="bg-muted flex size-40 shrink-0 items-center justify-center rounded-2xl sm:size-44">
+										<UserRound className="text-muted-foreground size-16" />
 									</div>
 								)}
 								<div className="min-w-0 space-y-2">
-									<h2 className="truncate text-xl font-semibold">
-										{app.fullName || app.studentName || "-"}
-									</h2>
+									<div className="flex items-center justify-center gap-3">
+										<h2 className="truncate text-xl font-semibold">
+											{app.fullName || app.studentName || "-"}
+										</h2>
+									</div>
 									<div className="flex flex-wrap items-center gap-2">
 										<StatusPill status={currentStatus} />
 										<Badge variant="outline">{app.applicationNo || app.id}</Badge>
@@ -345,33 +435,35 @@ export default function ApplicationDetails({ id }: { id: string }) {
 
 			<div className="space-y-4 @5xl/main:col-span-8">
 				{(app.visibleFieldGroups || []).map((group: any) => (
-					<Card key={group.section} className="shadow-none">
-						<CardHeader className="border-b py-4">
+					<Card key={group.section} className="shadow-none p-0 gap-0">
+						<CardHeader className="border-b py-6">
 							<CardTitle className="text-base">
 								{sectionLabels[group.section] || group.section}
 							</CardTitle>
 						</CardHeader>
-						<CardContent className="grid grid-cols-1 gap-4 p-5 sm:grid-cols-2">
-							{(group.fields || []).map((field: any) => (
-								<div
-									key={`${group.section}-${field.fieldKey}`}
-									className={cn(
-										"rounded-md border p-3",
-										String(field.fieldType || "").toLowerCase() === "textarea" &&
+						<CardContent className="grid grid-cols-1 gap-4 p-6 sm:grid-cols-2">
+							{(group.fields || [])
+								.filter((field: any) => !isStudentPhotoField(field))
+								.map((field: any) => (
+									<div
+										key={`${group.section}-${field.fieldKey}`}
+										className={cn(
+											"rounded-md border p-3",
+											String(field.fieldType || "").toLowerCase() === "textarea" &&
 											"sm:col-span-2"
-									)}
-								>
-									<p className="text-muted-foreground text-xs">{field.label}</p>
-									<FieldDisplay field={field} onOpenMedia={setPreviewMedia} />
-								</div>
-							))}
+										)}
+									>
+										<p className="text-muted-foreground text-xs">{field.label}</p>
+										<FieldDisplay field={field} onOpenMedia={setPreviewMedia} />
+									</div>
+								))}
 						</CardContent>
 					</Card>
 				))}
 			</div>
 
 			<Sheet open={!!previewMedia} onOpenChange={(open) => !open && setPreviewMedia(null)}>
-				<SheetContent side="bottom" className="left-0 right-0 top-[100px] h-[calc(100vh-100px)]">
+				<SheetContent side="bottom" className="left-0 right-0 gap-0 top-0 h-[calc(100vh-0px)]">
 					<SheetHeader className="border-b p-4">
 						<SheetTitle className="text-base">{previewMedia?.name || "Document"}</SheetTitle>
 						<SheetDescription>Review uploaded admission document.</SheetDescription>

@@ -12,9 +12,6 @@ import { useEffect } from "react";
 const defaultValues: ClassFormValues = {
 	enName: "",
 	bnName: "",
-	sections: [],
-	classRoomId: "",
-	shiftId: "",
 	status: StatusEnum.ACTIVE,
 };
 

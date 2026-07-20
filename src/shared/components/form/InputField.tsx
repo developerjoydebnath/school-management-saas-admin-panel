@@ -31,6 +31,7 @@ import InventoryLocationSelect from "./InventoryLocationSelect";
 import MultiCheckbox from "./MultiCheckbox";
 import NumberInput from "./NumberInput";
 import PasswordInput from "./PasswordInput";
+import PaymentMethodSelect from "./PaymentMethodSelect";
 import SchoolSelect from "./SchoolSelect";
 import SchoolSubscriptionSelect from "./SchoolSubscriptionSelect";
 import SectionSelect from "./SectionSelect";
@@ -58,11 +59,12 @@ interface FormFieldProps extends UseControllerProps {
 	className?: string;
 	labelClass?: string;
 	helperText?: string;
-	min?: number;
-	max?: number;
+	min?: number | string;
+	max?: number | string;
 	step?: number | string;
 	control: any;
 	dependencyId?: string;
+	sessionId?: string;
 	placeholderBase64?: string | null;
 	disabled?: boolean;
 	fieldClass?: string;
@@ -91,70 +93,48 @@ export default function InputField({
 	return (
 		<div
 			className={cn(
-				"flex flex-col gap-2",
-				type === "checkbox" && "flex-row items-center gap-3",
+				"flex flex-col gap-2 w-full",
 				props.fieldClass
 			)}
 		>
 			{/* Checkbox and Switch render their own inline label – skip the block label */}
-			{type === "checkbox" ? (
-				<>
-					{type === "checkbox" && (
-						<Checkbox
-							id={field.name}
-							checked={!!field.value}
-							onCheckedChange={field.onChange}
-							disabled={props.disabled}
-							className={className}
-						/>
+			{props.label && (
+				<Label
+					htmlFor={
+						[
+							"text",
+							"email",
+							"date",
+							"tel",
+							"phone",
+							"url",
+							"search",
+							"color",
+							"time",
+							"number",
+							"password",
+							"textarea",
+							"switch",
+						].includes(type)
+							? field.name
+							: undefined
+					}
+					className={cn(
+						"text-muted-foreground w-full text-sm font-medium",
+						required ? "gap-0" : "gap-1",
+						labelClass
 					)}
-					{props.label && (
-						<Label
-							htmlFor={field.name}
-							className={cn("cursor-pointer text-sm font-medium", labelClass)}
-						>
-							{props.label}
-						</Label>
+				>
+					{props.label}
+					{required ? (
+						<span className="text-destructive">*</span>
+					) : (
+						<span>(Optional)</span>
 					)}
-				</>
-			) : (
-				props.label && (
-					<Label
-						htmlFor={
-							[
-								"text",
-								"email",
-								"date",
-								"tel",
-								"phone",
-								"url",
-								"search",
-								"color",
-								"time",
-								"number",
-								"password",
-								"textarea",
-								"switch",
-							].includes(type)
-								? field.name
-								: undefined
-						}
-						className={cn(
-							"text-muted-foreground text-sm font-medium",
-							required ? "gap-0" : "gap-1",
-							labelClass
-						)}
-					>
-						{props.label}
-						{required ? (
-							<span className="text-destructive">*</span>
-						) : (
-							<span>(Optional)</span>
-						)}
-					</Label>
-				)
-			)}
-			{type !== "checkbox" &&
+				</Label>
+			)
+			}
+			{
 				match(type)
 					.with("textarea", () => (
 						<Textarea
@@ -167,12 +147,39 @@ export default function InputField({
 					))
 
 					.with("switch", () => (
-						<Switch
-							id={field.name}
-							checked={!!field.value}
-							onCheckedChange={field.onChange}
-							className={className}
-						/>
+						<div className="border w-full flex justify-between gap-2 h-10 items-center px-3 rounded-md bg-transparent dark:bg-input/30">
+							<p>{props.label}</p>
+							<Switch
+								id={field.name}
+								checked={!!field.value}
+								onCheckedChange={field.onChange}
+								className={className}
+							/>
+						</div>
+					))
+
+					.with("checkbox", () => (
+						<div className="border w-full flex justify-start gap-2 h-10 items-center px-3 rounded-md bg-transparent dark:bg-input/30">
+							<>
+								{type === "checkbox" && (
+									<Checkbox
+										id={field.name}
+										checked={!!field.value}
+										onCheckedChange={field.onChange}
+										disabled={props.disabled}
+										className={className}
+									/>
+								)}
+								{props.label && (
+									<Label
+										htmlFor={field.name}
+										className={cn("cursor-pointer text-sm font-medium", labelClass)}
+									>
+										{props.label}
+									</Label>
+								)}
+							</>
+						</div>
 					))
 
 					.with("textEditor", () => (
@@ -364,8 +371,10 @@ export default function InputField({
 						<ClassSelect
 							value={field.value}
 							onChange={field.onChange}
+							sessionId={props.dependencyId}
 							placeholder={props.placeholder}
 							className={className}
+							disabled={props.disabled}
 						/>
 					))
 
@@ -405,6 +414,17 @@ export default function InputField({
 					// inventoryLocationSelect
 					.with("inventoryLocationSelect", () => (
 						<InventoryLocationSelect
+							value={field.value}
+							onChange={field.onChange}
+							placeholder={props.placeholder}
+							className={className}
+							disabled={props.disabled}
+						/>
+					))
+
+					// paymentMethodSelect
+					.with("paymentMethodSelect", () => (
+						<PaymentMethodSelect
 							value={field.value}
 							onChange={field.onChange}
 							placeholder={props.placeholder}
@@ -465,6 +485,7 @@ export default function InputField({
 							value={field.value}
 							onChange={field.onChange}
 							classId={props.dependencyId}
+							sessionId={props.sessionId}
 							placeholder={props.placeholder}
 							className={className}
 						/>
@@ -596,6 +617,8 @@ export default function InputField({
 								inputMode={isPhoneInput ? "numeric" : undefined}
 								pattern={isPhoneInput ? "[0-9]*" : undefined}
 								maxLength={isPhoneInput ? 11 : undefined}
+								min={props.min}
+								max={props.max}
 								placeholder={props.placeholder}
 								{...field}
 								onChange={handleNativeInputChange}

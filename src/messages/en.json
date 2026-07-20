@@ -13,7 +13,9 @@
     "inventory_maintenance": "Maintenance",
     "inventory_audit_logs": "Audit Logs",
     "academics": "Academics",
-    "academics_classes": "Classes & Sections",
+    "academics_classes": "Classes",
+    "academics_sections": "Sections",
+    "academics_session_class_setup": "Session Class Setup",
     "academics_class_rooms": "Class Rooms",
     "academics_subjects": "Subjects",
     "academics_syllabus": "Syllabus",
@@ -49,6 +51,7 @@
     "parents_portal": "Portal Access",
     "finance": "Finance",
     "finance_fees": "Fee Collection",
+    "finance_student_payments": "Student Payments",
     "finance_expenses": "Expenses",
     "finance_payroll": "Payroll",
     "finance_ledger": "Student Ledger",
@@ -116,7 +119,11 @@
     "settings_integrations": "Integration Settings",
     "settings_localization": "Localization",
     "settings_backup": "Data & Backup",
-    "settings_audit": "Audit Log"
+    "settings_audit": "Audit Log",
+    "settings_payment_methods": "Payment Methods",
+    "settings_mail_settings": "Mail Settings",
+    "settings_school_mail": "School Mail",
+    "settings_software_mail": "Software Mail"
   },
   "ClassRooms": {
     "title": "Class Rooms",
@@ -167,10 +174,13 @@
     "addSection": "New Section",
     "sections": "Sections",
     "className": "Class Name",
+    "sessionSetups": "Session Setups",
     "capacity": "Capacity",
     "roomNumber": "Room",
     "classRoom": "Class Room",
+    "defaultRoom": "Default Room",
     "shift": "Shift",
+    "defaultShift": "Default Shift",
     "status": "Status",
     "actions": "Actions",
     "detailsTitle": "Class Details",
@@ -178,6 +188,8 @@
     "detailsSheetTitle": "Details",
     "detailsSheetDescription": "Review class setup, room assignment, and sections.",
     "classInformation": "Class Information",
+    "sessionSetupNoteTitle": "Session Setup",
+    "sessionSetupNoteDescription": "Assign sections, rooms, shifts, and capacities from Session Class Setup for each academic session.",
     "roomAndShift": "Room & Shift",
     "sectionAssignments": "Section Assignments",
     "sectionBasicTitle": "Basic Information",
@@ -187,6 +199,14 @@
     "sectionCardDescription": "Room and shift details for section {name}.",
     "noClassesFound": "No classes found",
     "statusChangeTitle": "Change Class Status"
+  },
+  "Sections": {
+    "title": "Sections",
+    "description": "Manage reusable section names for yearly class setup."
+  },
+  "SessionClassSetup": {
+    "title": "Session Class Setup",
+    "description": "Assign reusable sections to classes for each academic session."
   },
   "Orders": {
     "title": "Dashboard",
@@ -1403,6 +1423,23 @@
     "title": "Payment Details",
     "description": "View the full payment record."
   },
+  "StudentPayments": {
+    "title": "Student Payments",
+    "description": "Review admission and student fee payment history.",
+    "paymentNo": "Payment No",
+    "student": "Student",
+    "class": "Class",
+    "amount": "Amount",
+    "method": "Method",
+    "status": "Status",
+    "paidAt": "Paid At",
+    "detailsTitle": "Student Payment Details",
+    "detailsDescription": "Review collected amount, due, discount, and transaction references.",
+    "sectionPaymentTitle": "Payment Snapshot",
+    "sectionStudentTitle": "Student Assignment",
+    "sectionAmountTitle": "Amount Breakdown",
+    "sectionReferenceTitle": "References"
+  },
   "VouchersPage": {
     "title": "Vouchers",
     "description": "Manage discount vouchers",
@@ -1912,5 +1949,34 @@
     "descriptionText": "Description",
     "isActive": "Status",
     "actions": "Actions"
+  },
+  "PaymentMethods": {
+    "title": "Payment Methods",
+    "description": "Configure school payment providers, bank accounts, and collection methods.",
+    "addMethod": "Add Method",
+    "editMethod": "Edit Method",
+    "provider": "Provider",
+    "displayName": "Display Name",
+    "mode": "Mode",
+    "status": "Status",
+    "default": "Default",
+    "credentials": "Credentials",
+    "instructions": "Instructions",
+    "activeMethods": "Active Methods",
+    "inactiveMethods": "Inactive Methods",
+    "gatewayMethods": "Gateway Methods",
+    "manualMethods": "Manual Methods",
+    "save": "Save Method",
+    "update": "Update Method",
+    "deleteTitle": "Delete payment method",
+    "deleteDescription": "This payment method will be removed from active use.",
+    "enable": "Enable",
+    "disable": "Disable",
+    "noCredentialFields": "No credentials are needed for this method.",
+    "sandbox": "Sandbox",
+    "live": "Live",
+    "manual": "Manual",
+    "active": "Active",
+    "inactive": "Inactive"
   }
 }

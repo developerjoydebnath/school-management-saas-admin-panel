@@ -57,23 +57,24 @@ export default function LoginForm() {
 			const user = apiResponse?.data?.user;
 
 			if (user) {
+				const accessToken = apiResponse.data.accessToken ?? apiResponse.data.access_token;
 				// Save the matched user to Zustand auth store
 				setAuth({
 					id: user.userId, // Map from userId to id as expected by auth store
-					name: user.email, // Temporarily use email as name, we'll fetch full profile later
+					name: user.email || user.username || user.phone || user.studentCode,
 					auth_id: user.userId,
 					image: null,
 					base_role: user.role,
 					status: "active",
 					permissions: [],
-					token: apiResponse.data.access_token,
+					token: accessToken,
 				});
 
 				toast.success(apiResponse.message || "Login Successful");
 				// Redirect to the dashboard inside (protected)
 				router.push(PATHS.DASHBOARD);
 			} else {
-				toast.error("Invalid email or password.");
+				toast.error("Invalid login identifier or password.");
 			}
 		} catch (err: any) {
 			// do nothing. error is handled by global axios interceptor

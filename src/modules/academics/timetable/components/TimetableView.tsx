@@ -1,6 +1,14 @@
 "use client";
 
 import { Card, CardContent } from "@/shared/components/ui/card";
+import { Label } from "@/shared/components/ui/label";
+import {
+	Select,
+	SelectContent,
+	SelectItem,
+	SelectTrigger,
+	SelectValue,
+} from "@/shared/components/ui/select";
 import { PATHS } from "@/shared/configs/paths.config";
 import { useSWR } from "@/shared/hooks/use-swr";
 import { ClassModel } from "@/shared/models/class.model";
@@ -31,29 +39,29 @@ export default function TimetableView() {
 	const locale = useLocale();
 	const { selectedSessionId } = useSessionStore();
 	const { data: sessionsRes } = useSWR("/sessions/active-list");
-	const { data: classesRes } = useSWR("/classes/active-list");
 	const { data: subjectResponse } = useSWR("/subjects/active-list");
 	const { data: roomResponse } = useSWR("/class-rooms/active-list");
 
 	const sessions = useMemo(() => sessionsRes?.data || sessionsRes || [], [sessionsRes]);
-	const sessionId =
+	const defaultSessionId =
 		selectedSessionId ||
 		sessions.find((session: any) => session.status === "ACTIVE")?.id ||
 		sessions[0]?.id ||
 		null;
-	const classes = useMemo(() => classesRes?.data || classesRes || [], [classesRes]);
 	const subjectsData = useMemo(
 		() => subjectResponse?.data || subjectResponse || [],
 		[subjectResponse]
 	);
 	const roomsData = useMemo(() => roomResponse?.data || roomResponse || [], [roomResponse]);
 
+	const [selectedClass, setSelectedClass] = useState<string | null>("");
+	const [sessionId, setSessionId] = useState<string | null>(null);
+	const { data: classesRes } = useSWR(sessionId ? "/classes/active-list" : null, { sessionId });
+	const classes = useMemo(() => classesRes?.data || classesRes || [], [classesRes]);
 	const serializedClasses: ClassModel[] = useMemo(
 		() => classes?.map((cls: any) => new ClassModel(cls)) || [],
 		[classes]
 	);
-
-	const [selectedClass, setSelectedClass] = useState<string | null>("");
 	const [selectedSectionIds, setSelectedSectionIds] = useState<string[]>([]);
 	const [periods, setPeriods] = useState<TimetableColumn[]>(DEFAULT_PERIODS);
 	const [assignments, setAssignments] = useState<TimetableCells>({});
@@ -62,9 +70,27 @@ export default function TimetableView() {
 	const [isSaving, setIsSaving] = useState(false);
 	const [isPrinting, setIsPrinting] = useState(false);
 
-	const activeClass = serializedClasses.find((c) => c.id === selectedClass);
-	const sections = activeClass?.sections || [];
-	const sectionKey = sections.map((section) => section.id).join(",");
+	useEffect(() => {
+		setSessionId(defaultSessionId);
+	}, [defaultSessionId]);
+
+	const { data: sessionClassSectionsRes } = useSWR(
+		sessionId && selectedClass
+			? `/session-class-sections/setup?sessionId=${sessionId}&classId=${selectedClass}`
+			: null
+	);
+
+	const sessionClassSections = useMemo(
+		() => sessionClassSectionsRes?.data?.items || [],
+		[sessionClassSectionsRes]
+	);
+
+	const sections = useMemo(() => {
+		return sessionClassSections
+			.filter((item: any) => item.section)
+			.map((item: any) => item.section);
+	}, [sessionClassSections]);
+	const sectionKey = sections.map((section: any) => section.id).join(",");
 	const activeSectionId = sections.length ? selectedSectionIds[0] || null : null;
 	const isSectionSelectionRequired = sections.length > 0 && selectedSectionIds.length === 0;
 	const disableActions = !sessionId || !selectedClass || isSectionSelectionRequired;
@@ -93,7 +119,9 @@ export default function TimetableView() {
 		}
 
 		setSelectedSectionIds((current) => {
-			const existing = current.filter((id) => sections.some((section) => section.id === id));
+			const existing = current.filter((id) =>
+				sections.some((section: any) => section.id === id)
+			);
 			const next = existing.length ? existing : [sections[0].id as string];
 			const isSame =
 				next.length === current.length && next.every((id, index) => id === current[index]);
@@ -229,6 +257,31 @@ export default function TimetableView() {
 
 	return (
 		<div className="flex w-full min-w-0 flex-col gap-6">
+			<Card className="w-full border p-4 shadow-none ring-0">
+				<div className="grid gap-2 @xl/page:max-w-sm">
+					<Label className="text-muted-foreground text-xs">Session</Label>
+					<Select
+						value={sessionId || undefined}
+						onValueChange={(value) => {
+							setSessionId(value);
+							setAssignments({});
+							setPeriods(DEFAULT_PERIODS);
+						}}
+					>
+						<SelectTrigger className="h-10! w-full">
+							<SelectValue placeholder="Select session" />
+						</SelectTrigger>
+						<SelectContent>
+							{sessions.map((session: any) => (
+								<SelectItem key={session.id} value={session.id}>
+									{session.name}
+								</SelectItem>
+							))}
+						</SelectContent>
+					</Select>
+				</div>
+			</Card>
+
 			<ClassesSelection
 				classes={serializedClasses}
 				selectedClass={selectedClass}

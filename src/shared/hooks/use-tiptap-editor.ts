@@ -20,6 +20,7 @@ export function useTiptapEditor(providedEditor?: Editor | null): {
   const mainEditor = providedEditor ?? coreEditor
 
   const [storageEditor, setStorageEditor] = useState<Editor | null>(null)
+  const [, setEditorStateVersion] = useState(0)
 
   useEffect(() => {
     if (!mainEditor) {
@@ -52,8 +53,34 @@ export function useTiptapEditor(providedEditor?: Editor | null): {
     }
   }, [storageEditor])
 
+  const activeEditor = storageEditor ?? mainEditor
+
+  useEffect(() => {
+    if (!activeEditor) return
+
+    const refreshToolbarState = () => {
+      setEditorStateVersion((version) => version + 1)
+    }
+
+    refreshToolbarState()
+
+    activeEditor.on("transaction", refreshToolbarState)
+    activeEditor.on("selectionUpdate", refreshToolbarState)
+    activeEditor.on("update", refreshToolbarState)
+    activeEditor.on("focus", refreshToolbarState)
+    activeEditor.on("blur", refreshToolbarState)
+
+    return () => {
+      activeEditor.off("transaction", refreshToolbarState)
+      activeEditor.off("selectionUpdate", refreshToolbarState)
+      activeEditor.off("update", refreshToolbarState)
+      activeEditor.off("focus", refreshToolbarState)
+      activeEditor.off("blur", refreshToolbarState)
+    }
+  }, [activeEditor])
+
   const editorState = useEditorState({
-    editor: storageEditor ?? mainEditor,
+    editor: activeEditor,
     selector(context) {
       if (!context.editor) {
         return { editor: null, editorState: undefined, canCommand: undefined }

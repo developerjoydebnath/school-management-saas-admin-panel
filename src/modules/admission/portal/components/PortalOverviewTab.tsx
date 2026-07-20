@@ -29,12 +29,47 @@ function formatDate(value?: string | null) {
 	}).format(new Date(value));
 }
 
+function getSchoolSubdomain(hostname: string) {
+	const host = hostname.toLowerCase();
+	if (host === "localhost" || host === "127.0.0.1" || host === "lvh.me") {
+		return "";
+	}
+
+	if (host.endsWith(".lvh.me")) {
+		const subdomain = host.replace(/\.lvh\.me$/, "");
+		return subdomain && subdomain !== "www" ? subdomain : "";
+	}
+
+	const parts = host.split(".");
+	return parts.length > 2 && parts[0] !== "www" ? parts[0] : "";
+}
+
+function buildPublicAdmissionUrl(slug: string, tenantSchema?: string | null) {
+	const params = new URLSearchParams();
+	if (slug) params.set("slug", slug);
+
+	if (typeof window !== "undefined") {
+		const subdomain = getSchoolSubdomain(window.location.hostname);
+		const tenantFallback = tenantSchema && tenantSchema !== "public" ? tenantSchema : "";
+
+		if (!subdomain && tenantFallback) {
+			params.set("tenant", tenantFallback);
+		}
+
+		return `${window.location.origin}/admission-form?${params.toString()}`;
+	}
+
+	if (tenantSchema && tenantSchema !== "public") {
+		params.set("tenant", tenantSchema);
+	}
+
+	return `/admission-form?${params.toString()}`;
+}
+
 export default function PortalOverviewTab({ config, onUpdate }: PortalOverviewTabProps) {
 	const t = useTranslations("Portal");
 	const slug = config.onlinePortalSlug || "";
-	const publicPath = `/admission-form?tenant=${encodeURIComponent(slug)}&slug=${encodeURIComponent(slug)}`;
-	const publicUrl =
-		typeof window === "undefined" ? publicPath : `${window.location.origin}${publicPath}`;
+	const publicUrl = buildPublicAdmissionUrl(slug, config.tenantSchema);
 	const isLive = Boolean(config.onlinePortalEnabled);
 
 	const handleStatusToggle = async (checked: boolean) => {

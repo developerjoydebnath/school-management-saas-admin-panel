@@ -13,7 +13,7 @@ import { PERMISSIONS } from "@/shared/configs/permissions.config";
 import { SchoolModel } from "@/shared/models/school.model";
 import { ColumnDef } from "@tanstack/react-table";
 import { format } from "date-fns";
-import { CreditCard, Edit2, Eye, Landmark, Trash2 } from "lucide-react";
+import { CreditCard, Edit2, Eye, Landmark, ShieldCheck, Trash2 } from "lucide-react";
 import { useTranslations } from "next-intl";
 import Link from "next/link";
 import { useState } from "react";
@@ -220,7 +220,14 @@ export function SchoolList() {
 								PERMISSIONS.SCHOOLS_MANAGEMENT.PAYMENTS.CREATE,
 							]}
 						>
-							<Button asChild variant="outline" size="icon-sm">
+							{school.status === "pending" && (
+								<Button asChild variant="outline" size="icon-sm" title="Activate school">
+									<Link href={PATHS.SCHOOLS_MANAGEMENT.SCHOOLS.PAYMENT(school.id)}>
+										<ShieldCheck className="text-muted-foreground hover:text-foreground h-4 w-4" />
+									</Link>
+								</Button>
+							)}
+							<Button asChild variant="outline" size="icon-sm" title="Add payment">
 								<Link
 									href={`${PATHS.SCHOOLS_MANAGEMENT.PAYMENTS.CREATE}?schoolId=${school.id}`}
 								>

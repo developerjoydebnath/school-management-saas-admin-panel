@@ -16,6 +16,13 @@ const mediumEnum = z.enum(['bangla', 'english', 'both']);
 const shiftEnum = z.enum(['day', 'morning', 'both']);
 const emptyToNull = (value: unknown) =>
   value === '' || value === null || value === undefined ? null : value;
+const schoolShortCodeSchema = z
+  .string()
+  .trim()
+  .min(2, 'School short code must be at least 2 characters')
+  .max(10, 'School short code cannot exceed 10 characters')
+  .regex(/^[A-Za-z0-9]+$/, 'Only letters and numbers are allowed')
+  .transform((value) => value.toUpperCase());
 
 // URL that allows empty string (optional URL fields)
 const optionalUrl = z
@@ -62,6 +69,7 @@ const baseSchoolSchema = z.object({
     .string()
     .min(1, 'School name is required')
     .max(255, 'Max length 255'),
+  schoolShortCode: schoolShortCodeSchema,
   schoolType: schoolTypeEnum,
   schoolNameBn: z.string().max(255).nullable().optional(),
 

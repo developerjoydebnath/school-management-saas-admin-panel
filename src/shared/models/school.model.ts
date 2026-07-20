@@ -2,6 +2,7 @@ export class SchoolModel {
   private readonly _id: string;
   private readonly _schoolName: string;
   private readonly _schoolSlug: string;
+  private readonly _schoolShortCode: string;
   private readonly _schoolType: string;
   private readonly _schoolNameBn: string | null;
 
@@ -80,6 +81,7 @@ export class SchoolModel {
     this._id = data?.id ?? '';
     this._schoolName = data?.schoolName ?? '';
     this._schoolSlug = data?.schoolSlug ?? '';
+    this._schoolShortCode = data?.schoolShortCode ?? '';
     this._schoolType = data?.schoolType ?? '';
     this._schoolNameBn = data?.schoolNameBn ?? null;
 
@@ -163,6 +165,9 @@ export class SchoolModel {
   }
   get schoolSlug() {
     return this._schoolSlug;
+  }
+  get schoolShortCode() {
+    return this._schoolShortCode;
   }
   get schoolType() {
     return this._schoolType;

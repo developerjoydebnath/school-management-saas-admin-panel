@@ -23,6 +23,7 @@ type Props = {
 const statusOptions: TOption[] = [
 	{ label: "Pending", value: "pending" },
 	{ label: "Under Review", value: "under_review" },
+	{ label: "Eligible For Payment", value: "eligible_for_payment" },
 	{ label: "Approved", value: "approved" },
 	{ label: "Rejected", value: "rejected" },
 	{ label: "Waitlisted", value: "waitlisted" },
@@ -56,6 +57,12 @@ export default function ApplicationFilterBar({ children, filter, setFilter }: Pr
 	const sessions = listFromResponse(sessionResponse);
 	const classes = listFromResponse(classResponse);
 	const selectedClassId = filter.classId[0] || "";
+	const selectedSessionId = filter.sessionId[0] || undefined;
+	const { data: sectionResponse } = useSWR(
+		selectedClassId ? "/classes/sections/active-list" : null,
+		{ classId: selectedClassId, sessionId: selectedSessionId }
+	);
+	const sections = listFromResponse(sectionResponse);
 
 	const sessionOptions = useMemo<TOption[]>(
 		() =>
@@ -77,12 +84,11 @@ export default function ApplicationFilterBar({ children, filter, setFilter }: Pr
 
 	const sectionOptions = useMemo<TOption[]>(() => {
 		if (!selectedClassId) return [];
-		const selectedClass = classes.find((item: any) => item.id === selectedClassId);
-		return (selectedClass?.sections || []).map((section: any) => ({
-			label: section.name,
+		return sections.map((section: any) => ({
+			label: section.label || section.name,
 			value: section.id,
 		}));
-	}, [classes, selectedClassId]);
+	}, [sections, selectedClassId]);
 
 	const controls = (
 		<>

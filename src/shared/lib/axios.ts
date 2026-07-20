@@ -1,4 +1,5 @@
 import Axios from "axios";
+import { useSessionStore } from "@/shared/stores/session-store";
 
 const axios = Axios.create({
 	baseURL: "/api/proxy",
@@ -11,9 +12,13 @@ axios.interceptors.request.use((config) => {
 	if (typeof document !== "undefined") {
 		const match = document.cookie.match(new RegExp("(^| )NEXT_LOCALE=([^;]+)"));
 		const locale = match ? match[2] : "en";
+		const selectedSessionId = useSessionStore.getState().selectedSessionId;
 
 		// Add Accept-Language header
 		config.headers["Accept-Language"] = locale;
+		if (selectedSessionId) {
+			config.headers["x-academic-session-id"] = selectedSessionId;
+		}
 	}
 	return config;
 });

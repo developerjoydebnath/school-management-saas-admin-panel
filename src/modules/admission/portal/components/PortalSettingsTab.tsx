@@ -71,6 +71,14 @@ function makeSlug(value: string) {
 		.replace(/^-+|-+$/g, "");
 }
 
+function isLockedPortalField(field: PortalField) {
+	return Boolean(field.isSystemLocked);
+}
+
+function isPortalPaymentField(field: PortalField) {
+	return field.section === "payment";
+}
+
 export default function PortalSettingsTab({ config, onUpdate }: PortalSettingsTabProps) {
 	const locale = useLocale();
 	const t = useTranslations("Portal");
@@ -95,6 +103,18 @@ export default function PortalSettingsTab({ config, onUpdate }: PortalSettingsTa
 		setFields(
 			[...(config.fieldConfigs || [])].sort(
 				(a: PortalField, b: PortalField) => (a.sortOrder || 0) - (b.sortOrder || 0)
+			).filter((field: PortalField) => !isPortalPaymentField(field))
+			.map((field: PortalField) =>
+				isLockedPortalField(field)
+					? {
+							...field,
+							portal: {
+								...(field.portal || {}),
+								isShown: true,
+								isRequired: true,
+							},
+						}
+					: field
 			)
 		);
 	}, [config]);
@@ -102,7 +122,9 @@ export default function PortalSettingsTab({ config, onUpdate }: PortalSettingsTa
 	const groupedFields = useMemo(() => {
 		const grouped = new Map<string, PortalField[]>();
 		for (const field of fields) {
-			grouped.set(field.section, [...(grouped.get(field.section) || []), field]);
+			if (!isPortalPaymentField(field)) {
+				grouped.set(field.section, [...(grouped.get(field.section) || []), field]);
+			}
 		}
 		return Array.from(grouped.entries());
 	}, [fields]);
@@ -113,18 +135,27 @@ export default function PortalSettingsTab({ config, onUpdate }: PortalSettingsTa
 		checked: boolean
 	) => {
 		setFields((current) =>
-			current.map((field) =>
-				field.fieldKey === fieldKey
-					? {
+			current.map((field) => {
+				if (field.fieldKey !== fieldKey) return field;
+				if (isLockedPortalField(field)) {
+					return {
 						...field,
 						portal: {
 							...(field.portal || {}),
-							[flag]: checked,
-							...(flag === "isShown" && !checked ? { isRequired: false } : {}),
+							isShown: true,
+							isRequired: true,
 						},
-					}
-					: field
-			)
+					};
+				}
+				return {
+					...field,
+					portal: {
+						...(field.portal || {}),
+						[flag]: checked,
+						...(flag === "isShown" && !checked ? { isRequired: false } : {}),
+					},
+				};
+			})
 		);
 	};
 
@@ -144,8 +175,12 @@ export default function PortalSettingsTab({ config, onUpdate }: PortalSettingsTa
 				fields: fields.map((field) => ({
 					fieldKey: field.fieldKey,
 					portal: {
-						isShown: Boolean(field.portal?.isShown),
-						isRequired: Boolean(field.portal?.isRequired),
+						isShown: isLockedPortalField(field)
+							? true
+							: Boolean(field.portal?.isShown),
+						isRequired: isLockedPortalField(field)
+							? true
+							: Boolean(field.portal?.isRequired),
 					},
 				})),
 			});
@@ -245,8 +280,9 @@ export default function PortalSettingsTab({ config, onUpdate }: PortalSettingsTa
 							<TableBody>
 								{sectionFields.map((field) => {
 									const label = field.label;
-									const shown = Boolean(field.portal?.isShown);
-									const required = Boolean(field.portal?.isRequired);
+									const locked = isLockedPortalField(field);
+									const shown = locked ? true : Boolean(field.portal?.isShown);
+									const required = locked ? true : Boolean(field.portal?.isRequired);
 									return (
 										<TableRow key={field.fieldKey}>
 											<TableCell className="pl-6 font-medium">
@@ -266,6 +302,7 @@ export default function PortalSettingsTab({ config, onUpdate }: PortalSettingsTa
 												<div className="flex items-center gap-2">
 													<Switch
 														checked={shown}
+														disabled={locked}
 														onCheckedChange={(checked) =>
 															setPortalFlag(field.fieldKey, "isShown", checked)
 														}
@@ -285,7 +322,7 @@ export default function PortalSettingsTab({ config, onUpdate }: PortalSettingsTa
 												<div className="flex items-center gap-2">
 													<Switch
 														checked={required}
-														disabled={!shown}
+														disabled={locked || !shown}
 														onCheckedChange={(checked) =>
 															setPortalFlag(field.fieldKey, "isRequired", checked)
 														}

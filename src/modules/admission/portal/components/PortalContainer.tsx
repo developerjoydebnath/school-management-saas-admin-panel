@@ -1,8 +1,8 @@
 "use client";
 
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/shared/components/ui/tabs";
+import { Skeleton } from "@/shared/components/ui/skeleton";
 import { useSWR } from "@/shared/hooks/use-swr";
-import { Loader2 } from "lucide-react";
 import { useTranslations } from "next-intl";
 import PortalOverviewTab from "./PortalOverviewTab";
 import PortalPaymentTab from "./PortalPaymentTab";
@@ -14,8 +14,10 @@ export default function PortalContainer() {
 
 	if (isLoading) {
 		return (
-			<div className="flex h-64 items-center justify-center">
-				<Loader2 className="text-muted-foreground h-8 w-8 animate-spin" />
+			<div className="space-y-4">
+				<Skeleton className="h-12 w-96 rounded-lg" />
+				<Skeleton className="h-44 rounded-lg" />
+				<Skeleton className="h-72 rounded-lg" />
 			</div>
 		);
 	}

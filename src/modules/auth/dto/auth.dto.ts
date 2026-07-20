@@ -1,7 +1,9 @@
 import * as z from "zod";
 
 export const loginSchema = z.object({
-	identifier: z.string().min(1, { message: "Please enter your Student ID, phone number, or email." }),
+	identifier: z.string().min(1, {
+		message: "Students must use Student ID. Staff, parents, and admins may use phone or email.",
+	}),
 	password: z.string().min(6, { message: "Password must be at least 6 characters." }),
 });
 

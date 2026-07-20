@@ -16,6 +16,23 @@ function formatBytes(bytes: number, decimals = 2) {
 	return `${parseFloat((bytes / Math.pow(k, i)).toFixed(dm))} ${sizes[i]}`;
 }
 
+function getDocumentUrl(value: any) {
+	const candidate =
+		value?.url ||
+		value?.fileUrl ||
+		value?.documentUrl ||
+		value?.imageUrl ||
+		value?.path ||
+		value?.src;
+
+	if (typeof candidate === "string") return candidate;
+	if (candidate && typeof candidate === "object") {
+		const nested = candidate.url || candidate.path || candidate.src;
+		return typeof nested === "string" ? nested : "";
+	}
+	return "";
+}
+
 const UploadDocumentSingle = React.forwardRef<
 	HTMLDivElement,
 	{
@@ -89,19 +106,30 @@ const UploadDocumentSingle = React.forwardRef<
 		if (value.type.startsWith("image/")) {
 			previewUrl = URL.createObjectURL(value);
 		}
+	} else if (typeof value === "string") {
+		const fileUrl = value;
+		name = fileUrl.split("/").pop() || "Document";
+		type = "Document";
+		previewUrl =
+			fileUrl.startsWith("http") ||
+			fileUrl.startsWith("blob:") ||
+			fileUrl.startsWith("data:")
+				? fileUrl
+				: `${appConfig.API_URL}${fileUrl.startsWith("/") ? "" : "/"}${fileUrl}`;
 	} else if (value && typeof value === "object") {
 		// Existing file from backend
-		name = value.originalName || value.url || "Document";
+		const fileUrl = getDocumentUrl(value);
+		name = value.originalName || value.name || value.fileName || fileUrl || "Document";
 		size = value.fileSize ? formatBytes(value.fileSize) : "";
 		type = value.mimeType || value.type || "Document";
 		placeholder = value.placeholder || value.placeholderUrl || "";
-		if (value.url) {
+		if (fileUrl) {
 			previewUrl =
-				value.url.startsWith("http") ||
-				value.url.startsWith("blob:") ||
-				value.url.startsWith("data:")
-					? value.url
-					: `${appConfig.API_URL}${value.url.startsWith("/") ? "" : "/"}${value.url}`;
+				fileUrl.startsWith("http") ||
+				fileUrl.startsWith("blob:") ||
+				fileUrl.startsWith("data:")
+					? fileUrl
+					: `${appConfig.API_URL}${fileUrl.startsWith("/") ? "" : "/"}${fileUrl}`;
 		}
 	}
 

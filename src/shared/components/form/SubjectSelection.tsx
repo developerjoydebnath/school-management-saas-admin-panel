@@ -8,6 +8,7 @@ import * as React from "react";
 import { Popover, PopoverContent, PopoverTrigger } from "@/shared/components/ui/popover";
 import { Command, CommandEmpty, CommandGroup, CommandItem, CommandList } from "@/shared/components/ui/command";
 import { Badge } from "@/shared/components/ui/badge";
+import { ScrollArea } from "@/shared/components/ui/scroll-area";
 import { XIcon } from "lucide-react";
 
 interface SubjectSelectionProps {
@@ -33,9 +34,16 @@ export default function SubjectSelection({
 
 	const subjects = Array.isArray(subjectResponse?.data) ? subjectResponse.data : subjectResponse || [];
 	const serializedSubjects = subjects?.map((s: any) => new Subject(s)) || [];
+	const filteredSubjects = serializedSubjects.filter(
+		(s: Subject) =>
+			getLocalizedName(s.name, locale).toLowerCase().includes(inputValue.toLowerCase()) &&
+			!value.includes(s.id)
+	);
 
 	const handleUnselect = (subjectId: string) => {
 		onChange(value.filter((id) => id !== subjectId));
+		setOpen(true);
+		requestAnimationFrame(() => inputRef.current?.focus());
 	};
 
 	return (
@@ -83,12 +91,17 @@ export default function SubjectSelection({
 							<input
 								ref={inputRef}
 								value={inputValue}
-								onChange={(e) => setInputValue(e.target.value)}
+								onFocus={() => setOpen(true)}
+								onChange={(e) => {
+									setInputValue(e.target.value);
+									setOpen(true);
+								}}
 								onKeyDown={(e) => {
 									if (e.key === "Backspace" && inputValue === "" && value.length > 0) {
 										const newSelected = [...value];
 										newSelected.pop();
 										onChange(newSelected);
+										setOpen(true);
 									}
 								}}
 								className="flex-1 bg-transparent outline-none placeholder:text-muted-foreground min-w-[120px]"
@@ -103,27 +116,32 @@ export default function SubjectSelection({
 					>
 						<Command shouldFilter={false}>
 							<CommandList>
-								{serializedSubjects.filter((s: Subject) => getLocalizedName(s.name, locale).toLowerCase().includes(inputValue.toLowerCase()) && !value.includes(s.id)).length === 0 ? (
+								{filteredSubjects.length === 0 ? (
 									<CommandEmpty>No subjects found.</CommandEmpty>
 								) : (
-									<CommandGroup>
-										{serializedSubjects
-											.filter((s: Subject) => getLocalizedName(s.name, locale).toLowerCase().includes(inputValue.toLowerCase()) && !value.includes(s.id))
-											.map((subject: Subject) => (
+									<ScrollArea className={cn(filteredSubjects.length > 6 && "h-64")}>
+										<CommandGroup>
+											{filteredSubjects.map((subject: Subject) => (
 												<CommandItem
 													key={subject.id}
 													value={subject.id}
+													onMouseDown={(event) => {
+														event.preventDefault();
+														event.stopPropagation();
+													}}
 													onSelect={() => {
 														setInputValue("");
 														onChange([...value, subject.id]);
-														// keep open for multiple selection
+														setOpen(true);
+														requestAnimationFrame(() => inputRef.current?.focus());
 													}}
 													className="cursor-pointer"
 												>
 													{getLocalizedName(subject.name, locale)}
 												</CommandItem>
 											))}
-									</CommandGroup>
+										</CommandGroup>
+									</ScrollArea>
 								)}
 							</CommandList>
 						</Command>

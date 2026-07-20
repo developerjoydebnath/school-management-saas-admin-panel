@@ -14,24 +14,32 @@ import { useLocale } from "next-intl";
 interface ClassSelectProps {
 	value: string;
 	onChange: (value: string | null) => void;
+	sessionId?: string;
 	placeholder?: string;
 	className?: string;
+	disabled?: boolean;
 }
 
 export default function ClassSelect({
 	value,
 	onChange,
+	sessionId,
 	placeholder = "Select Class",
 	className,
+	disabled = false,
 }: ClassSelectProps) {
-	const { data: response, isLoading } = useSWR("/classes/active-list");
+	const { data: response, isLoading } = useSWR("/classes/active-list", { sessionId });
 	const locale = useLocale();
 	const classes = response?.data || response || [];
 
 	if (isLoading) return <Skeleton className="h-10 w-full" />;
 
 	return (
-		<Select value={value?.toString() || undefined} onValueChange={onChange}>
+		<Select
+			value={value?.toString() || undefined}
+			onValueChange={onChange}
+			disabled={disabled}
+		>
 			<SelectTrigger className={cn("h-10! w-full", className)}>
 				<SelectValue placeholder={placeholder} />
 			</SelectTrigger>

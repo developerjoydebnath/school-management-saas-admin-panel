@@ -23,6 +23,7 @@ interface ApiErrorData {
 
 // Define the API Key for your NestJS backend
 const API_KEY = appConfig.FRONTEND_API_KEY;
+const SELECTED_ACADEMIC_SESSION_COOKIE = "selected_academic_session_id";
 
 if (!appConfig.API_URL || !appConfig.API_PREFIX) {
 	throw new Error("API_URL and API_PREFIX must be defined in environment variables");
@@ -107,6 +108,30 @@ async function handleApiRequest(
 			headersToForward[key] = value;
 		}
 	});
+
+	const cookieStore = await cookies();
+	const selectedAcademicSessionId =
+		request.headers.get("x-academic-session-id") ||
+		cookieStore.get(SELECTED_ACADEMIC_SESSION_COOKIE)?.value;
+	if (selectedAcademicSessionId && !headersToForward["x-academic-session-id"]) {
+		headersToForward["x-academic-session-id"] = selectedAcademicSessionId;
+	}
+
+	const originalHost = request.headers.get("host");
+	const forwardedProto =
+		request.headers.get("x-forwarded-proto") ||
+		(originalHost?.includes("localhost") || originalHost?.includes("lvh.me")
+			? "http"
+			: "https");
+	if (originalHost) {
+		headersToForward["x-forwarded-host"] = originalHost;
+		headersToForward["x-original-host"] = originalHost;
+		headersToForward["x-forwarded-proto"] = forwardedProto;
+		headersToForward["x-original-origin"] = `${forwardedProto}://${originalHost}`;
+		if (!headersToForward.origin) {
+			headersToForward.origin = `${forwardedProto}://${originalHost}`;
+		}
+	}
 
 	const requestConfig: AxiosRequestConfig = {
 		method: method as AxiosRequestConfig["method"],

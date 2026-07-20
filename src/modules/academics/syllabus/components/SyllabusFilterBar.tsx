@@ -8,8 +8,9 @@ import {
 	FilterTriggerButton,
 } from "@/shared/components/custom/Filter";
 import FilterButton from "@/shared/components/form/FilterButton";
+import { useSWR } from "@/shared/hooks/use-swr";
 import { IconFilter } from "@tabler/icons-react";
-import React from "react";
+import React, { useMemo } from "react";
 import { SyllabusFilter } from "./SyllabusList";
 
 type Props = {
@@ -25,14 +26,32 @@ const statusOptions = [
 ];
 
 export default function SyllabusFilterBar({ children, filter, setFilter }: Props) {
+	const { data: sessionsResponse } = useSWR("/sessions/active-list");
+	const sessionOptions = useMemo(() => {
+		const sessions = sessionsResponse?.data || sessionsResponse || [];
+		return sessions.map((session: any) => ({
+			label: session.name,
+			value: session.id,
+		}));
+	}, [sessionsResponse]);
+
 	const filters = (
-		<FilterButton
-			title="Status"
-			selected={filter.status}
-			onSelect={(values) => setFilter({ ...filter, status: values })}
-			clearFilter={() => setFilter({ ...filter, status: [] })}
-			options={statusOptions}
-		/>
+		<>
+			<FilterButton
+				title="Session"
+				selected={filter.sessionId}
+				onSelect={(values) => setFilter({ ...filter, sessionId: values })}
+				clearFilter={() => setFilter({ ...filter, sessionId: [] })}
+				options={sessionOptions}
+			/>
+			<FilterButton
+				title="Status"
+				selected={filter.status}
+				onSelect={(values) => setFilter({ ...filter, status: values })}
+				clearFilter={() => setFilter({ ...filter, status: [] })}
+				options={statusOptions}
+			/>
+		</>
 	);
 
 	return (

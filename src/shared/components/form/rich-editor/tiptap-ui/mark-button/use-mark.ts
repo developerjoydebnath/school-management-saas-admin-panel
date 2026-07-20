@@ -86,7 +86,34 @@ export function canToggleMark(editor: Editor | null, type: Mark): boolean {
  */
 export function isMarkActive(editor: Editor | null, type: Mark): boolean {
   if (!editor || !editor.isEditable) return false
-  return editor.isActive(type)
+  const markType = editor.state.schema.marks[type]
+  if (!markType) return false
+
+  const { empty, from, to, $from } = editor.state.selection
+
+  if (empty) {
+    return Boolean(markType.isInSet($from.marks()))
+  }
+
+  let hasText = false
+  let everySelectedTextHasMark = true
+
+  editor.state.doc.nodesBetween(from, to, (node, pos) => {
+    if (!node.isText) return
+
+    const selectedFrom = Math.max(from, pos)
+    const selectedTo = Math.min(to, pos + node.nodeSize)
+
+    if (selectedFrom >= selectedTo) return
+
+    hasText = true
+
+    if (!markType.isInSet(node.marks)) {
+      everySelectedTextHasMark = false
+    }
+  })
+
+  return hasText && everySelectedTextHasMark
 }
 
 /**

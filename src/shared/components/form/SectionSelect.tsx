@@ -10,12 +10,13 @@ import { useSWR } from "@/shared/hooks/use-swr";
 import { cn } from "@/shared/lib/utils";
 import { getLocalizedName } from "@/shared/utils/localization";
 import { useLocale } from "next-intl";
-import { useMemo } from "react";
+import { useEffect, useMemo } from "react";
 
 interface SectionSelectProps {
 	value: string;
 	onChange: (value: string | null) => void;
 	classId?: string;
+	sessionId?: string;
 	placeholder?: string;
 	className?: string;
 }
@@ -24,18 +25,48 @@ export default function SectionSelect({
 	value,
 	onChange,
 	classId,
+	sessionId,
 	placeholder = "Select Section",
 	className,
 }: SectionSelectProps) {
-	const { data: response, isLoading } = useSWR("/classes/active-list");
-	const locale = useLocale();
-	const classes = response?.data || response || [];
+	const endpoint =
+		classId && sessionId
+			? "/session-class-sections/setup"
+			: classId
+				? "/classes/sections/active-list"
+				: null;
 
+	const { data: response, isLoading } = useSWR(
+		endpoint,
+		classId && sessionId ? { classId, sessionId } : { classId }
+	);
+	const locale = useLocale();
 	const sections = useMemo(() => {
-		if (!classId || !classes) return [];
-		const selectedClass = classes.find((c: any) => c.id === classId);
-		return selectedClass?.sections || [];
-	}, [classId, classes]);
+		const payload = response?.data || response;
+
+		if (Array.isArray(payload?.items)) {
+			return payload.items
+				.filter((item: any) => item?.status === "ACTIVE" && item?.section?.id)
+				.map((item: any) => ({
+					id: item.section.id,
+					name: item.section.name,
+					bnName: item.section.bnName,
+					label: item.section.name,
+					setupId: item.id,
+					shiftId: item.shiftId,
+					roomId: item.roomId,
+				}));
+		}
+
+		return Array.isArray(payload) ? payload : [];
+	}, [response]);
+
+	useEffect(() => {
+		if (isLoading || !value) return;
+		if (!sections.some((section: any) => section.id === value)) {
+			onChange(null);
+		}
+	}, [isLoading, onChange, sections, value]);
 
 	if (isLoading) return <Skeleton className="h-10 w-full" />;
 
@@ -51,9 +82,9 @@ export default function SectionSelect({
 						value={section.id}
 						className="cursor-pointer py-2"
 					>
-						{typeof section.name === "object"
-							? getLocalizedName(section.name, locale)
-							: section.name}
+						{typeof (section.label || section.name) === "object"
+							? getLocalizedName(section.label || section.name, locale)
+							: section.label || section.name}
 					</SelectItem>
 				))}
 			</SelectContent>

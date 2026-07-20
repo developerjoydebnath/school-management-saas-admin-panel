@@ -36,10 +36,11 @@ import SyllabusFilterBar from "./SyllabusFilterBar";
 
 export type SyllabusFilter = {
 	search: string;
+	sessionId: string[];
 	status: string[];
 };
 
-const initialFilters: SyllabusFilter = { search: "", status: [] };
+const initialFilters: SyllabusFilter = { search: "", sessionId: [], status: [] };
 
 const format = (value?: string) =>
 	value ? value.replaceAll("_", " ").toLowerCase().replace(/\b\w/g, (char) => char.toUpperCase()) : "-";
@@ -147,6 +148,7 @@ export default function SyllabusList() {
 		page,
 		limit,
 		search: filter.search,
+		sessionId: filter.sessionId,
 		status: filter.status,
 	});
 

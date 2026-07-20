@@ -1,12 +1,12 @@
 "use client";
 
-import React, { useEffect } from 'react';
-import PageHeading from '@/shared/components/custom/PageHeading';
 import NewAdmissionForm from '@/modules/admission/new-admission/components/NewAdmissionForm';
-import { useBreadcrumbStore } from '@/shared/stores/breadcrumb-store';
+import PageHeading from '@/shared/components/custom/PageHeading';
 import { PATHS } from '@/shared/configs/paths.config';
-import { useRouter } from 'next/navigation';
+import { useBreadcrumbStore } from '@/shared/stores/breadcrumb-store';
 import { useTranslations } from "next-intl";
+import { useRouter } from 'next/navigation';
+import { useEffect } from 'react';
 
 export default function NewAdmissionPage() {
   const { setBreadcrumbs } = useBreadcrumbStore();
@@ -28,10 +28,10 @@ export default function NewAdmissionPage() {
 
   return (
     <div className="space-y-6">
-      <PageHeading 
-        routeName="AdmissionNew" 
+      <PageHeading
+        routeName="AdmissionNew"
       />
-      
+
       <div className="mx-auto max-w-7xl">
         <NewAdmissionForm onSuccess={handleSuccess} />
       </div>

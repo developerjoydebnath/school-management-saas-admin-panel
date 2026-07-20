@@ -4,17 +4,13 @@ export interface Section {
 	id?: string;
 	name: string;
 	classRoomId?: string;
-	classRoom?: any;
 	shiftId?: string;
-	shift?: string | { id: string; name: string };
 }
 
 export class ClassModel {
 	private _id: string;
 	private _name: string | { en: string; bn: string };
 	private _sections: Section[];
-	private _classRoom?: any;
-	private _shift?: string;
 	private _status: StatusEnum;
 	private _createdAt: Date;
 	private _updatedAt: Date;
@@ -29,8 +25,6 @@ export class ClassModel {
 				bn: data.bnName || "",
 			};
 		this._sections = data.sections || [];
-		this._classRoom = data.classRoom;
-		this._shift = data.shift?.name || data.shift || data.shiftId;
 		this._status = (data.status?.toUpperCase() as StatusEnum) || StatusEnum.ACTIVE;
 		this._createdAt = data.createdAt || new Date();
 		this._updatedAt = data.updatedAt || new Date();
@@ -47,14 +41,6 @@ export class ClassModel {
 
 	get sections(): Section[] {
 		return this._sections;
-	}
-
-	get classRoom(): any {
-		return this._classRoom;
-	}
-
-	get shift(): string | undefined {
-		return this._shift;
 	}
 
 	get status(): StatusEnum {

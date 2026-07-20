@@ -31,14 +31,6 @@ export default function EditClassPage({ params }: { params: Promise<{ id: string
 	const defaultValues: ClassFormValues = {
 		enName: raw.enName || "",
 		bnName: raw.bnName || "",
-		sections:
-			raw.sections?.map((section: any) => ({
-				name: section.name || "",
-				classRoomId: section.classRoomId || section.classRoom?.id || "",
-				shiftId: section.shiftId || section.shift?.id || "",
-			})) || [],
-		classRoomId: raw.classRoomId || raw.classRoom?.id || "",
-		shiftId: raw.shiftId || raw.shift?.id || "",
 		status: raw.status || StatusEnum.ACTIVE,
 	};
 

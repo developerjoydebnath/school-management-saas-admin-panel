@@ -56,9 +56,8 @@ export default function ConfirmationModal({
 		try {
 			await onConfirm();
 			setOpen(false);
-		} catch (error) {
-			// If it fails, we might want to keep it open
-			console.error(error);
+		} catch {
+			// Keep the dialog open. The caller or global API layer owns user-facing error feedback.
 		}
 	};
 

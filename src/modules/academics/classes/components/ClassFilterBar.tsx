@@ -8,7 +8,6 @@ import {
 	FilterTriggerButton,
 } from "@/shared/components/custom/Filter";
 import FilterButton from "@/shared/components/form/FilterButton";
-import { useSWR } from "@/shared/hooks/use-swr";
 import { IconFilter } from "@tabler/icons-react";
 import React from "react";
 import { ClassFilter } from "./ClassList";
@@ -20,22 +19,10 @@ type Props = {
 };
 
 export default function ClassFilterBar({ children, filter, setFilter }: Props) {
-	const { data: shiftResponse } = useSWR("/shifts/active-list");
-	const { data: classRoomResponse } = useSWR("/class-rooms/active-list");
-	const shifts = shiftResponse?.data || shiftResponse || [];
-	const classRooms = classRoomResponse?.data || classRoomResponse || [];
 	const statusOptions = [
 		{ label: "Active", value: "ACTIVE" },
 		{ label: "Inactive", value: "INACTIVE" },
 	];
-	const shiftOptions = shifts.map((shift: any) => ({
-		label: shift.name,
-		value: shift.id,
-	}));
-	const classRoomOptions = classRooms.map((room: any) => ({
-		label: `${room.roomNo} - ${room.name}`,
-		value: room.id,
-	}));
 
 	return (
 		<div>
@@ -46,20 +33,6 @@ export default function ClassFilterBar({ children, filter, setFilter }: Props) {
 					onSelect={(values: string[]) => setFilter({ ...filter, status: values })}
 					clearFilter={() => setFilter({ ...filter, status: [] })}
 					options={statusOptions}
-				/>
-				<FilterButton
-					title="Shift"
-					selected={filter.shiftId}
-					onSelect={(values: string[]) => setFilter({ ...filter, shiftId: values })}
-					clearFilter={() => setFilter({ ...filter, shiftId: [] })}
-					options={shiftOptions}
-				/>
-				<FilterButton
-					title="Class Room"
-					selected={filter.classRoomId}
-					onSelect={(values: string[]) => setFilter({ ...filter, classRoomId: values })}
-					clearFilter={() => setFilter({ ...filter, classRoomId: [] })}
-					options={classRoomOptions}
 				/>
 			</FilterDesktopWrapper>
 
@@ -83,24 +56,6 @@ export default function ClassFilterBar({ children, filter, setFilter }: Props) {
 							}
 							clearFilter={() => setFilter({ ...filter, status: [] })}
 							options={statusOptions}
-						/>
-						<FilterButton
-							title="Shift"
-							selected={filter.shiftId}
-							onSelect={(values: string[]) =>
-								setFilter({ ...filter, shiftId: values })
-							}
-							clearFilter={() => setFilter({ ...filter, shiftId: [] })}
-							options={shiftOptions}
-						/>
-						<FilterButton
-							title="Class Room"
-							selected={filter.classRoomId}
-							onSelect={(values: string[]) =>
-								setFilter({ ...filter, classRoomId: values })
-							}
-							clearFilter={() => setFilter({ ...filter, classRoomId: [] })}
-							options={classRoomOptions}
 						/>
 					</FilterContent>
 				</FilterContainer>

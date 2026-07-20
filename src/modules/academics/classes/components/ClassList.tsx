@@ -5,7 +5,6 @@ import PermissionGuard from "@/shared/components/custom/PermissionGuard";
 import DataTable from "@/shared/components/table/DataTable";
 import TableFilter from "@/shared/components/table/TableFilter";
 import { AlertDialogTrigger } from "@/shared/components/ui/alert-dialog";
-import { Badge } from "@/shared/components/ui/badge";
 import { Button } from "@/shared/components/ui/button";
 import { Card, CardContent, CardHeader } from "@/shared/components/ui/card";
 import { Sheet, SheetTrigger } from "@/shared/components/ui/sheet";
@@ -32,15 +31,11 @@ import ClassFilterBar from "./ClassFilterBar";
 export type ClassFilter = {
 	search: string;
 	status: string[];
-	shiftId: string[];
-	classRoomId: string[];
 };
 
 const initialFilters: ClassFilter = {
 	search: "",
 	status: [],
-	shiftId: [],
-	classRoomId: [],
 };
 
 function ClassDetailsAction({ id }: { id: string }) {
@@ -83,8 +78,6 @@ export default function ClassList() {
 		limit,
 		search: filter.search,
 		status: filter.status,
-		shiftId: filter.shiftId,
-		classRoomId: filter.classRoomId,
 	});
 
 	const confirmDelete = async (id: string) => {
@@ -125,76 +118,13 @@ export default function ClassList() {
 			),
 		},
 		{
-			id: "sections",
-			header: t("sections"),
-			cell: ({ row }) => {
-				const sections = row.original.sections || [];
-				if (!sections.length) {
-					return <span className="text-muted-foreground text-sm">-</span>;
-				}
-				return (
-					<div className="flex flex-wrap gap-1">
-						{sections.map((section: any) => (
-							<Badge key={section.id || section.name} variant="outline">
-								{section.name}
-							</Badge>
-						))}
-					</div>
-				);
-			},
-		},
-		{
-			id: "classRoom",
-			header: t("classRoom"),
-			cell: ({ row }) => {
-				const sections = row.original.sections || [];
-				if (sections.length) {
-					return (
-						<div className="flex flex-wrap gap-1">
-							{sections.map((section: any) => (
-								<Badge key={section.id || section.name} variant="secondary">
-									{section.name}: {section.classRoom?.roomNo || "-"}
-								</Badge>
-							))}
-						</div>
-					);
-				}
-				const room = row.original.classRoom;
-				return <span className="font-medium">{room?.roomNo || "-"}</span>;
-			},
-		},
-		{
-			id: "capacity",
-			header: t("capacity"),
-			cell: ({ row }) => {
-				const sections = row.original.sections || [];
-				const totalCapacity = sections.length
-					? sections.reduce(
-							(sum, section: any) => sum + Number(section.classRoom?.capacity || 0),
-							0
-						)
-					: row.original.classRoom?.capacity;
-				return <span className="font-medium">{totalCapacity || "-"}</span>;
-			},
-		},
-		{
-			id: "shift",
-			header: t("shift"),
-			cell: ({ row }) => {
-				const sections = row.original.sections || [];
-				if (sections.length) {
-					return (
-						<div className="flex flex-wrap gap-1">
-							{sections.map((section: any) => (
-								<Badge key={section.id || section.name} variant="secondary">
-									{section.shift?.name || section.shift || "-"}
-								</Badge>
-							))}
-						</div>
-					);
-				}
-				return <span className="font-medium">{row.original.shift || "-"}</span>;
-			},
+			id: "sessionSetups",
+			header: t("sessionSetups"),
+			cell: ({ row }) => (
+				<span className="font-medium">
+					{row.original.original?.sessionSections?.length || 0}
+				</span>
+			),
 		},
 		{
 			id: "status",

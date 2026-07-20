@@ -209,7 +209,7 @@ export default function SubjectList() {
 			cell: ({ row }) => {
 				const subject = row.original;
 				return (
-					<div className="flex flex-wrap items-center gap-2">
+					<div className="flex items-center gap-2">
 						<PermissionGuard
 							permissions={[
 								PERMISSIONS.ACADEMICS.SUBJECTS.VIEW,
@@ -292,13 +292,13 @@ export default function SubjectList() {
 					pagination={
 						meta
 							? {
-									page: meta.page,
-									limit: meta.limit,
-									total: meta.total,
-									totalPages: meta.totalPages,
-									onPageChange: setPage,
-									onLimitChange: setLimit,
-								}
+								page: meta.page,
+								limit: meta.limit,
+								total: meta.total,
+								totalPages: meta.totalPages,
+								onPageChange: setPage,
+								onLimitChange: setLimit,
+							}
 							: undefined
 					}
 				/>

@@ -38,6 +38,11 @@ const discountScopeOptions = [
 	{ label: "All Shown Fees", value: "shown_total" },
 ];
 
+const discountStackingOptions = [
+	{ label: "Apply all eligible discounts", value: "stack_all" },
+	{ label: "Apply one best discount only", value: "best_only" },
+];
+
 const quotaRuleSchema = z.object({
 	quotaType: z.string(),
 	label: z.string(),
@@ -55,6 +60,7 @@ const discountSchema = z.object({
 	discountScope: z.enum(["admission_fee", "required_total", "shown_total"]),
 	discountValue: z.coerce.number().min(0),
 	discountMaxAmount: z.coerce.number().min(0).optional().or(z.literal("")),
+	discountStackingMode: z.enum(["stack_all", "best_only"]),
 	manualDiscountEnabled: z.boolean().optional(),
 	quotaDiscountEnabled: z.boolean().optional(),
 	quotaDiscountRules: z.array(quotaRuleSchema),
@@ -97,6 +103,7 @@ export default function DiscountSettings() {
 			discountScope: "required_total",
 			discountValue: 0,
 			discountMaxAmount: "",
+			discountStackingMode: "stack_all",
 			manualDiscountEnabled: true,
 			quotaDiscountEnabled: false,
 			quotaDiscountRules: defaultQuotaRules(),
@@ -118,6 +125,7 @@ export default function DiscountSettings() {
 				settings.discountMaxAmount === null || settings.discountMaxAmount === undefined
 					? ""
 					: Number(settings.discountMaxAmount),
+			discountStackingMode: settings.discountStackingMode || "stack_all",
 			manualDiscountEnabled: settings.manualDiscountEnabled ?? true,
 			quotaDiscountEnabled: settings.quotaDiscountEnabled ?? false,
 			quotaDiscountRules: defaultQuotaRules(settings.quotaDiscountRules || []),
@@ -193,6 +201,20 @@ export default function DiscountSettings() {
 								form.setValue("referenceEnabled", value, { shouldDirty: true })
 							}
 						/>
+					</div>
+					<div className="rounded-lg border p-4 md:col-span-2">
+						<InputField
+							control={form.control}
+							name="discountStackingMode"
+							label="Discount Application Rule"
+							type="select"
+							options={discountStackingOptions}
+							placeholder="Select how discounts are applied"
+						/>
+						<p className="text-muted-foreground mt-2 text-sm">
+							Use one best discount when the school allows only the highest applicable benefit.
+							Use all eligible discounts when default and quota benefits can stack together.
+						</p>
 					</div>
 				</CardContent>
 			</Card>
@@ -277,7 +299,7 @@ export default function DiscountSettings() {
 				<CardHeader>
 					<CardTitle>Default Admission Discount</CardTitle>
 					<CardDescription>
-						This general rule is applied when no matching quota discount is active.
+						This general rule follows the discount application rule configured above.
 					</CardDescription>
 				</CardHeader>
 				<CardContent className="space-y-6">
