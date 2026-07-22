@@ -79,7 +79,7 @@ export default function StudentProfilePage() {
 
 	return (
 		<div className="space-y-6">
-			<StudentProfileHeader student={student} />
+			<StudentProfileHeader student={student} classId={classId} />
 
 			<Tabs defaultValue="overview">
 				<TabsList variant="line" className="w-full sm:w-auto">

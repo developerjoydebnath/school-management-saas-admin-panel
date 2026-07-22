@@ -960,7 +960,7 @@
   },
   "StudentsDirectory": {
     "title": "Student Directory",
-    "description": "Overview of all classes and student enrollment by session.",
+    "description": "Overview of all classes and student enrollment for the selected session.",
     "selectSession": "Select Session",
     "allSessions": "All Sessions",
     "totalStudents": "Total Students",
@@ -968,7 +968,15 @@
     "students": "students",
     "viewStudents": "View Students",
     "noClasses": "No classes found for this session.",
-    "classOverview": "Class Overview"
+    "classOverview": "Class Overview",
+    "totalClasses": "Total Classes",
+    "studentsInSession": "Students In Session",
+    "classesWithStudents": "Classes With Students",
+    "sectionSetups": "Section Setups",
+    "emptyClasses": "Empty Classes",
+    "studentDistribution": "Student Distribution",
+    "studentDistributionDescription": "Enrollment count by class for the selected session.",
+    "noStudentsInSession": "No students found for the selected session."
   },
   "StudentList": {
     "title": "Student List",

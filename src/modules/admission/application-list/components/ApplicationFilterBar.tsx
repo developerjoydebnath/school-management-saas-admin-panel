@@ -59,7 +59,7 @@ export default function ApplicationFilterBar({ children, filter, setFilter }: Pr
 	const selectedClassId = filter.classId[0] || "";
 	const selectedSessionId = filter.sessionId[0] || undefined;
 	const { data: sectionResponse } = useSWR(
-		selectedClassId ? "/classes/sections/active-list" : null,
+		selectedClassId ? "/session-class-sections/setup" : null,
 		{ classId: selectedClassId, sessionId: selectedSessionId }
 	);
 	const sections = listFromResponse(sectionResponse);
@@ -84,11 +84,16 @@ export default function ApplicationFilterBar({ children, filter, setFilter }: Pr
 
 	const sectionOptions = useMemo<TOption[]>(() => {
 		if (!selectedClassId) return [];
-		return sections.map((section: any) => ({
-			label: section.label || section.name,
-			value: section.id,
-		}));
-	}, [sections, selectedClassId]);
+		const items = Array.isArray((sectionResponse as any)?.data?.items)
+			? (sectionResponse as any).data.items
+			: sections;
+		return items
+			.filter((item: any) => item?.status !== "INACTIVE")
+			.map((item: any) => ({
+				label: item.section?.name || item.label || item.name,
+				value: item.sectionId || item.value || item.id,
+			}));
+	}, [sectionResponse, sections, selectedClassId]);
 
 	const controls = (
 		<>

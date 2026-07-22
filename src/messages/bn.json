@@ -1186,7 +1186,7 @@
   },
   "StudentsDirectory": {
     "title": "শিক্ষার্থী ডিরেক্টরি",
-    "description": "সেশন অনুযায়ী সকল ক্লাস ও শিক্ষার্থী তালিকার সারসংক্ষেপ।",
+    "description": "নির্বাচিত সেশনের সকল ক্লাস ও শিক্ষার্থী তালিকার সারসংক্ষেপ।",
     "selectSession": "সেশন নির্বাচন করুন",
     "allSessions": "সকল সেশন",
     "totalStudents": "মোট শিক্ষার্থী",
@@ -1194,7 +1194,15 @@
     "students": "শিক্ষার্থী",
     "viewStudents": "শিক্ষার্থীরা দেখুন",
     "noClasses": "এই সেশনের জন্য কোন ক্লাস পাওয়া যায়নি।",
-    "classOverview": "ক্লাস সারসংক্ষেপ"
+    "classOverview": "ক্লাস সারসংক্ষেপ",
+    "totalClasses": "মোট ক্লাস",
+    "studentsInSession": "এই সেশনের শিক্ষার্থী",
+    "classesWithStudents": "শিক্ষার্থীসহ ক্লাস",
+    "sectionSetups": "সেকশন সেটআপ",
+    "emptyClasses": "শূন্য ক্লাস",
+    "studentDistribution": "শিক্ষার্থী বণ্টন",
+    "studentDistributionDescription": "নির্বাচিত সেশনে ক্লাসভিত্তিক শিক্ষার্থী সংখ্যা।",
+    "noStudentsInSession": "নির্বাচিত সেশনে কোনো শিক্ষার্থী পাওয়া যায়নি।"
   },
   "StudentList": {
     "title": "শিক্ষার্থী তালিকা",

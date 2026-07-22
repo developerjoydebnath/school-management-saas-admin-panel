@@ -27,6 +27,8 @@ export type PaymentMethodSetting = {
 	description?: string | null;
 	mode: PaymentMethodMode;
 	status: PaymentMethodStatus;
+	adminEnabled: boolean;
+	publicEnabled: boolean;
 	isDefault: boolean;
 	sortOrder: number;
 	currency: string;
@@ -43,6 +45,8 @@ export type PaymentMethodPayload = {
 	description?: string;
 	mode: PaymentMethodMode;
 	status: PaymentMethodStatus;
+	adminEnabled: boolean;
+	publicEnabled: boolean;
 	isDefault: boolean;
 	sortOrder: number;
 	currency: string;

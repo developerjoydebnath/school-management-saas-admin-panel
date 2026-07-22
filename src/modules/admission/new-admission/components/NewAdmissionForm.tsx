@@ -368,13 +368,14 @@ export default function NewAdmissionForm({
 		return Array.isArray(options) ? options : [];
 	}, [shiftsResponse]);
 
-	const admissionMode = id ? "full" : (settings?.admissionMode || "fast");
+	const isEditMode = Boolean(id);
+	const admissionMode = isEditMode ? "full" : (settings?.admissionMode || "fast");
 
 	const allFields = useMemo<AdmissionFieldConfig[]>(() => {
 		const fields = dedupeAdmissionFields(settings?.fieldConfigs || []);
 		return fields
 			.filter((field: any) =>
-				id
+				isEditMode
 					? (field.showInFastMode ?? field.isShown) ||
 					(field.showInFullMode ?? field.isShown)
 					: admissionMode === "fast"
@@ -389,7 +390,7 @@ export default function NewAdmissionForm({
 				type: field.fieldType,
 				label: locale === "bn" && field.labelBn ? field.labelBn : field.label,
 			}));
-	}, [admissionMode, id, locale, settings]);
+	}, [admissionMode, isEditMode, locale, settings]);
 
 	const admissionFields = useMemo<AdmissionFieldConfig[]>(() => {
 		return allFields;
@@ -398,7 +399,7 @@ export default function NewAdmissionForm({
 	const fieldRequired = useMemo(() => {
 		return allFields.reduce((acc: Record<string, boolean>, field: any) => {
 			acc[field.fieldKey || field.id] = Boolean(
-				id
+				isEditMode
 					? (field.requiredInFastMode ?? field.isRequired) ||
 					(field.requiredInFullMode ?? field.isRequired)
 					: admissionMode === "fast"
@@ -407,7 +408,7 @@ export default function NewAdmissionForm({
 			);
 			return acc;
 		}, {});
-	}, [admissionMode, allFields, id]);
+	}, [admissionMode, allFields, isEditMode]);
 
 	const isEmptyValue = (value: any) =>
 		value === "" ||
@@ -486,14 +487,25 @@ export default function NewAdmissionForm({
 		}
 
 		const aliases: Record<string, any> = {
-			fullName: initialData.studentNameEn,
+			fullName: initialData.studentNameEn || initialData.fullNameEn || initialData.fullName,
+			fullNameEn: initialData.fullNameEn || initialData.studentNameEn || initialData.fullName,
+			studentNameEn: initialData.studentNameEn || initialData.fullNameEn || initialData.fullName,
+			studentNameBn: initialData.studentNameBn || initialData.fullNameBn,
+			email: initialData.email,
+			studentEmail: initialData.email,
 			dob: initialData.dateOfBirth,
 			class: initialData.applyingClassId || initialData.classId,
 			classId: initialData.applyingClassId || initialData.classId,
+			applyingClassId: initialData.applyingClassId || initialData.classId,
 			section: initialData.sectionId,
-			session: initialData.sessionId,
-			sessionYear: initialData.sessionId,
-			mobile: initialData.fatherMobile,
+			sectionId: initialData.sectionId,
+			session: initialData.sessionId || initialData.currentSessionId,
+			sessionId: initialData.sessionId || initialData.currentSessionId,
+			sessionYear: initialData.sessionId || initialData.currentSessionId,
+			currentSessionId: initialData.currentSessionId || initialData.sessionId,
+			roll: initialData.roll || initialData.rollNumber,
+			rollNumber: initialData.rollNumber || initialData.roll,
+			mobile: initialData.fatherMobile || initialData.mobile,
 			shift: resolveShiftValue(initialData.shiftId || initialData.shift),
 			shiftId: resolveShiftValue(initialData.shiftId || initialData.shift),
 			specialQuota: normalizeQuotaValue(initialData.specialQuota),
@@ -1097,7 +1109,7 @@ export default function NewAdmissionForm({
 							categories={categories}
 							currentStepIndex={currentStepIndex}
 							isPreviewStep={isPreviewStep}
-							isEditMode={!!id}
+							isEditMode={isEditMode}
 							onStepClick={(index) => {
 								setCurrentStepIndex(index);
 								updateStepParam(index);
@@ -1247,10 +1259,10 @@ export default function NewAdmissionForm({
 									{loading ? (
 										<>
 											<Loader2 className="h-5 w-5 animate-spin" />
-											{t("processingAdmission")}
+											{id ? "Updating application" : t("processingAdmission")}
 										</>
 									) : admissionMode === "full" ? (
-										"Complete Admission"
+										id ? "Update Application" : "Complete Admission"
 									) : (
 										<>
 											{t("completeAdmission")}

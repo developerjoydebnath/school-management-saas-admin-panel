@@ -14,6 +14,7 @@ import { useLocale } from "next-intl";
 interface ClassSelectProps {
 	value: string;
 	onChange: (value: string | null) => void;
+	onOptionChange?: (option: any | null) => void;
 	sessionId?: string;
 	placeholder?: string;
 	className?: string;
@@ -23,6 +24,7 @@ interface ClassSelectProps {
 export default function ClassSelect({
 	value,
 	onChange,
+	onOptionChange,
 	sessionId,
 	placeholder = "Select Class",
 	className,
@@ -37,7 +39,14 @@ export default function ClassSelect({
 	return (
 		<Select
 			value={value?.toString() || undefined}
-			onValueChange={onChange}
+			onValueChange={(selectedValue) => {
+				onChange(selectedValue);
+				onOptionChange?.(
+					classes?.find(
+						(cls: any) => cls.id?.toString() === selectedValue?.toString()
+					) || null
+				);
+			}}
 			disabled={disabled}
 		>
 			<SelectTrigger className={cn("h-10! w-full", className)}>

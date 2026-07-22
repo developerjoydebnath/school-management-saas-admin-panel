@@ -14,6 +14,7 @@ import { useLocale } from "next-intl";
 interface SessionSelectProps {
 	value: string;
 	onChange: (value: string | null) => void;
+	onOptionChange?: (option: any | null) => void;
 	placeholder?: string;
 	className?: string;
 }
@@ -21,6 +22,7 @@ interface SessionSelectProps {
 export default function SessionSelect({
 	value,
 	onChange,
+	onOptionChange,
 	placeholder = "Select Session",
 	className,
 }: SessionSelectProps) {
@@ -31,7 +33,17 @@ export default function SessionSelect({
 	if (isLoading) return <Skeleton className="h-10 w-full" />;
 
 	return (
-		<Select value={value?.toString() || undefined} onValueChange={onChange}>
+		<Select
+			value={value?.toString() || undefined}
+			onValueChange={(selectedValue) => {
+				onChange(selectedValue);
+				onOptionChange?.(
+					sessions?.find(
+						(session: any) => session.id?.toString() === selectedValue?.toString()
+					) || null
+				);
+			}}
+		>
 			<SelectTrigger className={cn("h-10! w-full", className)}>
 				<SelectValue placeholder={placeholder} />
 			</SelectTrigger>

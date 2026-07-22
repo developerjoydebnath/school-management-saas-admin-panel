@@ -377,7 +377,7 @@ export default function PublicAdmissionPayment({
 								<div className="space-y-2">
 									<Label>Payment Method</Label>
 									<Select value={paymentMethod} onValueChange={setPaymentMethod}>
-										<SelectTrigger>
+										<SelectTrigger className="h-10 w-full">
 											<SelectValue placeholder="Select payment method" />
 										</SelectTrigger>
 										<SelectContent>
@@ -402,6 +402,7 @@ export default function PublicAdmissionPayment({
 										value={amount}
 										onChange={(event) => setAmount(event.target.value)}
 										placeholder="Enter paid amount"
+										className="h-10 w-full"
 									/>
 								</div>
 								<div className="space-y-2">
@@ -410,6 +411,7 @@ export default function PublicAdmissionPayment({
 										type="date"
 										value={paidAt}
 										onChange={(event) => setPaidAt(event.target.value)}
+										className="h-10 w-full"
 									/>
 								</div>
 								<div className="space-y-2">
@@ -422,6 +424,7 @@ export default function PublicAdmissionPayment({
 												? "Optional receipt or voucher number"
 												: "Enter transaction ID"
 										}
+										className="h-10 w-full"
 									/>
 								</div>
 								<div className="space-y-2 md:col-span-2">
@@ -430,6 +433,7 @@ export default function PublicAdmissionPayment({
 										value={note}
 										onChange={(event) => setNote(event.target.value)}
 										placeholder="Optional payment note"
+										className="h-10 w-full"
 									/>
 								</div>
 								<div className="rounded-lg border bg-black p-4 md:col-span-2">

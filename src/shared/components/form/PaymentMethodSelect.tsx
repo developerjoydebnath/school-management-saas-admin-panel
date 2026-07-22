@@ -17,6 +17,7 @@ type Props = {
 	placeholder?: string;
 	className?: string;
 	disabled?: boolean;
+	usage?: "admin" | "public" | "all";
 };
 
 function listFromResponse(response: any) {
@@ -31,8 +32,11 @@ export default function PaymentMethodSelect({
 	placeholder = "Select payment method",
 	className,
 	disabled,
+	usage = "admin",
 }: Props) {
-	const { data: response, isLoading } = useSWR("/settings/payment-methods/active-options");
+	const { data: response, isLoading } = useSWR("/settings/payment-methods/active-options", {
+		usage,
+	});
 	const methods = listFromResponse(response);
 
 	if (isLoading) return <Skeleton className="h-10 w-full" />;

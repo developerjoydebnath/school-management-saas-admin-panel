@@ -15,6 +15,7 @@ import { useEffect, useMemo } from "react";
 interface SectionSelectProps {
 	value: string;
 	onChange: (value: string | null) => void;
+	onOptionChange?: (option: any | null) => void;
 	classId?: string;
 	sessionId?: string;
 	placeholder?: string;
@@ -24,6 +25,7 @@ interface SectionSelectProps {
 export default function SectionSelect({
 	value,
 	onChange,
+	onOptionChange,
 	classId,
 	sessionId,
 	placeholder = "Select Section",
@@ -65,13 +67,25 @@ export default function SectionSelect({
 		if (isLoading || !value) return;
 		if (!sections.some((section: any) => section.id === value)) {
 			onChange(null);
+			onOptionChange?.(null);
 		}
-	}, [isLoading, onChange, sections, value]);
+	}, [isLoading, onChange, onOptionChange, sections, value]);
 
 	if (isLoading) return <Skeleton className="h-10 w-full" />;
 
 	return (
-		<Select value={value?.toString() || undefined} onValueChange={onChange} disabled={!classId}>
+		<Select
+			value={value?.toString() || undefined}
+			onValueChange={(selectedValue) => {
+				onChange(selectedValue);
+				onOptionChange?.(
+					sections.find(
+						(section: any) => section.id?.toString() === selectedValue?.toString()
+					) || null
+				);
+			}}
+			disabled={!classId}
+		>
 			<SelectTrigger className={cn("h-10! w-full", className)}>
 				<SelectValue placeholder={!classId ? "Select a class first" : placeholder} />
 			</SelectTrigger>

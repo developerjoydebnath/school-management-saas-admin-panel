@@ -10,7 +10,7 @@ import { useBreadcrumbStore } from "@/shared/stores/breadcrumb-store";
 import { ArrowLeft } from "lucide-react";
 import { useLocale, useTranslations } from "next-intl";
 import Link from "next/link";
-import { useParams, useSearchParams } from "next/navigation";
+import { useParams } from "next/navigation";
 import { useEffect } from "react";
 
 export default function StudentListPage() {
@@ -19,10 +19,8 @@ export default function StudentListPage() {
 	const t = useTranslations("StudentList");
 	const locale = useLocale();
 	const params = useParams();
-	const searchParams = useSearchParams();
 
 	const classId = params.classId as string;
-	const session = searchParams.get("session") || undefined;
 
 	const { data: classResponse } = useSWR(`/classes/${classId}`);
 	const classData = classResponse?.data;
@@ -50,7 +48,7 @@ export default function StudentListPage() {
 				</Link>
 			</PageHeading>
 
-			<StudentListTable classId={classId} session={session} />
+			<StudentListTable classId={classId} />
 		</div>
 	);
 }

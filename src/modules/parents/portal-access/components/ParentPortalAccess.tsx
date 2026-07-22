@@ -1,0 +1,283 @@
+"use client";
+
+import ConfirmationModal from "@/shared/components/custom/ConfirmationModal";
+import DataTable from "@/shared/components/table/DataTable";
+import { AlertDialogTrigger } from "@/shared/components/ui/alert-dialog";
+import { Badge } from "@/shared/components/ui/badge";
+import { Button } from "@/shared/components/ui/button";
+import { Input } from "@/shared/components/ui/input";
+import {
+	Select,
+	SelectContent,
+	SelectItem,
+	SelectTrigger,
+	SelectValue,
+} from "@/shared/components/ui/select";
+import { Skeleton } from "@/shared/components/ui/skeleton";
+import { useSWR } from "@/shared/hooks/use-swr";
+import { useTableData } from "@/shared/hooks/use-table-data";
+import axios from "@/shared/lib/axios";
+import { ColumnDef } from "@tanstack/react-table";
+import { Eye, Power, PowerOff, RefreshCcw, Search } from "lucide-react";
+import Link from "next/link";
+import { useCallback, useEffect, useMemo, useState } from "react";
+import { toast } from "sonner";
+import {
+	formatDateTime,
+	formatNumber,
+	ParentRecord,
+	portalBadgeClass,
+} from "../../shared/parent-utils";
+
+function PortalSummary({ summary, isLoading }: { summary: any; isLoading: boolean }) {
+	if (isLoading) {
+		return (
+			<div className="grid gap-3 md:grid-cols-3">
+				{Array.from({ length: 3 }).map((_, index) => (
+					<Skeleton key={index} className="h-24 rounded-md" />
+				))}
+			</div>
+		);
+	}
+
+	return (
+		<div className="grid gap-3 md:grid-cols-3">
+			<div className="bg-card/70 border-border/70 rounded-md border p-4">
+				<p className="text-muted-foreground text-sm">Active Parent Logins</p>
+				<p className="mt-2 text-2xl font-semibold">
+					{formatNumber(summary?.activeParents)}
+				</p>
+			</div>
+			<div className="bg-card/70 border-border/70 rounded-md border p-4">
+				<p className="text-muted-foreground text-sm">Disabled Accounts</p>
+				<p className="mt-2 text-2xl font-semibold">
+					{formatNumber(summary?.inactiveParents)}
+				</p>
+			</div>
+			<div className="bg-card/70 border-border/70 rounded-md border p-4">
+				<p className="text-muted-foreground text-sm">Linked Students</p>
+				<p className="mt-2 text-2xl font-semibold">
+					{formatNumber(summary?.linkedStudents)}
+				</p>
+			</div>
+		</div>
+	);
+}
+
+export default function ParentPortalAccess() {
+	const [page, setPage] = useState(1);
+	const [limit, setLimit] = useState(10);
+	const [status, setStatus] = useState("all");
+	const [searchInput, setSearchInput] = useState("");
+	const [search, setSearch] = useState("");
+	const [updatingId, setUpdatingId] = useState<string | null>(null);
+
+	useEffect(() => {
+		const timeout = window.setTimeout(() => {
+			setPage(1);
+			setSearch(searchInput.trim());
+		}, 300);
+		return () => window.clearTimeout(timeout);
+	}, [searchInput]);
+
+	const query = useMemo(
+		() => ({
+			page,
+			limit,
+			status: status === "all" ? undefined : status,
+			search: search || undefined,
+		}),
+		[limit, page, search, status]
+	);
+
+	const { data: parents, meta, isLoading, mutate } = useTableData("/parents", query);
+	const {
+		data: summaryResponse,
+		isLoading: isSummaryLoading,
+		mutate: mutateSummary,
+	} = useSWR("/parents/summary", {
+		status: status === "all" ? undefined : status,
+		search: search || undefined,
+	});
+
+	const togglePortal = useCallback(
+		async (parent: ParentRecord) => {
+			setUpdatingId(parent.id);
+			try {
+				const response = await axios.patch(`/parents/${parent.id}/portal-access`, {
+					isActive: !parent.isActive,
+				});
+				toast.success(response.data?.message || "Parent portal access updated.");
+				await Promise.all([mutate?.(), mutateSummary?.()]);
+			} catch (error: any) {
+				toast.error(
+					error?.response?.data?.message || "Failed to update parent portal access."
+				);
+			} finally {
+				setUpdatingId(null);
+			}
+		},
+		[mutate, mutateSummary]
+	);
+
+	const columns: ColumnDef<ParentRecord>[] = useMemo(
+		() => [
+			{
+				id: "parent",
+				header: "Parent",
+				cell: ({ row }) => (
+					<div className="space-y-1">
+						<p className="font-semibold">{row.original.name || "Parent"}</p>
+						<p className="text-muted-foreground font-mono text-xs">
+							{row.original.username || "-"}
+						</p>
+					</div>
+				),
+			},
+			{
+				id: "contact",
+				header: "Contact",
+				cell: ({ row }) => (
+					<div className="space-y-1 text-sm">
+						<p>{row.original.phone || "-"}</p>
+						<p className="text-muted-foreground">{row.original.email || "-"}</p>
+					</div>
+				),
+			},
+			{
+				id: "children",
+				header: "Students",
+				cell: ({ row }) => (
+					<Badge variant="secondary">
+						{formatNumber(row.original.childCount)} linked
+					</Badge>
+				),
+			},
+			{
+				id: "status",
+				header: "Portal Status",
+				cell: ({ row }) => (
+					<span
+						className={`inline-flex rounded-full px-2.5 py-1 text-xs font-semibold ${portalBadgeClass(
+							row.original.isActive
+						)}`}
+					>
+						{row.original.isActive ? "Active" : "Disabled"}
+					</span>
+				),
+			},
+			{
+				id: "lastLogin",
+				header: "Last Login",
+				cell: ({ row }) => formatDateTime(row.original.lastLogin),
+			},
+			{
+				id: "actions",
+				header: "Actions",
+				cell: ({ row }) => (
+					<div className="flex items-center gap-2">
+						<Button asChild variant="outline" size="icon-sm" title="View details">
+							<Link href={`/parents/directory/${row.original.id}/details`}>
+								<Eye className="size-3.5" />
+							</Link>
+						</Button>
+						<ConfirmationModal
+							title={
+								row.original.isActive
+									? "Disable parent portal access?"
+									: "Enable parent portal access?"
+							}
+							description={
+								row.original.isActive
+									? "The parent will no longer be able to sign in to the parent portal."
+									: "The parent will be able to sign in and view linked children."
+							}
+							confirmText={row.original.isActive ? "Disable" : "Enable"}
+							variant={row.original.isActive ? "destructive" : "default"}
+							isLoading={updatingId === row.original.id}
+							onConfirm={() => togglePortal(row.original)}
+						>
+							<AlertDialogTrigger asChild>
+								<Button variant="outline" size="sm">
+									{row.original.isActive ? (
+										<PowerOff className="mr-2 size-4" />
+									) : (
+										<Power className="mr-2 size-4" />
+									)}
+									{row.original.isActive ? "Disable" : "Enable"}
+								</Button>
+							</AlertDialogTrigger>
+						</ConfirmationModal>
+					</div>
+				),
+			},
+		],
+		[togglePortal, updatingId]
+	);
+
+	return (
+		<div className="space-y-6">
+			<div>
+				<h1 className="text-2xl font-semibold">Parent Portal Access</h1>
+				<p className="text-muted-foreground">
+					Control which parents can sign in to the student-parent portal.
+				</p>
+			</div>
+
+			<PortalSummary summary={summaryResponse?.data} isLoading={isSummaryLoading} />
+
+			<div className="bg-card/70 border-border/70 space-y-4 rounded-md border p-4">
+				<div className="grid gap-3 md:grid-cols-[220px_1fr_auto]">
+					<Select value={status} onValueChange={(value) => { setStatus(value); setPage(1); }}>
+						<SelectTrigger>
+							<SelectValue placeholder="Portal status" />
+						</SelectTrigger>
+						<SelectContent>
+							<SelectItem value="all">All Accounts</SelectItem>
+							<SelectItem value="active">Active</SelectItem>
+							<SelectItem value="inactive">Disabled</SelectItem>
+						</SelectContent>
+					</Select>
+					<div className="relative">
+						<Search className="text-muted-foreground absolute left-3 top-1/2 size-4 -translate-y-1/2" />
+						<Input
+							value={searchInput}
+							onChange={(event) => setSearchInput(event.target.value)}
+							placeholder="Search parent, username, phone, or email"
+							className="pl-9"
+						/>
+					</div>
+					<Button
+						variant="outline"
+						onClick={() => {
+							setStatus("all");
+							setSearchInput("");
+							setSearch("");
+							setPage(1);
+						}}
+					>
+						<RefreshCcw className="mr-2 size-4" />
+						Reset
+					</Button>
+				</div>
+
+				<DataTable
+					data={parents}
+					columns={columns}
+					isLoading={isLoading}
+					pagination={{
+						page,
+						limit,
+						total: meta.total,
+						totalPages: meta.totalPages,
+						onPageChange: setPage,
+						onLimitChange: (nextLimit) => {
+							setLimit(nextLimit);
+							setPage(1);
+						},
+					}}
+				/>
+			</div>
+		</div>
+	);
+}

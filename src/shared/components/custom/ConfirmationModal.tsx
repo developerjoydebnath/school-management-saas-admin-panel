@@ -11,6 +11,7 @@ import {
 	AlertDialogHeader,
 	AlertDialogTitle,
 } from "@/shared/components/ui/alert-dialog";
+import { cn } from "@/shared/lib/utils";
 import { useTranslations } from "next-intl";
 
 interface ConfirmationModalProps {
@@ -25,6 +26,9 @@ interface ConfirmationModalProps {
 	variant?: "default" | "destructive" | "outline" | "secondary" | "ghost" | "link";
 	open?: boolean;
 	onOpenChange?: (open: boolean) => void;
+	closeOnConfirm?: boolean;
+	contentClassName?: string;
+	footerExtra?: React.ReactNode;
 }
 
 export default function ConfirmationModal({
@@ -39,6 +43,9 @@ export default function ConfirmationModal({
 	variant = "default",
 	open: controlledOpen,
 	onOpenChange: controlledOnOpenChange,
+	closeOnConfirm = true,
+	contentClassName,
+	footerExtra,
 }: ConfirmationModalProps) {
 	const t = useTranslations("Forms");
 	const [internalOpen, setInternalOpen] = React.useState(false);
@@ -55,7 +62,9 @@ export default function ConfirmationModal({
 		e.preventDefault(); // Prevent default if any
 		try {
 			await onConfirm();
-			setOpen(false);
+			if (closeOnConfirm) {
+				setOpen(false);
+			}
 		} catch {
 			// Keep the dialog open. The caller or global API layer owns user-facing error feedback.
 		}
@@ -64,13 +73,14 @@ export default function ConfirmationModal({
 	return (
 		<AlertDialog open={open} onOpenChange={setOpen}>
 			{children}
-			<AlertDialogContent>
+			<AlertDialogContent className={cn(contentClassName)}>
 				<AlertDialogHeader>
 					<AlertDialogTitle>{titleAltText}</AlertDialogTitle>
 					<AlertDialogDescription>{descriptionAltText}</AlertDialogDescription>
 				</AlertDialogHeader>
 				{body && <div className="py-2">{body}</div>}
 				<AlertDialogFooter>
+					{footerExtra ? <div className="mr-auto">{footerExtra}</div> : null}
 					<AlertDialogCancel disabled={isLoading} onClick={() => setOpen(false)}>
 						{cancelAltText}
 					</AlertDialogCancel>

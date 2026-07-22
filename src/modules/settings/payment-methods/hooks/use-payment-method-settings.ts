@@ -56,6 +56,17 @@ export async function updatePaymentMethodStatus(id: string, status: string) {
 	return response.data;
 }
 
+export async function updatePaymentMethodAvailability(
+	id: string,
+	payload: { adminEnabled?: boolean; publicEnabled?: boolean }
+) {
+	const response = await axios.patch(
+		`/settings/payment-methods/${id}/availability`,
+		payload
+	);
+	return response.data;
+}
+
 export async function deletePaymentMethod(id: string) {
 	const response = await axios.delete(`/settings/payment-methods/${id}`);
 	return response.data;

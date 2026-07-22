@@ -37,6 +37,7 @@ import type {
 } from "../dto/payment-method-setting.dto";
 import {
 	deletePaymentMethod,
+	updatePaymentMethodAvailability,
 	updatePaymentMethodStatus,
 	usePaymentMethodProviders,
 	usePaymentMethods,
@@ -155,6 +156,14 @@ function PaymentMethodDetailsSheet({
 									label="Default Method"
 									value={method.isDefault ? "Yes" : "No"}
 								/>
+								<CompactPair
+									label="Admin Panel"
+									value={method.adminEnabled ? "Enabled" : "Disabled"}
+								/>
+								<CompactPair
+									label="Public Portal"
+									value={method.publicEnabled ? "Enabled" : "Disabled"}
+								/>
 								<CompactPair label="Sort Order" value={method.sortOrder ?? 0} />
 							</div>
 						</div>
@@ -266,9 +275,15 @@ function PaymentMethodCard({
 		onChanged();
 	};
 
+	const toggleAvailability = async (key: "adminEnabled" | "publicEnabled") => {
+		await updatePaymentMethodAvailability(method.id, { [key]: !method[key] });
+		toast.success("Payment method availability updated successfully");
+		onChanged();
+	};
+
 	return (
-		<Card className="@container/card">
-			<CardContent className="flex flex-col gap-4 p-4">
+		<Card className="@container/card shadow-none bg-accent/20 px-0 py-2">
+			<CardContent className="flex flex-col gap-3 p-4">
 				<div className="flex items-start gap-3">
 					<div
 						className={cn(
@@ -285,23 +300,29 @@ function PaymentMethodCard({
 							<Badge variant={isActive ? "default" : "outline"}>
 								{isActive ? t("active") : t("inactive")}
 							</Badge>
+							<Badge variant={method.adminEnabled ? "secondary" : "outline"}>
+								Admin {method.adminEnabled ? "On" : "Off"}
+							</Badge>
+							<Badge variant={method.publicEnabled ? "secondary" : "outline"}>
+								Public {method.publicEnabled ? "On" : "Off"}
+							</Badge>
 						</div>
-						<p className="text-muted-foreground mt-1 line-clamp-2 text-sm">
+						<p className="text-muted-foreground mt-1 line-clamp-1 text-xs">
 							{method.description || template?.description || "-"}
 						</p>
 					</div>
 				</div>
 
-				<div className="grid gap-3 text-sm @md/card:grid-cols-3">
-					<div className="rounded-md border p-3">
+				<div className="grid gap-2 text-sm @md/card:grid-cols-3">
+					<div className="rounded-md border p-2.5">
 						<p className="text-muted-foreground text-xs">{t("provider")}</p>
 						<p className="font-medium">{method.providerLabel || normalizeText(method.provider)}</p>
 					</div>
-					<div className="rounded-md border p-3">
+					<div className="rounded-md border p-2.5">
 						<p className="text-muted-foreground text-xs">{t("mode")}</p>
 						<p className="font-medium">{normalizeText(method.mode)}</p>
 					</div>
-					<div className="rounded-md border p-3">
+					<div className="rounded-md border p-2.5">
 						<p className="text-muted-foreground text-xs">Currency</p>
 						<p className="font-medium">{method.currency || "BDT"}</p>
 					</div>
@@ -309,6 +330,32 @@ function PaymentMethodCard({
 
 				<div className="flex flex-wrap justify-end gap-2">
 					<PaymentMethodDetailsSheet method={method} template={template} />
+					<ConfirmationModal
+						title={method.adminEnabled ? "Disable admin usage?" : "Enable admin usage?"}
+						description="This controls whether school staff can use this method inside the admin panel."
+						confirmText={method.adminEnabled ? "Disable Admin" : "Enable Admin"}
+						variant={method.adminEnabled ? "destructive" : "default"}
+						onConfirm={() => toggleAvailability("adminEnabled")}
+					>
+						<AlertDialogTrigger asChild>
+							<Button variant="outline" size="sm">
+								Admin {method.adminEnabled ? "Off" : "On"}
+							</Button>
+						</AlertDialogTrigger>
+					</ConfirmationModal>
+					<ConfirmationModal
+						title={method.publicEnabled ? "Disable public usage?" : "Enable public usage?"}
+						description="This controls whether parents/students can use this method from the public payment page."
+						confirmText={method.publicEnabled ? "Disable Public" : "Enable Public"}
+						variant={method.publicEnabled ? "destructive" : "default"}
+						onConfirm={() => toggleAvailability("publicEnabled")}
+					>
+						<AlertDialogTrigger asChild>
+							<Button variant="outline" size="sm">
+								Public {method.publicEnabled ? "Off" : "On"}
+							</Button>
+						</AlertDialogTrigger>
+					</ConfirmationModal>
 					<ConfirmationModal
 						title={isActive ? "Disable payment method?" : "Enable payment method?"}
 						description={
@@ -438,14 +485,16 @@ export function PaymentMethodSettingsView() {
 							</Card>
 						))
 					) : items.length ? (
-						items.map((method) => (
-							<PaymentMethodCard
-								key={method.id}
-								method={method}
-								providers={providers}
-								onChanged={() => mutate()}
-							/>
-						))
+						<div className="grid gap-4 @4xl:grid-cols-2">
+							{items.map((method) => (
+								<PaymentMethodCard
+									key={method.id}
+									method={method}
+									providers={providers}
+									onChanged={() => mutate()}
+								/>
+							))}
+						</div>
 					) : (
 						<div className="text-muted-foreground rounded-md border border-dashed p-6 text-center">
 							No payment methods configured yet.

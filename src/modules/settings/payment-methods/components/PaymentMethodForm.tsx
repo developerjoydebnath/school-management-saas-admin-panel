@@ -39,6 +39,8 @@ const defaultPayload: PaymentMethodPayload = {
 	description: "",
 	mode: "manual",
 	status: "INACTIVE",
+	adminEnabled: true,
+	publicEnabled: false,
 	isDefault: false,
 	sortOrder: 0,
 	currency: "BDT",
@@ -61,6 +63,8 @@ function buildPayloadFromMethod(method: PaymentMethodSetting): PaymentMethodPayl
 		description: method.description || "",
 		mode: method.mode,
 		status: method.status,
+		adminEnabled: method.adminEnabled !== false,
+		publicEnabled: !!method.publicEnabled,
 		isDefault: method.isDefault,
 		sortOrder: method.sortOrder || 0,
 		currency: method.currency || "BDT",
@@ -258,6 +262,46 @@ export function PaymentMethodForm({
 										</SelectItem>
 									</SelectContent>
 								</Select>
+							</div>
+
+							<div className="rounded-md border p-4">
+								<div className="flex items-center justify-between gap-4">
+									<div>
+										<Label className="text-sm font-medium">Admin Panel</Label>
+										<p className="text-muted-foreground text-xs">
+											Show this method for internal school staff payments.
+										</p>
+									</div>
+									<Switch
+										checked={payload.adminEnabled}
+										onCheckedChange={(checked) =>
+											setPayload((current) => ({
+												...current,
+												adminEnabled: checked,
+											}))
+										}
+									/>
+								</div>
+							</div>
+
+							<div className="rounded-md border p-4">
+								<div className="flex items-center justify-between gap-4">
+									<div>
+										<Label className="text-sm font-medium">Public Portal</Label>
+										<p className="text-muted-foreground text-xs">
+											Show this method on parent/student public payment pages.
+										</p>
+									</div>
+									<Switch
+										checked={payload.publicEnabled}
+										onCheckedChange={(checked) =>
+											setPayload((current) => ({
+												...current,
+												publicEnabled: checked,
+											}))
+										}
+									/>
+								</div>
 							</div>
 
 							<div className="flex flex-col gap-2">

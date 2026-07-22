@@ -10,9 +10,9 @@ import {
 	TableHeader,
 	TableRow,
 } from "@/shared/components/ui/table";
-import { useTableData } from "@/shared/hooks/use-table-data";
+import { useSWR } from "@/shared/hooks/use-swr";
 import { useTranslations } from "next-intl";
-import { useEffect } from "react";
+import { useEffect, useMemo } from "react";
 
 interface StudentRollListProps {
 	classId?: string;
@@ -28,32 +28,42 @@ export default function StudentRollList({
 	onSuggestedRoll,
 }: StudentRollListProps) {
 	const t = useTranslations("Applications");
-	const { data: students, isLoading } = useTableData(
+	const query = useMemo(
+		() => ({
+			classId,
+			sessionId,
+			sectionId: section || undefined,
+		}),
+		[classId, sessionId, section]
+	);
+	const { data: response, isLoading } = useSWR(
 		"/admissions/rolls",
-		{ classId, sessionId, sectionId: section },
+		query,
 		{ revalidateOnMount: true }
 	);
+	const students = Array.isArray(response?.data) ? response.data : [];
 
 	useEffect(() => {
+		if (isLoading) return;
 		if (!Array.isArray(students) || !onSuggestedRoll) return;
 		const maxRoll = students.reduce((max, student: any) => {
 			const roll = Number.parseInt(String(student.rollNumber || "0"), 10);
 			return Number.isFinite(roll) ? Math.max(max, roll) : max;
 		}, 0);
 		onSuggestedRoll(String(maxRoll + 1).padStart(3, "0"));
-	}, [students, onSuggestedRoll]);
+	}, [isLoading, students, onSuggestedRoll]);
 
 	if (isLoading) {
 		return (
-			<div className="flex h-32 items-center justify-center">
+			<div className="bg-muted/30 flex min-h-40 items-center justify-center rounded-md border">
 				<Spinner className="h-6 w-6" />
 			</div>
 		);
 	}
 
 	return (
-		<ScrollArea className="max-h-[400px] overflow-y-auto px-2">
-			<Table>
+		<ScrollArea className="max-h-[420px] w-full overflow-auto rounded-md border">
+			<Table className="min-w-[560px]">
 				<TableHeader>
 					<TableRow>
 						<TableHead>{t("studentId")}</TableHead>
@@ -65,9 +75,13 @@ export default function StudentRollList({
 					{Array.isArray(students) && students.length > 0 ? (
 						students.map((s: any) => (
 							<TableRow key={s.id}>
-								<TableCell className="text-xs">{s.studentIdNo}</TableCell>
-								<TableCell className="font-bold">{s.rollNumber || "-"}</TableCell>
-								<TableCell>{s.fullNameEn}</TableCell>
+								<TableCell className="whitespace-nowrap text-xs">
+									{s.studentIdNo || "-"}
+								</TableCell>
+								<TableCell className="whitespace-nowrap font-bold">
+									{s.rollNumber || "-"}
+								</TableCell>
+								<TableCell className="min-w-48">{s.fullNameEn || "-"}</TableCell>
 							</TableRow>
 						))
 					) : (
