@@ -17,6 +17,8 @@ type Props = {
 	placeholder?: string;
 	className?: string;
 	disabled?: boolean;
+	itemId?: string;
+	excludeId?: string;
 };
 
 export default function InventoryLocationSelect({
@@ -25,9 +27,12 @@ export default function InventoryLocationSelect({
 	placeholder = "Select inventory location",
 	className,
 	disabled,
+	itemId,
+	excludeId,
 }: Props) {
-	const { data: response, isLoading } = useSWR("/inventory/locations/options");
-	const locations = response?.data || [];
+	const url = itemId ? `/inventory/locations/options?itemId=${itemId}` : "/inventory/locations/options";
+	const { data: response, isLoading } = useSWR(url);
+	const locations = (response?.data || []).filter((loc: any) => loc.value !== excludeId);
 
 	if (isLoading) return <Skeleton className="h-10 w-full" />;
 

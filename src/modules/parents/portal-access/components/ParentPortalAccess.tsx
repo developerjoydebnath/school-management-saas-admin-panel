@@ -2,26 +2,32 @@
 
 import ConfirmationModal from "@/shared/components/custom/ConfirmationModal";
 import DataTable from "@/shared/components/table/DataTable";
+import TableFilter from "@/shared/components/table/TableFilter";
 import { AlertDialogTrigger } from "@/shared/components/ui/alert-dialog";
 import { Badge } from "@/shared/components/ui/badge";
 import { Button } from "@/shared/components/ui/button";
-import { Input } from "@/shared/components/ui/input";
-import {
-	Select,
-	SelectContent,
-	SelectItem,
-	SelectTrigger,
-	SelectValue,
-} from "@/shared/components/ui/select";
+import { Card, CardContent, CardHeader } from "@/shared/components/ui/card";
 import { Skeleton } from "@/shared/components/ui/skeleton";
+import { PATHS } from "@/shared/configs/paths.config";
 import { useSWR } from "@/shared/hooks/use-swr";
 import { useTableData } from "@/shared/hooks/use-table-data";
 import axios from "@/shared/lib/axios";
 import { ColumnDef } from "@tanstack/react-table";
-import { Eye, Power, PowerOff, RefreshCcw, Search } from "lucide-react";
+import {
+	AlertTriangle,
+	Eye,
+	KeyRound,
+	Pencil,
+	Power,
+	PowerOff,
+	ShieldCheck,
+	UsersRound,
+	type LucideIcon,
+} from "lucide-react";
 import Link from "next/link";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import { toast } from "sonner";
+import ParentFilterBar from "../../directory/components/ParentFilterBar";
 import {
 	formatDateTime,
 	formatNumber,
@@ -29,37 +35,91 @@ import {
 	portalBadgeClass,
 } from "../../shared/parent-utils";
 
-function PortalSummary({ summary, isLoading }: { summary: any; isLoading: boolean }) {
-	if (isLoading) {
-		return (
-			<div className="grid gap-3 md:grid-cols-3">
-				{Array.from({ length: 3 }).map((_, index) => (
-					<Skeleton key={index} className="h-24 rounded-md" />
-				))}
-			</div>
-		);
-	}
+export type ParentPortalAccessFilter = {
+	search: string;
+	status?: string[];
+};
+
+const initialFilters: ParentPortalAccessFilter = { search: "" };
+
+function PortalSummarySkeleton() {
+	return (
+		<div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+			{Array.from({ length: 4 }).map((_, index) => (
+				<Skeleton key={index} className="h-28 rounded-md" />
+			))}
+		</div>
+	);
+}
+
+function SummaryCard({
+	label,
+	value,
+	description,
+	icon: Icon,
+	accent,
+}: {
+	label: string;
+	value: unknown;
+	description: string;
+	icon: LucideIcon;
+	accent?: "success" | "warning" | "danger";
+}) {
+	const accentClass =
+		accent === "success"
+			? "border-emerald-500/40 bg-emerald-500/10"
+			: accent === "warning"
+				? "border-amber-500/40 bg-amber-500/10"
+				: accent === "danger"
+					? "border-red-500/40 bg-red-500/10"
+					: "";
 
 	return (
-		<div className="grid gap-3 md:grid-cols-3">
-			<div className="bg-card/70 border-border/70 rounded-md border p-4">
-				<p className="text-muted-foreground text-sm">Active Parent Logins</p>
-				<p className="mt-2 text-2xl font-semibold">
-					{formatNumber(summary?.activeParents)}
-				</p>
-			</div>
-			<div className="bg-card/70 border-border/70 rounded-md border p-4">
-				<p className="text-muted-foreground text-sm">Disabled Accounts</p>
-				<p className="mt-2 text-2xl font-semibold">
-					{formatNumber(summary?.inactiveParents)}
-				</p>
-			</div>
-			<div className="bg-card/70 border-border/70 rounded-md border p-4">
-				<p className="text-muted-foreground text-sm">Linked Students</p>
-				<p className="mt-2 text-2xl font-semibold">
-					{formatNumber(summary?.linkedStudents)}
-				</p>
-			</div>
+		<Card className={`min-h-28 p-4 shadow-none ring-0 ${accentClass}`}>
+			<CardContent className="flex h-full items-start justify-between gap-4 p-0">
+				<div className="space-y-2">
+					<p className="text-muted-foreground text-sm">{label}</p>
+					<p className="text-2xl font-semibold">{formatNumber(value)}</p>
+					<p className="text-muted-foreground text-xs">{description}</p>
+				</div>
+				<Icon className="text-muted-foreground size-4 shrink-0" />
+			</CardContent>
+		</Card>
+	);
+}
+
+function PortalSummary({ summary, isLoading }: { summary: any; isLoading: boolean }) {
+	if (isLoading) return <PortalSummarySkeleton />;
+
+	return (
+		<div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+			<SummaryCard
+				label="Portal Ready"
+				value={summary?.readyParents}
+				description="Active accounts with mobile and linked children."
+				icon={ShieldCheck}
+				accent="success"
+			/>
+			<SummaryCard
+				label="Active Access"
+				value={summary?.activeParents}
+				description="Parents currently allowed to sign in."
+				icon={UsersRound}
+			/>
+			<SummaryCard
+				label="Never Signed In"
+				value={summary?.neverLoggedInParents}
+				description="Enabled or created accounts with no login yet."
+				icon={KeyRound}
+				accent="warning"
+			/>
+			<SummaryCard
+				label="Needs Attention"
+				value={summary?.needsAttentionParents}
+				description="Missing mobile or not linked with students."
+				icon={AlertTriangle}
+				accent="danger"
+			/>
 		</div>
 	);
 }
@@ -67,27 +127,21 @@ function PortalSummary({ summary, isLoading }: { summary: any; isLoading: boolea
 export default function ParentPortalAccess() {
 	const [page, setPage] = useState(1);
 	const [limit, setLimit] = useState(10);
-	const [status, setStatus] = useState("all");
-	const [searchInput, setSearchInput] = useState("");
-	const [search, setSearch] = useState("");
+	const [filter, setFilterState] = useState<ParentPortalAccessFilter>(initialFilters);
 	const [updatingId, setUpdatingId] = useState<string | null>(null);
 
-	useEffect(() => {
-		const timeout = window.setTimeout(() => {
-			setPage(1);
-			setSearch(searchInput.trim());
-		}, 300);
-		return () => window.clearTimeout(timeout);
-	}, [searchInput]);
+	const setFilter = useCallback((nextFilter: ParentPortalAccessFilter) => {
+		setFilterState(nextFilter);
+		setPage(1);
+	}, []);
 
 	const query = useMemo(
 		() => ({
 			page,
 			limit,
-			status: status === "all" ? undefined : status,
-			search: search || undefined,
+			...filter,
 		}),
-		[limit, page, search, status]
+		[filter, limit, page]
 	);
 
 	const { data: parents, meta, isLoading, mutate } = useTableData("/parents", query);
@@ -95,10 +149,7 @@ export default function ParentPortalAccess() {
 		data: summaryResponse,
 		isLoading: isSummaryLoading,
 		mutate: mutateSummary,
-	} = useSWR("/parents/summary", {
-		status: status === "all" ? undefined : status,
-		search: search || undefined,
-	});
+	} = useSWR("/parents/summary", filter);
 
 	const togglePortal = useCallback(
 		async (parent: ParentRecord) => {
@@ -120,6 +171,12 @@ export default function ParentPortalAccess() {
 		[mutate, mutateSummary]
 	);
 
+	const resetFilters = () => {
+		setFilterState(initialFilters);
+		setPage(1);
+		setLimit(10);
+	};
+
 	const columns: ColumnDef<ParentRecord>[] = useMemo(
 		() => [
 			{
@@ -136,26 +193,41 @@ export default function ParentPortalAccess() {
 			},
 			{
 				id: "contact",
-				header: "Contact",
+				header: "Login Contact",
+				cell: ({ row }) => {
+					const hasMobile = Boolean(row.original.phone);
+					return (
+						<div className="space-y-1 text-sm">
+							<p>{row.original.phone || "-"}</p>
+							<p className="text-muted-foreground">{row.original.email || "-"}</p>
+							{!hasMobile && (
+								<Badge className="bg-red-500/15 text-red-300">Mobile missing</Badge>
+							)}
+						</div>
+					);
+				},
+			},
+			{
+				id: "children",
+				header: "Linked Children",
 				cell: ({ row }) => (
-					<div className="space-y-1 text-sm">
-						<p>{row.original.phone || "-"}</p>
-						<p className="text-muted-foreground">{row.original.email || "-"}</p>
+					<div className="space-y-2">
+						<Badge variant="secondary">
+							{formatNumber(row.original.childCount)} linked
+						</Badge>
+						<div className="flex max-w-72 flex-wrap gap-1">
+							{(row.original.childrenPreview || []).slice(0, 2).map((child) => (
+								<Badge key={child.id} variant="outline" className="max-w-36 truncate text-xs">
+									{child.fullName || child.studentIdNo || "Student"}
+								</Badge>
+							))}
+						</div>
 					</div>
 				),
 			},
 			{
-				id: "children",
-				header: "Students",
-				cell: ({ row }) => (
-					<Badge variant="secondary">
-						{formatNumber(row.original.childCount)} linked
-					</Badge>
-				),
-			},
-			{
-				id: "status",
-				header: "Portal Status",
+				id: "portal",
+				header: "Portal",
 				cell: ({ row }) => (
 					<span
 						className={`inline-flex rounded-full px-2.5 py-1 text-xs font-semibold ${portalBadgeClass(
@@ -169,7 +241,11 @@ export default function ParentPortalAccess() {
 			{
 				id: "lastLogin",
 				header: "Last Login",
-				cell: ({ row }) => formatDateTime(row.original.lastLogin),
+				cell: ({ row }) => (
+					<span className="text-muted-foreground text-sm">
+						{formatDateTime(row.original.lastLogin)}
+					</span>
+				),
 			},
 			{
 				id: "actions",
@@ -177,8 +253,13 @@ export default function ParentPortalAccess() {
 				cell: ({ row }) => (
 					<div className="flex items-center gap-2">
 						<Button asChild variant="outline" size="icon-sm" title="View details">
-							<Link href={`/parents/directory/${row.original.id}/details`}>
+							<Link href={PATHS.PARENTS.DIRECTORY.DETAILS(row.original.id)}>
 								<Eye className="size-3.5" />
+							</Link>
+						</Button>
+						<Button asChild variant="outline" size="icon-sm" title="Update parent profile">
+							<Link href={PATHS.PARENTS.DIRECTORY.EDIT(row.original.id)}>
+								<Pencil className="size-3.5" />
 							</Link>
 						</Button>
 						<ConfirmationModal
@@ -198,13 +279,16 @@ export default function ParentPortalAccess() {
 							onConfirm={() => togglePortal(row.original)}
 						>
 							<AlertDialogTrigger asChild>
-								<Button variant="outline" size="sm">
+								<Button
+									variant="outline"
+									size="icon-sm"
+									title={row.original.isActive ? "Disable portal" : "Enable portal"}
+								>
 									{row.original.isActive ? (
-										<PowerOff className="mr-2 size-4" />
+										<PowerOff className="size-3.5" />
 									) : (
-										<Power className="mr-2 size-4" />
+										<Power className="size-3.5" />
 									)}
-									{row.original.isActive ? "Disable" : "Enable"}
 								</Button>
 							</AlertDialogTrigger>
 						</ConfirmationModal>
@@ -217,67 +301,36 @@ export default function ParentPortalAccess() {
 
 	return (
 		<div className="space-y-6">
-			<div>
-				<h1 className="text-2xl font-semibold">Parent Portal Access</h1>
-				<p className="text-muted-foreground">
-					Control which parents can sign in to the student-parent portal.
-				</p>
-			</div>
-
 			<PortalSummary summary={summaryResponse?.data} isLoading={isSummaryLoading} />
 
-			<div className="bg-card/70 border-border/70 space-y-4 rounded-md border p-4">
-				<div className="grid gap-3 md:grid-cols-[220px_1fr_auto]">
-					<Select value={status} onValueChange={(value) => { setStatus(value); setPage(1); }}>
-						<SelectTrigger>
-							<SelectValue placeholder="Portal status" />
-						</SelectTrigger>
-						<SelectContent>
-							<SelectItem value="all">All Accounts</SelectItem>
-							<SelectItem value="active">Active</SelectItem>
-							<SelectItem value="inactive">Disabled</SelectItem>
-						</SelectContent>
-					</Select>
-					<div className="relative">
-						<Search className="text-muted-foreground absolute left-3 top-1/2 size-4 -translate-y-1/2" />
-						<Input
-							value={searchInput}
-							onChange={(event) => setSearchInput(event.target.value)}
-							placeholder="Search parent, username, phone, or email"
-							className="pl-9"
-						/>
-					</div>
-					<Button
-						variant="outline"
-						onClick={() => {
-							setStatus("all");
-							setSearchInput("");
-							setSearch("");
-							setPage(1);
+			<Card className="p-6 shadow-none ring-0">
+				<CardHeader className="p-0">
+					<ParentFilterBar filter={filter} setFilter={setFilter} />
+				</CardHeader>
+				<CardContent className="space-y-4 p-0">
+					<TableFilter
+						filter={filter}
+						setFilter={setFilter}
+						resetFilters={resetFilters}
+					/>
+					<DataTable
+						data={parents}
+						columns={columns}
+						isLoading={isLoading}
+						pagination={{
+							page,
+							limit,
+							total: meta?.total || 0,
+							totalPages: meta?.totalPages || 0,
+							onPageChange: setPage,
+							onLimitChange: (nextLimit) => {
+								setLimit(nextLimit);
+								setPage(1);
+							},
 						}}
-					>
-						<RefreshCcw className="mr-2 size-4" />
-						Reset
-					</Button>
-				</div>
-
-				<DataTable
-					data={parents}
-					columns={columns}
-					isLoading={isLoading}
-					pagination={{
-						page,
-						limit,
-						total: meta.total,
-						totalPages: meta.totalPages,
-						onPageChange: setPage,
-						onLimitChange: (nextLimit) => {
-							setLimit(nextLimit);
-							setPage(1);
-						},
-					}}
-				/>
-			</div>
+					/>
+				</CardContent>
+			</Card>
 		</div>
 	);
 }

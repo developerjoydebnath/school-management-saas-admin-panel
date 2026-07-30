@@ -106,6 +106,7 @@ export const PATHS = {
 			ROOT: "/academics/class-rooms",
 			CREATE: "/academics/class-rooms/create",
 			EDIT: (id: number | string) => `/academics/class-rooms/${id}/edit`,
+			DESIGN: (id: number | string) => `/academics/class-rooms/${id}/design`,
 		},
 		SUBJECTS: {
 			ROOT: "/academics/subjects",

@@ -1,29 +1,14 @@
 "use client";
 
-import ClassRoomForm from "@/modules/academics/class-rooms/components/ClassRoomForm";
-import { ClassRoomFormValues } from "@/modules/academics/class-rooms/dto/class-room.dto";
+import ClassRoomDesignView from "@/modules/academics/class-rooms/components/ClassRoomDesignView";
 import PageHeading from "@/shared/components/custom/PageHeading";
 import { PATHS } from "@/shared/configs/paths.config";
 import { useBreadcrumbStore } from "@/shared/stores/breadcrumb-store";
-import { StatusEnum } from "@/shared/types/enums";
 import { useTranslations } from "next-intl";
-import { useEffect } from "react";
+import { use, useEffect } from "react";
 
-const defaultValues: ClassRoomFormValues = {
-	name: "",
-	roomNo: "",
-	capacity: 30,
-	roomLength: undefined,
-	roomWidth: undefined,
-	dimensionUnit: "feet",
-	floor: "",
-	building: "",
-	status: StatusEnum.ACTIVE,
-	description: "",
-	layoutConfig: undefined,
-};
-
-export default function CreateClassRoomPage() {
+export default function ClassRoomDesignPage({ params }: { params: Promise<{ id: string }> }) {
+	const { id } = use(params);
 	const { setBreadcrumbs } = useBreadcrumbStore();
 	const tNav = useTranslations("Navigation");
 
@@ -32,14 +17,18 @@ export default function CreateClassRoomPage() {
 			{ label: tNav("dashboard"), href: PATHS.DASHBOARD },
 			{ label: tNav("academics"), href: PATHS.ACADEMICS.ROOT },
 			{ label: tNav("academics_class_rooms"), href: PATHS.ACADEMICS.CLASS_ROOMS.ROOT },
-			{ label: tNav("create") },
+			{ label: "Design" },
 		]);
 	}, [setBreadcrumbs, tNav]);
 
 	return (
 		<div className="@container/page space-y-6">
-			<PageHeading routeName="ClassRooms" />
-			<ClassRoomForm defaultValues={defaultValues} />
+			<PageHeading
+				routeName="ClassRooms"
+				title="Class Room Design"
+				description="Arrange furniture and prepare the room layout for seat planning."
+			/>
+			<ClassRoomDesignView id={id} />
 		</div>
 	);
 }

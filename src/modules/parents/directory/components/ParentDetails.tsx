@@ -2,16 +2,17 @@
 
 import ConfirmationModal from "@/shared/components/custom/ConfirmationModal";
 import { AlertDialogTrigger } from "@/shared/components/ui/alert-dialog";
-import { Badge } from "@/shared/components/ui/badge";
 import { Button } from "@/shared/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/shared/components/ui/card";
 import { Skeleton } from "@/shared/components/ui/skeleton";
+import { PATHS } from "@/shared/configs/paths.config";
 import { useSWR } from "@/shared/hooks/use-swr";
 import axios from "@/shared/lib/axios";
 import {
 	ArrowLeft,
 	Eye,
 	Mail,
+	Pencil,
 	Phone,
 	Power,
 	PowerOff,
@@ -46,44 +47,70 @@ function DetailsSkeleton() {
 
 function ChildCard({ child }: { child: ParentChild }) {
 	return (
-		<div className="border-border/70 bg-muted/20 flex flex-col gap-3 rounded-md border p-4 md:flex-row md:items-center md:justify-between">
-			<div className="space-y-1">
-				<div className="flex flex-wrap items-center gap-2">
-					<h3 className="font-semibold">{child.fullName || "Student"}</h3>
-					<span
-						className={`rounded-full px-2 py-0.5 text-xs font-medium ${studentStatusClass(
-							child.status
-						)}`}
-					>
-						{child.status || "Unknown"}
-					</span>
+		<div className="border-border/70 bg-muted/20 rounded-md border p-4">
+			<div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
+				<div className="space-y-1">
+					<div className="flex flex-wrap items-center gap-2">
+						<h3 className="font-semibold">{child.fullName || "Student"}</h3>
+						<span
+							className={`rounded-full px-2 py-0.5 text-xs font-medium ${studentStatusClass(
+								child.status
+							)}`}
+						>
+							{child.status || "Unknown"}
+						</span>
+					</div>
+					<p className="text-muted-foreground font-mono text-xs">
+						{child.studentIdNo || "-"}
+					</p>
 				</div>
-				<p className="text-muted-foreground font-mono text-xs">
-					{child.studentIdNo || "-"}
-				</p>
+				{child.classId ? (
+					<Button asChild variant="outline" size="sm" className="w-full md:w-auto">
+						<Link href={`/students/directory/${child.classId}/${child.id}`}>
+							<Eye className="mr-2 size-4" />
+							View Student
+						</Link>
+					</Button>
+				) : null}
 			</div>
-			<div className="grid gap-3 text-sm sm:grid-cols-3 md:min-w-[360px]">
-				<div>
+
+			<div className="mt-4 grid gap-3 text-sm sm:grid-cols-2 xl:grid-cols-4">
+				<div className="border-border/60 rounded-md border p-3">
 					<p className="text-muted-foreground text-xs">Class</p>
 					<p className="font-medium">{child.className || "-"}</p>
 				</div>
-				<div>
+				<div className="border-border/60 rounded-md border p-3">
 					<p className="text-muted-foreground text-xs">Section</p>
 					<p className="font-medium">{child.sectionName || "-"}</p>
 				</div>
-				<div>
+				<div className="border-border/60 rounded-md border p-3">
 					<p className="text-muted-foreground text-xs">Roll</p>
 					<p className="font-medium">{child.rollNumber || "-"}</p>
 				</div>
+				<div className="border-border/60 rounded-md border p-3">
+					<p className="text-muted-foreground text-xs">Gender</p>
+					<p className="font-medium">{child.gender || "-"}</p>
+				</div>
+				<div className="border-border/60 rounded-md border p-3">
+					<p className="text-muted-foreground text-xs">Father</p>
+					<p className="font-medium">{child.fatherName || "-"}</p>
+					<p className="text-muted-foreground text-xs">{child.fatherMobile || "-"}</p>
+				</div>
+				<div className="border-border/60 rounded-md border p-3">
+					<p className="text-muted-foreground text-xs">Mother</p>
+					<p className="font-medium">{child.motherName || "-"}</p>
+					<p className="text-muted-foreground text-xs">{child.motherMobile || "-"}</p>
+				</div>
+				<div className="border-border/60 rounded-md border p-3">
+					<p className="text-muted-foreground text-xs">Guardian</p>
+					<p className="font-medium">{child.guardianName || "-"}</p>
+					<p className="text-muted-foreground text-xs">{child.guardianMobile || "-"}</p>
+				</div>
+				<div className="border-border/60 rounded-md border p-3">
+					<p className="text-muted-foreground text-xs">Admission Date</p>
+					<p className="font-medium">{formatDateTime(child.admissionDate)}</p>
+				</div>
 			</div>
-			{child.classId ? (
-				<Button asChild variant="outline" size="sm" className="w-full md:w-auto">
-					<Link href={`/students/directory/${child.classId}/${child.id}`}>
-						<Eye className="mr-2 size-4" />
-						View Student
-					</Link>
-				</Button>
-			) : null}
 		</div>
 	);
 }
@@ -126,7 +153,7 @@ export default function ParentDetails({ parentId }: { parentId: string }) {
 					</p>
 				</div>
 				<Button asChild variant="outline">
-					<Link href="/parents/directory">
+					<Link href={PATHS.PARENTS.DIRECTORY.ROOT}>
 						<ArrowLeft className="mr-2 size-4" />
 						Back
 					</Link>
@@ -165,33 +192,44 @@ export default function ParentDetails({ parentId }: { parentId: string }) {
 								</div>
 							</div>
 
-							<ConfirmationModal
-								title={
-									parent.isActive
-										? "Disable parent portal access?"
-										: "Enable parent portal access?"
-								}
-								description={
-									parent.isActive
-										? "The parent will no longer be able to sign in to the parent portal."
-										: "The parent will be able to sign in and view linked children."
-								}
-								confirmText={parent.isActive ? "Disable" : "Enable"}
-								variant={parent.isActive ? "destructive" : "default"}
-								isLoading={updating}
-								onConfirm={togglePortal}
-							>
-								<AlertDialogTrigger asChild>
-									<Button className="w-full" variant={parent.isActive ? "destructive" : "default"}>
-										{parent.isActive ? (
-											<PowerOff className="mr-2 size-4" />
-										) : (
-											<Power className="mr-2 size-4" />
-										)}
-										{parent.isActive ? "Disable Portal" : "Enable Portal"}
-									</Button>
-								</AlertDialogTrigger>
-							</ConfirmationModal>
+							<div className="grid gap-2 sm:grid-cols-2 xl:grid-cols-1 2xl:grid-cols-2">
+								<Button asChild variant="outline" className="w-full">
+									<Link href={PATHS.PARENTS.DIRECTORY.EDIT(parent.id)}>
+										<Pencil className="mr-2 size-4" />
+										Update Profile
+									</Link>
+								</Button>
+								<ConfirmationModal
+									title={
+										parent.isActive
+											? "Disable parent portal access?"
+											: "Enable parent portal access?"
+									}
+									description={
+										parent.isActive
+											? "The parent will no longer be able to sign in to the parent portal."
+											: "The parent will be able to sign in and view linked children."
+									}
+									confirmText={parent.isActive ? "Disable" : "Enable"}
+									variant={parent.isActive ? "destructive" : "default"}
+									isLoading={updating}
+									onConfirm={togglePortal}
+								>
+									<AlertDialogTrigger asChild>
+										<Button
+											className="w-full"
+											variant={parent.isActive ? "destructive" : "default"}
+										>
+											{parent.isActive ? (
+												<PowerOff className="mr-2 size-4" />
+											) : (
+												<Power className="mr-2 size-4" />
+											)}
+											{parent.isActive ? "Disable Portal" : "Enable Portal"}
+										</Button>
+									</AlertDialogTrigger>
+								</ConfirmationModal>
+							</div>
 						</CardContent>
 					</Card>
 
@@ -258,12 +296,24 @@ export default function ParentDetails({ parentId }: { parentId: string }) {
 						</CardHeader>
 						<CardContent className="grid gap-3 md:grid-cols-2">
 							<div className="border-border/70 rounded-md border p-3">
+								<p className="text-muted-foreground text-xs">Username</p>
+								<p className="font-mono text-sm font-medium">{parent.username || "-"}</p>
+							</div>
+							<div className="border-border/70 rounded-md border p-3">
+								<p className="text-muted-foreground text-xs">Email Address</p>
+								<p className="break-all font-medium">{parent.email || "-"}</p>
+							</div>
+							<div className="border-border/70 rounded-md border p-3">
 								<p className="text-muted-foreground text-xs">First Name</p>
 								<p className="font-medium">{parent.firstName || "-"}</p>
 							</div>
 							<div className="border-border/70 rounded-md border p-3">
 								<p className="text-muted-foreground text-xs">Last Name</p>
 								<p className="font-medium">{parent.lastName || "-"}</p>
+							</div>
+							<div className="border-border/70 rounded-md border p-3">
+								<p className="text-muted-foreground text-xs">Mobile Number</p>
+								<p className="font-medium">{parent.phone || "-"}</p>
 							</div>
 							<div className="border-border/70 rounded-md border p-3">
 								<p className="text-muted-foreground text-xs">Created At</p>

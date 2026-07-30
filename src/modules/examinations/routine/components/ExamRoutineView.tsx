@@ -1,8 +1,7 @@
 "use client";
 
-import ClassRoomSelect from "@/shared/components/form/ClassRoomSelect";
 import ExamSelect from "@/shared/components/form/ExamSelect";
-import TeacherSelection from "@/shared/components/form/TeacherSelection";
+import TeacherMultiSelection from "@/shared/components/form/TeacherMultiSelection";
 import { Button } from "@/shared/components/ui/button";
 import { Card, CardContent, CardHeader } from "@/shared/components/ui/card";
 import { Input } from "@/shared/components/ui/input";
@@ -23,6 +22,7 @@ import {
 	TableRow,
 } from "@/shared/components/ui/table";
 import { PATHS } from "@/shared/configs/paths.config";
+import { Download, Save } from "lucide-react";
 import { useLocale, useTranslations } from "next-intl";
 import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
@@ -31,12 +31,11 @@ import {
 	ExamRoutineSubjectPayload,
 	ExamRoutineSubjectStatusEnum,
 } from "../dto/exam-routine.dto";
+import { useExamRoutine } from "../hooks/use-exam-routine";
 import {
 	downloadExamRoutinePdf,
 	saveExamRoutine,
 } from "../hooks/use-exam-routine-mutations";
-import { useExamRoutine } from "../hooks/use-exam-routine";
-import { Download, Save } from "lucide-react";
 
 type ExamRoutineViewProps = {
 	initialExamId?: string;
@@ -62,18 +61,34 @@ function formatDate(value?: string | null) {
 	});
 }
 
+function isDateOutsidePeriod(
+	dateValue?: string | null,
+	startValue?: string | null,
+	endValue?: string | null
+) {
+	if (!dateValue || !startValue || !endValue) return false;
+	return dateValue < startValue || dateValue > endValue;
+}
+
 function getClassName(cls: any) {
 	return cls?.class?.enName || cls?.enName || "-";
 }
 
 function mapSubjectRow(row: any): ExamRoutineSubjectPayload {
+	const invigilatorIds =
+		Array.isArray(row.invigilatorIds) && row.invigilatorIds.length
+			? row.invigilatorIds
+			: row.invigilatorId
+				? [row.invigilatorId]
+				: [];
+
 	return {
 		id: row.id,
 		examDate: formatDateInput(row.examDate),
 		startTime: row.startTime || "",
 		durationMins: row.durationMins || 180,
-		classRoomId: row.classRoomId || "",
-		invigilatorId: row.invigilatorId || "",
+		invigilatorId: invigilatorIds[0] || "",
+		invigilatorIds,
 		status: row.status || ExamRoutineSubjectStatusEnum.SCHEDULED,
 	};
 }
@@ -89,6 +104,8 @@ export default function ExamRoutineView({ initialExamId }: ExamRoutineViewProps)
 	const [isPrinting, setIsPrinting] = useState(false);
 
 	const { data, isLoading } = useExamRoutine(examId, selectedClassId);
+	const examStartDate = formatDateInput(data?.exam?.startDate);
+	const examEndDate = formatDateInput(data?.exam?.endDate);
 
 	useEffect(() => {
 		setExamId(initialExamId || "");
@@ -128,19 +145,42 @@ export default function ExamRoutineView({ initialExamId }: ExamRoutineViewProps)
 	const handleSave = async () => {
 		if (!examId || !selectedClassId) return;
 
+		const hasOutOfRangeDate = rows.some((row) =>
+			isDateOutsidePeriod(row.examDate, examStartDate, examEndDate)
+		);
+		if (hasOutOfRangeDate) {
+			toast.error(
+				`Exam date must be between ${formatDate(data?.exam?.startDate)} and ${formatDate(
+					data?.exam?.endDate
+				)}.`
+			);
+			return;
+		}
+
+		const hasMissingInvigilator = rows.some(
+			(row) => !(row.invigilatorIds || []).filter(Boolean).length && !row.invigilatorId
+		);
+		if (hasMissingInvigilator) {
+			toast.error("Select at least one invigilator for every subject row.");
+			return;
+		}
+
 		setIsSaving(true);
 		try {
 			await saveExamRoutine({
 				examId,
 				classId: selectedClassId,
-				subjects: rows.map((row) => ({
-					...row,
-					examDate: row.examDate || null,
-					startTime: row.startTime || null,
-					classRoomId: row.classRoomId || null,
-					invigilatorId: row.invigilatorId || null,
-					durationMins: Number(row.durationMins || 180),
-				})),
+				subjects: rows.map((row) => {
+					const invigilatorIds = (row.invigilatorIds || []).filter(Boolean);
+					return {
+						...row,
+						examDate: row.examDate || null,
+						startTime: row.startTime || null,
+						invigilatorId: invigilatorIds[0] || row.invigilatorId || null,
+						invigilatorIds,
+						durationMins: Number(row.durationMins || 180),
+					};
+				}),
 			});
 			toast.success(t("saveSuccess"));
 		} catch {
@@ -166,7 +206,7 @@ export default function ExamRoutineView({ initialExamId }: ExamRoutineViewProps)
 	};
 
 	return (
-		<div className="mx-auto max-w-7xl space-y-6">
+		<div className="space-y-6">
 			<Card className="shadow-none ring-0">
 				<CardHeader className="space-y-2">
 					<h2 className="text-base font-semibold">{t("selectExamTitle")}</h2>
@@ -268,7 +308,6 @@ export default function ExamRoutineView({ initialExamId }: ExamRoutineViewProps)
 											<TableHead className="min-w-40">{t("examDate")}</TableHead>
 											<TableHead className="min-w-36">{t("startTime")}</TableHead>
 											<TableHead className="min-w-32">{t("duration")}</TableHead>
-											<TableHead className="min-w-56">{t("room")}</TableHead>
 											<TableHead className="min-w-64">{t("invigilator")}</TableHead>
 											<TableHead className="min-w-40">{t("status")}</TableHead>
 										</TableRow>
@@ -281,7 +320,7 @@ export default function ExamRoutineView({ initialExamId }: ExamRoutineViewProps)
 													<TableCell className="whitespace-normal">
 														<div className="font-medium">{subject.subject?.enName || "-"}</div>
 														<div className="text-muted-foreground text-xs">
-															{subject.subject?.code || subject.subject?.boardCode || "-"} ·{" "}
+															{subject.subject?.code || subject.subject?.boardCode || "-"} -{" "}
 															{subject.totalMarks}/{subject.passMarks}
 														</div>
 													</TableCell>
@@ -290,6 +329,8 @@ export default function ExamRoutineView({ initialExamId }: ExamRoutineViewProps)
 															type="date"
 															placeholder="Select date"
 															value={row.examDate || ""}
+															min={examStartDate || undefined}
+															max={examEndDate || undefined}
 															onChange={(event) =>
 																updateRow(subject.id, { examDate: event.target.value })
 															}
@@ -322,21 +363,15 @@ export default function ExamRoutineView({ initialExamId }: ExamRoutineViewProps)
 														/>
 													</TableCell>
 													<TableCell>
-														<ClassRoomSelect
-															value={row.classRoomId || ""}
+														<TeacherMultiSelection
+															value={row.invigilatorIds || []}
 															onChange={(value) =>
-																updateRow(subject.id, { classRoomId: value })
+																updateRow(subject.id, {
+																	invigilatorIds: value,
+																	invigilatorId: value[0] || "",
+																})
 															}
-															placeholder="Select room"
-														/>
-													</TableCell>
-													<TableCell>
-														<TeacherSelection
-															value={row.invigilatorId || ""}
-															onChange={(value) =>
-																updateRow(subject.id, { invigilatorId: value })
-															}
-															placeholder="Select invigilator"
+															placeholder="Select invigilators"
 														/>
 													</TableCell>
 													<TableCell>
@@ -369,7 +404,7 @@ export default function ExamRoutineView({ initialExamId }: ExamRoutineViewProps)
 										})}
 										{!data.subjects?.length ? (
 											<TableRow>
-												<TableCell colSpan={7} className="text-muted-foreground h-28 text-center">
+												<TableCell colSpan={6} className="text-muted-foreground h-28 text-center">
 													{t("noSubjects")}
 												</TableCell>
 											</TableRow>

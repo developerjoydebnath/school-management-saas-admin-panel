@@ -15,7 +15,7 @@ import { useAuthStore } from "@/shared/stores/authStore";
 import { StatusEnum } from "@/shared/types/enums";
 import { hasAccess } from "@/shared/utils/permission";
 import { ColumnDef } from "@tanstack/react-table";
-import { Eye, Pencil, Trash2 } from "lucide-react";
+import { Eye, LayoutGrid, Pencil, Trash2 } from "lucide-react";
 import { useTranslations } from "next-intl";
 import Link from "next/link";
 import { useState } from "react";
@@ -187,6 +187,19 @@ export default function ClassRoomList() {
 							]}
 						>
 							<ClassRoomDetailsAction id={room.id} />
+						</PermissionGuard>
+						<PermissionGuard
+							permissions={[
+								PERMISSIONS.ACADEMICS.CLASS_ROOMS.EDIT,
+								PERMISSIONS.ACADEMICS.CLASS_ROOMS.ALL,
+								PERMISSIONS.ACADEMICS.ALL,
+							]}
+						>
+							<Button asChild variant="outline" size="icon-sm" title="Design room layout">
+								<Link href={PATHS.ACADEMICS.CLASS_ROOMS.DESIGN(room.id)}>
+									<LayoutGrid className="text-muted-foreground hover:text-foreground h-4 w-4" />
+								</Link>
+							</Button>
 						</PermissionGuard>
 						<PermissionGuard
 							permissions={[

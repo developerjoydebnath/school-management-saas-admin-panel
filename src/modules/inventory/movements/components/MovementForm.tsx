@@ -50,6 +50,13 @@ export function MovementForm({ defaultValues }: Props) {
 		form.reset(defaultValues);
 	}, [defaultValues, form]);
 
+	const itemId = form.watch("itemId");
+	const movementType = form.watch("movementType");
+	const fromLocationId = form.watch("fromLocationId");
+
+	const isFromLocationRequired = ["TRANSFER", "RETURN", "DISPOSE", "LOST"].includes(movementType);
+	const isToLocationRequired = ["TRANSFER", "RETURN"].includes(movementType);
+
 	const movementTypeOptions = useMemo(() => {
 		return MOVEMENT_TYPES.map((type) => {
 			const labelKey = type.toLowerCase().replace(/_([a-z])/g, (_, c) => c.toUpperCase());
@@ -66,9 +73,7 @@ export function MovementForm({ defaultValues }: Props) {
 			toast.success("Inventory movement recorded successfully");
 			router.push(PATHS.INVENTORY.MOVEMENTS.ROOT);
 		} catch (error: any) {
-			toast.error(
-				error.response?.data?.message || "Something went wrong. Please try again."
-			);
+			// Error is already handled by axios global interceptor
 		}
 	};
 
@@ -107,16 +112,20 @@ export function MovementForm({ defaultValues }: Props) {
 					<InputField
 						control={form.control}
 						name="fromLocationId"
-						label="From Location (Optional)"
+						label={isFromLocationRequired ? "From Location" : "From Location (Optional)"}
 						type="inventoryLocationSelect"
 						placeholder="Select source location"
+						dependencyId={itemId}
+						required={isFromLocationRequired}
 					/>
 					<InputField
 						control={form.control}
 						name="toLocationId"
-						label="To Location (Optional)"
+						label={isToLocationRequired ? "To Location" : "To Location (Optional)"}
 						type="inventoryLocationSelect"
 						placeholder="Select destination location"
+						required={isToLocationRequired}
+						excludeId={fromLocationId}
 					/>
 					<InputField
 						control={form.control}

@@ -51,26 +51,17 @@ function DetailsSkeleton() {
 	);
 }
 
-export function ItemDetailsSheet({ id, open }: Props) {
+export function ItemDetailsContent({ id }: { id: string }) {
 	const t = useTranslations("Inventory");
-	const { data: response, isLoading } = useItem(open ? id : null);
+	const { data: response, isLoading } = useItem(id);
 	const data = response?.data || response;
 
+	if (isLoading || !data) return <DetailsSkeleton />;
+
 	return (
-		<SheetContent className="w-full gap-0 p-0 sm:max-w-none @3xl/body:w-[64vw]">
-			<SheetHeader className="border-b p-4">
-				<SheetTitle className="text-base leading-6 font-normal">
-					{t("detailsTitle")}
-				</SheetTitle>
-				<SheetDescription className="text-xs">{t("detailsDescription")}</SheetDescription>
-			</SheetHeader>
-			<ScrollArea className="h-[calc(100vh-73px)]">
-				{isLoading || !data ? (
-					<DetailsSkeleton />
-				) : (
-					<div className="space-y-4 p-4">
-						<section className="bg-muted/20 rounded-md border p-4">
-							<h3 className="text-sm font-normal">{t("basicInformation")}</h3>
+		<div className="space-y-4 p-4">
+			<section className="bg-muted/20 rounded-md border p-4">
+				<h3 className="text-sm font-normal">{t("basicInformation")}</h3>
 							<div className="mt-4 grid grid-cols-1 gap-x-4 gap-y-4 @xl/body:grid-cols-2">
 								<Pair label="Item Name" value={data.name} />
 								<Pair label="Item Code" value={data.code} />
@@ -115,7 +106,22 @@ export function ItemDetailsSheet({ id, open }: Props) {
 							</div>
 						</section>
 					</div>
-				)}
+	);
+}
+
+export function ItemDetailsSheet({ id, open }: Props) {
+	const t = useTranslations("Inventory");
+
+	return (
+		<SheetContent className="w-full gap-0 p-0 sm:max-w-none @3xl/body:w-[64vw]">
+			<SheetHeader className="border-b p-4">
+				<SheetTitle className="text-base leading-6 font-normal">
+					{t("detailsTitle")}
+				</SheetTitle>
+				<SheetDescription className="text-xs">{t("detailsDescription")}</SheetDescription>
+			</SheetHeader>
+			<ScrollArea className="h-[calc(100vh-73px)]">
+				{open && <ItemDetailsContent id={id} />}
 			</ScrollArea>
 		</SheetContent>
 	);

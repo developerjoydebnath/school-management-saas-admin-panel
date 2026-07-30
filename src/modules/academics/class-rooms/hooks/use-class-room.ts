@@ -11,3 +11,14 @@ export function useClassRoom(id?: string) {
 		mutate,
 	};
 }
+
+export function useClassRoomDesign(id?: string) {
+	const { data, isLoading, isError, mutate } = useSWR(id ? `/class-rooms/${id}` : null);
+
+	return {
+		data: data?.data ? new ClassRoomModel(data.data) : null,
+		isLoading,
+		isError,
+		mutate,
+	};
+}

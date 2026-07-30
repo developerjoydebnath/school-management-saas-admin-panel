@@ -9,6 +9,15 @@ export type ParentChild = {
 	sectionId?: string | null;
 	sectionName?: string | null;
 	currentSessionId?: string | null;
+	fatherName?: string | null;
+	fatherMobile?: string | null;
+	motherName?: string | null;
+	motherMobile?: string | null;
+	guardianName?: string | null;
+	guardianMobile?: string | null;
+	gender?: string | null;
+	email?: string | null;
+	admissionDate?: string | null;
 };
 
 export type ParentRecord = {

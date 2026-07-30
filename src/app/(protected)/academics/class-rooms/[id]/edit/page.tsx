@@ -4,6 +4,7 @@ import ClassRoomForm from "@/modules/academics/class-rooms/components/ClassRoomF
 import { ClassRoomFormValues } from "@/modules/academics/class-rooms/dto/class-room.dto";
 import { useClassRoom } from "@/modules/academics/class-rooms/hooks/use-class-room";
 import PageHeading from "@/shared/components/custom/PageHeading";
+import { Skeleton } from "@/shared/components/ui/skeleton";
 import { PATHS } from "@/shared/configs/paths.config";
 import { useBreadcrumbStore } from "@/shared/stores/breadcrumb-store";
 import { StatusEnum } from "@/shared/types/enums";
@@ -25,27 +26,34 @@ export default function EditClassRoomPage({ params }: { params: Promise<{ id: st
 		]);
 	}, [setBreadcrumbs, tNav]);
 
-	if (isLoading) return null;
+	if (isLoading) {
+		return (
+			<div className="@container/page space-y-6">
+				<PageHeading routeName="ClassRooms" />
+				<Skeleton className="h-96 w-full rounded-md" />
+			</div>
+		);
+	}
 
 	const raw = room?.original || {};
 	const defaultValues: ClassRoomFormValues = {
 		name: raw.name || "",
 		roomNo: raw.roomNo || "",
 		capacity: raw.capacity || 30,
+		roomLength:
+			raw.roomLength === null || raw.roomLength === undefined
+				? undefined
+				: Number(raw.roomLength),
+		roomWidth:
+			raw.roomWidth === null || raw.roomWidth === undefined
+				? undefined
+				: Number(raw.roomWidth),
+		dimensionUnit: raw.dimensionUnit || "feet",
 		floor: raw.floor || "",
 		building: raw.building || "",
-		highBench: raw.highBench || 0,
-		lowBench: raw.lowBench || 0,
-		chair: raw.chair || 0,
-		table: raw.table || 0,
-		board: raw.board || 0,
-		projector: raw.projector || 0,
-		fan: raw.fan || 0,
-		light: raw.light || 0,
-		hasAc: raw.hasAc || false,
-		hasCctv: raw.hasCctv || false,
 		status: raw.status || StatusEnum.ACTIVE,
 		description: raw.description || "",
+		layoutConfig: raw.layoutConfig || undefined,
 	};
 
 	return (

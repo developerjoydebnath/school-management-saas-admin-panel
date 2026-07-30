@@ -10,7 +10,7 @@ import { MovementForm } from "./MovementForm";
 
 const defaultValues: MovementFormValues = {
 	itemId: "",
-	movementType: "PURCHASE",
+	movementType: "TRANSFER",
 	quantity: 1,
 	assetId: "",
 	stockBatchId: "",

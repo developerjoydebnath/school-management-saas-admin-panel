@@ -2,34 +2,29 @@
 
 import ConfirmationModal from "@/shared/components/custom/ConfirmationModal";
 import DataTable from "@/shared/components/table/DataTable";
+import TableFilter from "@/shared/components/table/TableFilter";
 import { AlertDialogTrigger } from "@/shared/components/ui/alert-dialog";
 import { Badge } from "@/shared/components/ui/badge";
 import { Button } from "@/shared/components/ui/button";
-import { Input } from "@/shared/components/ui/input";
-import {
-	Select,
-	SelectContent,
-	SelectItem,
-	SelectTrigger,
-	SelectValue,
-} from "@/shared/components/ui/select";
+import { Card, CardContent, CardHeader } from "@/shared/components/ui/card";
 import { Skeleton } from "@/shared/components/ui/skeleton";
+import { PATHS } from "@/shared/configs/paths.config";
 import { useSWR } from "@/shared/hooks/use-swr";
 import { useTableData } from "@/shared/hooks/use-table-data";
 import axios from "@/shared/lib/axios";
 import { ColumnDef } from "@tanstack/react-table";
 import {
 	Eye,
+	Pencil,
 	Power,
 	PowerOff,
-	RefreshCcw,
-	Search,
 	ShieldCheck,
 	Users,
 	UsersRound,
+	type LucideIcon,
 } from "lucide-react";
 import Link from "next/link";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import { toast } from "sonner";
 import {
 	formatDateTime,
@@ -37,6 +32,14 @@ import {
 	ParentRecord,
 	portalBadgeClass,
 } from "../../shared/parent-utils";
+import ParentFilterBar from "./ParentFilterBar";
+
+export type ParentDirectoryFilter = {
+	search: string;
+	status?: string[];
+};
+
+const initialFilters: ParentDirectoryFilter = { search: "" };
 
 function SummarySkeleton() {
 	return (
@@ -56,7 +59,7 @@ function StatCard({
 }: {
 	label: string;
 	value: unknown;
-	icon: typeof Users;
+	icon: LucideIcon;
 	accent?: "success" | "warning";
 }) {
 	return (
@@ -81,27 +84,21 @@ function StatCard({
 export default function ParentDirectory() {
 	const [page, setPage] = useState(1);
 	const [limit, setLimit] = useState(10);
-	const [status, setStatus] = useState("all");
-	const [searchInput, setSearchInput] = useState("");
-	const [search, setSearch] = useState("");
+	const [filter, setFilterState] = useState<ParentDirectoryFilter>(initialFilters);
 	const [updatingId, setUpdatingId] = useState<string | null>(null);
 
-	useEffect(() => {
-		const timeout = window.setTimeout(() => {
-			setPage(1);
-			setSearch(searchInput.trim());
-		}, 300);
-		return () => window.clearTimeout(timeout);
-	}, [searchInput]);
+	const setFilter = useCallback((nextFilter: ParentDirectoryFilter) => {
+		setFilterState(nextFilter);
+		setPage(1);
+	}, []);
 
 	const query = useMemo(
 		() => ({
 			page,
 			limit,
-			status: status === "all" ? undefined : status,
-			search: search || undefined,
+			...filter,
 		}),
-		[limit, page, search, status]
+		[filter, limit, page]
 	);
 
 	const { data: parents, meta, isLoading, mutate } = useTableData("/parents", query);
@@ -109,10 +106,7 @@ export default function ParentDirectory() {
 		data: summaryResponse,
 		isLoading: isSummaryLoading,
 		mutate: mutateSummary,
-	} = useSWR("/parents/summary", {
-		status: status === "all" ? undefined : status,
-		search: search || undefined,
-	});
+	} = useSWR("/parents/summary", filter);
 	const summary = summaryResponse?.data;
 
 	const togglePortal = useCallback(
@@ -136,10 +130,9 @@ export default function ParentDirectory() {
 	);
 
 	const resetFilters = () => {
-		setStatus("all");
-		setSearchInput("");
-		setSearch("");
+		setFilterState(initialFilters);
 		setPage(1);
+		setLimit(10);
 	};
 
 	const columns: ColumnDef<ParentRecord>[] = useMemo(
@@ -212,8 +205,13 @@ export default function ParentDirectory() {
 				cell: ({ row }) => (
 					<div className="flex items-center gap-2">
 						<Button asChild variant="outline" size="icon-sm" title="View details">
-							<Link href={`/parents/directory/${row.original.id}/details`}>
+							<Link href={PATHS.PARENTS.DIRECTORY.DETAILS(row.original.id)}>
 								<Eye className="size-3.5" />
+							</Link>
+						</Button>
+						<Button asChild variant="outline" size="icon-sm" title="Update parent profile">
+							<Link href={PATHS.PARENTS.DIRECTORY.EDIT(row.original.id)}>
+								<Pencil className="size-3.5" />
 							</Link>
 						</Button>
 						<ConfirmationModal
@@ -255,13 +253,6 @@ export default function ParentDirectory() {
 
 	return (
 		<div className="space-y-6">
-			<div>
-				<h1 className="text-2xl font-semibold">Parent Directory</h1>
-				<p className="text-muted-foreground">
-					Manage parent accounts and linked student profiles.
-				</p>
-			</div>
-
 			{isSummaryLoading ? (
 				<SummarySkeleton />
 			) : (
@@ -283,32 +274,16 @@ export default function ParentDirectory() {
 				</div>
 			)}
 
-			<div className="bg-card/70 border-border/70 space-y-4 rounded-md border p-4">
-				<div className="grid gap-3 md:grid-cols-[220px_1fr_auto]">
-					<Select value={status} onValueChange={(value) => { setStatus(value); setPage(1); }}>
-						<SelectTrigger>
-							<SelectValue placeholder="Status" />
-						</SelectTrigger>
-						<SelectContent>
-							<SelectItem value="all">All Statuses</SelectItem>
-							<SelectItem value="active">Active Portal</SelectItem>
-							<SelectItem value="inactive">Disabled Portal</SelectItem>
-						</SelectContent>
-					</Select>
-					<div className="relative">
-						<Search className="text-muted-foreground absolute left-3 top-1/2 size-4 -translate-y-1/2" />
-						<Input
-							value={searchInput}
-							onChange={(event) => setSearchInput(event.target.value)}
-							placeholder="Search parent, username, phone, or email"
-							className="pl-9"
-						/>
-					</div>
-					<Button variant="outline" onClick={resetFilters}>
-						<RefreshCcw className="mr-2 size-4" />
-						Reset
-					</Button>
-				</div>
+			<Card className="p-6 shadow-none ring-0">
+				<CardHeader className="p-0">
+					<ParentFilterBar filter={filter} setFilter={setFilter} />
+				</CardHeader>
+				<CardContent className="space-y-4 p-0">
+				<TableFilter
+					filter={filter}
+					setFilter={setFilter}
+					resetFilters={resetFilters}
+				/>
 
 				<DataTable
 					data={parents}
@@ -317,8 +292,8 @@ export default function ParentDirectory() {
 					pagination={{
 						page,
 						limit,
-						total: meta.total,
-						totalPages: meta.totalPages,
+						total: meta?.total || 0,
+						totalPages: meta?.totalPages || 0,
 						onPageChange: setPage,
 						onLimitChange: (nextLimit) => {
 							setLimit(nextLimit);
@@ -326,7 +301,8 @@ export default function ParentDirectory() {
 						},
 					}}
 				/>
-			</div>
+				</CardContent>
+			</Card>
 		</div>
 	);
 }

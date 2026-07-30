@@ -11,8 +11,8 @@ export type ExamRoutineSubjectPayload = {
 	examDate?: string | null;
 	startTime?: string | null;
 	durationMins: number;
-	classRoomId?: string | null;
 	invigilatorId?: string | null;
+	invigilatorIds?: string[] | null;
 	status: ExamRoutineSubjectStatusEnum;
 };
 

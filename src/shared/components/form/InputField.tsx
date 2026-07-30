@@ -69,6 +69,7 @@ interface FormFieldProps extends UseControllerProps {
 	disabled?: boolean;
 	fieldClass?: string;
 	skipLocalization?: boolean;
+	excludeId?: string;
 }
 
 export default function InputField({
@@ -419,6 +420,8 @@ export default function InputField({
 							placeholder={props.placeholder}
 							className={className}
 							disabled={props.disabled}
+							itemId={props.dependencyId}
+							excludeId={props.excludeId}
 						/>
 					))
 
