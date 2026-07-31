@@ -92,12 +92,7 @@ export default function InputField({
 	};
 
 	return (
-		<div
-			className={cn(
-				"flex flex-col gap-2 w-full",
-				props.fieldClass
-			)}
-		>
+		<div className={cn("flex w-full flex-col gap-2", props.fieldClass)}>
 			{/* Checkbox and Switch render their own inline label – skip the block label */}
 			{props.label && (
 				<Label
@@ -133,509 +128,499 @@ export default function InputField({
 						<span>(Optional)</span>
 					)}
 				</Label>
-			)
-			}
-			{
-				match(type)
-					.with("textarea", () => (
-						<Textarea
-							{...field}
-							value={field.value ?? ""}
-							placeholder={props?.placeholder}
-							disabled={props.disabled}
-							className={cn("h-32", className)}
-						/>
-					))
+			)}
+			{match(type)
+				.with("textarea", () => (
+					<Textarea
+						{...field}
+						value={field.value ?? ""}
+						placeholder={props?.placeholder}
+						disabled={props.disabled}
+						className={cn("h-32", className)}
+					/>
+				))
 
-					.with("switch", () => (
-						<div className="border w-full flex justify-between gap-2 h-10 items-center px-3 rounded-md bg-transparent dark:bg-input/30">
-							<p>{props.label}</p>
-							<Switch
-								id={field.name}
-								checked={!!field.value}
-								onCheckedChange={field.onChange}
-								className={className}
-							/>
-						</div>
-					))
-
-					.with("checkbox", () => (
-						<div className="border w-full flex justify-start gap-2 h-10 items-center px-3 rounded-md bg-transparent dark:bg-input/30">
-							<>
-								{type === "checkbox" && (
-									<Checkbox
-										id={field.name}
-										checked={!!field.value}
-										onCheckedChange={field.onChange}
-										disabled={props.disabled}
-										className={className}
-									/>
-								)}
-								{props.label && (
-									<Label
-										htmlFor={field.name}
-										className={cn("cursor-pointer text-sm font-medium", labelClass)}
-									>
-										{props.label}
-									</Label>
-								)}
-							</>
-						</div>
-					))
-
-					.with("textEditor", () => (
-						<SimpleEditor
-							value={field.value}
-							onValueChange={field.onChange}
+				.with("switch", () => (
+					<div className="dark:bg-input/30 flex h-10 w-full items-center justify-between gap-2 rounded-md border bg-transparent px-3">
+						<p>{props.label}</p>
+						<Switch
+							id={field.name}
+							checked={!!field.value}
+							onCheckedChange={field.onChange}
 							className={className}
 						/>
-					))
+					</div>
+				))
 
-					// file
-					.with("file", () => (
-						<UploadImage
-							className={className}
-							placeholderBase64={props.placeholderBase64}
-							{...props}
-							{...field}
-						/>
-					))
-					// document-multi
-					.with("document-multi", () => (
-						<UploadDocumentMulti
-							className={className}
-							{...props}
-							{...field}
-						/>
-					))
-					// document-single
-					.with("document-single", () => (
-						<UploadDocumentSingle
-							className={className}
-							{...props}
-							{...field}
-						/>
-					))
-					// radio type
-					.with("radio", () => (
-						<RadioGroup
-							value={field.value}
-							onValueChange={field.onChange}
-							className={cn("flex items-center gap-2", className)}
-						>
-							{props.options?.map((option) => (
-								<Label key={option.value} className="cursor-pointer font-normal">
-									<RadioGroupItem value={option.value} />
-									<span> {option.label} </span>
+				.with("checkbox", () => (
+					<div className="dark:bg-input/30 flex h-10 w-full items-center justify-start gap-2 rounded-md border bg-transparent px-3">
+						<>
+							{type === "checkbox" && (
+								<Checkbox
+									id={field.name}
+									checked={!!field.value}
+									onCheckedChange={field.onChange}
+									disabled={props.disabled}
+									className={className}
+								/>
+							)}
+							{props.label && (
+								<Label
+									htmlFor={field.name}
+									className={cn("cursor-pointer text-sm font-medium", labelClass)}
+								>
+									{props.label}
 								</Label>
-							))}
-						</RadioGroup>
-					))
+							)}
+						</>
+					</div>
+				))
 
-					// multi-checkbox
-					.with("multi-checkbox", () => (
-						<MultiCheckbox
-							value={field.value || []}
-							onChange={field.onChange}
-							options={props.options || []}
-							className={className}
-						/>
-					))
+				.with("textEditor", () => (
+					<SimpleEditor
+						value={field.value}
+						onValueChange={field.onChange}
+						className={className}
+					/>
+				))
 
-					// number
-					.with("number", () => (
-						<NumberInput
-							type="number"
+				// file
+				.with("file", () => (
+					<UploadImage
+						className={className}
+						placeholderBase64={props.placeholderBase64}
+						{...props}
+						{...field}
+					/>
+				))
+				// document-multi
+				.with("document-multi", () => (
+					<UploadDocumentMulti className={className} {...props} {...field} />
+				))
+				// document-single
+				.with("document-single", () => (
+					<UploadDocumentSingle className={className} {...props} {...field} />
+				))
+				// radio type
+				.with("radio", () => (
+					<RadioGroup
+						value={field.value}
+						onValueChange={field.onChange}
+						className={cn("flex items-center gap-2", className)}
+					>
+						{props.options?.map((option) => (
+							<Label key={option.value} className="cursor-pointer font-normal">
+								<RadioGroupItem value={option.value} />
+								<span> {option.label} </span>
+							</Label>
+						))}
+					</RadioGroup>
+				))
+
+				// multi-checkbox
+				.with("multi-checkbox", () => (
+					<MultiCheckbox
+						value={field.value || []}
+						onChange={field.onChange}
+						options={props.options || []}
+						className={className}
+					/>
+				))
+
+				// number
+				.with("number", () => (
+					<NumberInput
+						type="number"
+						min={props.min}
+						max={props.max}
+						step={props.step}
+						value={field.value}
+						onChange={field.onChange}
+						placeholder={props.placeholder}
+					/>
+				))
+
+				// Type select option
+				.with("select", () => {
+					const selectedValue =
+						field.value === undefined || field.value === null || field.value === ""
+							? undefined
+							: field.value.toString();
+
+					return (
+						<Select
+							name={field.name}
+							value={selectedValue}
+							onValueChange={field.onChange}
+							disabled={props.disabled}
+						>
+							<SelectTrigger className={cn("h-10! w-full", className)}>
+								<SelectValue placeholder={props.placeholder} />
+							</SelectTrigger>
+							<SelectContent className="p-1" sideOffset={4}>
+								{props?.options?.map((opt) => (
+									<SelectItem
+										key={opt.value}
+										value={opt.value}
+										className="cursor-pointer py-2"
+									>
+										{opt.label}
+									</SelectItem>
+								))}
+							</SelectContent>
+						</Select>
+					);
+				})
+
+				// Type native_select
+				.with("native_select", () => (
+					<NativeSelect
+						name={field.name}
+						value={field.value?.toString()}
+						onChange={field.onChange}
+						disabled={props.disabled}
+						className={cn("h-10", className)}
+					>
+						{props?.options?.map((opt) => (
+							<NativeSelectOption key={opt.value} value={opt.value}>
+								{opt.label}
+							</NativeSelectOption>
+						))}
+					</NativeSelect>
+				))
+
+				.with("password", () => (
+					<PasswordInput
+						name={field.name}
+						placeholder={props.placeholder}
+						className={className}
+						value={field.value}
+						onChange={field.onChange}
+						hasError={!!fieldState.error}
+					/>
+				))
+
+				// Date Picker
+				.with("DatePicker", () => (
+					<DatePicker
+						value={field.value}
+						onValueChange={field.onChange}
+						className={className}
+					/>
+				))
+
+				// tags
+				.with("tags", () => (
+					<TagInput
+						value={field.value || []}
+						onChange={field.onChange}
+						placeholder={props.placeholder}
+						className={className}
+					/>
+				))
+
+				// classSelection
+				.with("classSelection", () => (
+					<ClassSelection
+						value={field.value || []}
+						onChange={field.onChange}
+						placeholder={props.placeholder}
+						className={className}
+						skipLocalization={props.skipLocalization}
+					/>
+				))
+
+				// subjectSelection
+				.with("subjectSelection", () => (
+					<SubjectSelection
+						value={field.value || []}
+						onChange={field.onChange}
+						placeholder={props.placeholder}
+						className={className}
+						classId={props.dependencyId}
+					/>
+				))
+
+				// subjectSingleSelect
+				.with("subjectSingleSelect", () => (
+					<SubjectSingleSelection
+						value={field.value}
+						onChange={field.onChange}
+						placeholder={props.placeholder}
+						className={className}
+						classId={props.dependencyId}
+					/>
+				))
+
+				// classSelect
+				.with("classSelect", () => (
+					<ClassSelect
+						value={field.value}
+						onChange={field.onChange}
+						sessionId={props.dependencyId}
+						placeholder={props.placeholder}
+						className={className}
+						disabled={props.disabled}
+					/>
+				))
+
+				// classRoomSelect
+				.with("classRoomSelect", () => (
+					<ClassRoomSelect
+						value={field.value}
+						onChange={field.onChange}
+						placeholder={props.placeholder}
+						className={className}
+						disabled={props.disabled}
+					/>
+				))
+
+				// inventoryCategorySelect
+				.with("inventoryCategorySelect", () => (
+					<InventoryCategorySelect
+						value={field.value}
+						onChange={field.onChange}
+						placeholder={props.placeholder}
+						className={className}
+						disabled={props.disabled}
+					/>
+				))
+
+				// inventoryItemSelect
+				.with("inventoryItemSelect", () => (
+					<InventoryItemSelect
+						value={field.value}
+						onChange={field.onChange}
+						placeholder={props.placeholder}
+						className={className}
+						disabled={props.disabled}
+					/>
+				))
+
+				// inventoryLocationSelect
+				.with("inventoryLocationSelect", () => (
+					<InventoryLocationSelect
+						value={field.value}
+						onChange={field.onChange}
+						placeholder={props.placeholder}
+						className={className}
+						disabled={props.disabled}
+						itemId={props.dependencyId}
+						excludeId={props.excludeId}
+					/>
+				))
+
+				// paymentMethodSelect
+				.with("paymentMethodSelect", () => (
+					<PaymentMethodSelect
+						value={field.value}
+						onChange={field.onChange}
+						placeholder={props.placeholder}
+						className={className}
+						disabled={props.disabled}
+					/>
+				))
+
+				// geo location selects
+				.with("divisionSelect", () => (
+					<GeoLocationSelect
+						type="division"
+						value={field.value}
+						onChange={field.onChange}
+						placeholder={props.placeholder}
+						className={className}
+						disabled={props.disabled}
+					/>
+				))
+
+				.with("districtSelect", () => (
+					<GeoLocationSelect
+						type="district"
+						value={field.value}
+						onChange={field.onChange}
+						placeholder={props.placeholder}
+						className={className}
+						dependencyId={props.dependencyId}
+						disabled={props.disabled}
+					/>
+				))
+
+				.with("upazilaSelect", () => (
+					<GeoLocationSelect
+						type="upazila"
+						value={field.value}
+						onChange={field.onChange}
+						placeholder={props.placeholder}
+						className={className}
+						dependencyId={props.dependencyId}
+						disabled={props.disabled}
+					/>
+				))
+
+				// sectionSelect
+
+				// userSingleSelect
+				.with("userSingleSelect", () => (
+					<UserSingleSelection
+						value={field.value}
+						onChange={field.onChange}
+						placeholder={props.placeholder}
+						className={className}
+					/>
+				))
+				.with("sectionSelect", () => (
+					<SectionSelect
+						value={field.value}
+						onChange={field.onChange}
+						classId={props.dependencyId}
+						sessionId={props.sessionId}
+						placeholder={props.placeholder}
+						className={className}
+					/>
+				))
+
+				// sessionSelect
+				.with("sessionSelect", () => (
+					<SessionSelect
+						value={field.value}
+						onChange={field.onChange}
+						placeholder={props.placeholder}
+						className={className}
+					/>
+				))
+
+				// examSelect
+				.with("examSelect", () => (
+					<ExamSelect
+						value={field.value}
+						onChange={field.onChange}
+						placeholder={props.placeholder}
+						className={className}
+						sessionId={props.dependencyId}
+						disabled={props.disabled}
+					/>
+				))
+
+				// shiftSelect
+				.with("shiftSelect", () => (
+					<ShiftSelect
+						value={field.value}
+						onChange={field.onChange}
+						placeholder={props.placeholder}
+						className={className}
+						disabled={props.disabled}
+					/>
+				))
+
+				// teacherSelect
+				.with("teacherSelect", () => (
+					<TeacherSelection
+						value={field.value}
+						onChange={field.onChange}
+						placeholder={props.placeholder}
+						className={className}
+					/>
+				))
+
+				// designationSelect
+				.with("designationSelect", () => (
+					<DesignationSelect
+						value={field.value}
+						onChange={field.onChange}
+						placeholder={props.placeholder}
+						className={className}
+						disabled={props.disabled}
+					/>
+				))
+
+				// departmentSelect
+				.with("departmentSelect", () => (
+					<DepartmentSelect
+						value={field.value}
+						onChange={field.onChange}
+						placeholder={props.placeholder}
+						className={className}
+						disabled={props.disabled}
+					/>
+				))
+
+				// schoolSelect
+				.with("schoolSelect", () => (
+					<SchoolSelect
+						value={field.value}
+						onChange={field.onChange}
+						placeholder={props.placeholder}
+						className={className}
+					/>
+				))
+
+				// subscriptionPlanSelect
+				.with("subscriptionPlanSelect", () => (
+					<SubscriptionPlanSelect
+						value={field.value}
+						onChange={field.onChange}
+						placeholder={props.placeholder}
+						className={className}
+					/>
+				))
+
+				// schoolSubscriptionSelect
+				.with("schoolSubscriptionSelect", () => (
+					<SchoolSubscriptionSelect
+						value={field.value}
+						onChange={field.onChange}
+						placeholder={props.placeholder}
+						className={className}
+						schoolId={props.dependencyId}
+					/>
+				))
+
+				// voucherSelect
+				.with("voucherSelect", () => (
+					<VoucherSelect
+						value={field.value}
+						onChange={field.onChange}
+						placeholder={props.placeholder}
+						className={className}
+						disabled={props.disabled}
+					/>
+				))
+
+				// native type
+				.with(
+					"text",
+					"email",
+					"date",
+					"tel",
+					"phone",
+					"url",
+					"search",
+					"color",
+					"time",
+					"datetime-local",
+					() => (
+						<Input
+							id={field.name}
+							type={isPhoneInput ? "tel" : type}
+							inputMode={isPhoneInput ? "numeric" : undefined}
+							pattern={isPhoneInput ? "[0-9]*" : undefined}
+							maxLength={isPhoneInput ? 11 : undefined}
 							min={props.min}
 							max={props.max}
-							step={props.step}
-							value={field.value}
-							onChange={field.onChange}
 							placeholder={props.placeholder}
-						/>
-					))
-
-					// Type select option
-					.with("select", () => {
-						const selectedValue =
-							field.value === undefined || field.value === null || field.value === ""
-								? undefined
-								: field.value.toString();
-
-						return (
-							<Select
-								name={field.name}
-								value={selectedValue}
-								onValueChange={field.onChange}
-								disabled={props.disabled}
-							>
-								<SelectTrigger className={cn("h-10! w-full", className)}>
-									<SelectValue placeholder={props.placeholder} />
-								</SelectTrigger>
-								<SelectContent className="p-1" sideOffset={4}>
-									{props?.options?.map((opt) => (
-										<SelectItem
-											key={opt.value}
-											value={opt.value}
-											className="cursor-pointer py-2"
-										>
-											{opt.label}
-										</SelectItem>
-									))}
-								</SelectContent>
-							</Select>
-						);
-					})
-
-					// Type native_select
-					.with("native_select", () => (
-						<NativeSelect
-							name={field.name}
-							value={field.value?.toString()}
-							onChange={field.onChange}
+							{...field}
+							onChange={handleNativeInputChange}
+							value={field.value ?? ""}
 							disabled={props.disabled}
-							className={cn("h-10", className)}
-						>
-							{props?.options?.map((opt) => (
-								<NativeSelectOption key={opt.value} value={opt.value}>
-									{opt.label}
-								</NativeSelectOption>
-							))}
-						</NativeSelect>
-					))
-
-					.with("password", () => (
-						<PasswordInput
-							name={field.name}
-							placeholder={props.placeholder}
-							className={className}
-							value={field.value}
-							onChange={field.onChange}
-							hasError={!!fieldState.error}
+							className={cn(
+								fieldState.error ? "border-red-500 focus:ring-red-500" : "",
+								"focus:border-primary focus:ring-primary h-10 rounded-md shadow-none",
+								className
+							)}
 						/>
-					))
-
-					// Date Picker
-					.with("DatePicker", () => (
-						<DatePicker
-							value={field.value}
-							onValueChange={field.onChange}
-							className={className}
-						/>
-					))
-
-					// tags
-					.with("tags", () => (
-						<TagInput
-							value={field.value || []}
-							onChange={field.onChange}
-							placeholder={props.placeholder}
-							className={className}
-						/>
-					))
-
-					// classSelection
-					.with("classSelection", () => (
-						<ClassSelection
-							value={field.value || []}
-							onChange={field.onChange}
-							placeholder={props.placeholder}
-							className={className}
-							skipLocalization={props.skipLocalization}
-						/>
-					))
-
-					// subjectSelection
-					.with("subjectSelection", () => (
-						<SubjectSelection
-							value={field.value || []}
-							onChange={field.onChange}
-							placeholder={props.placeholder}
-							className={className}
-							classId={props.dependencyId}
-						/>
-					))
-
-					// subjectSingleSelect
-					.with("subjectSingleSelect", () => (
-						<SubjectSingleSelection
-							value={field.value}
-							onChange={field.onChange}
-							placeholder={props.placeholder}
-							className={className}
-							classId={props.dependencyId}
-						/>
-					))
-
-					// classSelect
-					.with("classSelect", () => (
-						<ClassSelect
-							value={field.value}
-							onChange={field.onChange}
-							sessionId={props.dependencyId}
-							placeholder={props.placeholder}
-							className={className}
-							disabled={props.disabled}
-						/>
-					))
-
-					// classRoomSelect
-					.with("classRoomSelect", () => (
-						<ClassRoomSelect
-							value={field.value}
-							onChange={field.onChange}
-							placeholder={props.placeholder}
-							className={className}
-							disabled={props.disabled}
-						/>
-					))
-
-					// inventoryCategorySelect
-					.with("inventoryCategorySelect", () => (
-						<InventoryCategorySelect
-							value={field.value}
-							onChange={field.onChange}
-							placeholder={props.placeholder}
-							className={className}
-							disabled={props.disabled}
-						/>
-					))
-
-					// inventoryItemSelect
-					.with("inventoryItemSelect", () => (
-						<InventoryItemSelect
-							value={field.value}
-							onChange={field.onChange}
-							placeholder={props.placeholder}
-							className={className}
-							disabled={props.disabled}
-						/>
-					))
-
-					// inventoryLocationSelect
-					.with("inventoryLocationSelect", () => (
-						<InventoryLocationSelect
-							value={field.value}
-							onChange={field.onChange}
-							placeholder={props.placeholder}
-							className={className}
-							disabled={props.disabled}
-							itemId={props.dependencyId}
-							excludeId={props.excludeId}
-						/>
-					))
-
-					// paymentMethodSelect
-					.with("paymentMethodSelect", () => (
-						<PaymentMethodSelect
-							value={field.value}
-							onChange={field.onChange}
-							placeholder={props.placeholder}
-							className={className}
-							disabled={props.disabled}
-						/>
-					))
-
-					// geo location selects
-					.with("divisionSelect", () => (
-						<GeoLocationSelect
-							type="division"
-							value={field.value}
-							onChange={field.onChange}
-							placeholder={props.placeholder}
-							className={className}
-							disabled={props.disabled}
-						/>
-					))
-
-					.with("districtSelect", () => (
-						<GeoLocationSelect
-							type="district"
-							value={field.value}
-							onChange={field.onChange}
-							placeholder={props.placeholder}
-							className={className}
-							dependencyId={props.dependencyId}
-							disabled={props.disabled}
-						/>
-					))
-
-					.with("upazilaSelect", () => (
-						<GeoLocationSelect
-							type="upazila"
-							value={field.value}
-							onChange={field.onChange}
-							placeholder={props.placeholder}
-							className={className}
-							dependencyId={props.dependencyId}
-							disabled={props.disabled}
-						/>
-					))
-
-					// sectionSelect
-
-					// userSingleSelect
-					.with("userSingleSelect", () => (
-						<UserSingleSelection
-							value={field.value}
-							onChange={field.onChange}
-							placeholder={props.placeholder}
-							className={className}
-						/>
-					))
-					.with("sectionSelect", () => (
-						<SectionSelect
-							value={field.value}
-							onChange={field.onChange}
-							classId={props.dependencyId}
-							sessionId={props.sessionId}
-							placeholder={props.placeholder}
-							className={className}
-						/>
-					))
-
-					// sessionSelect
-					.with("sessionSelect", () => (
-						<SessionSelect
-							value={field.value}
-							onChange={field.onChange}
-							placeholder={props.placeholder}
-							className={className}
-						/>
-					))
-
-					// examSelect
-					.with("examSelect", () => (
-						<ExamSelect
-							value={field.value}
-							onChange={field.onChange}
-							placeholder={props.placeholder}
-							className={className}
-							sessionId={props.dependencyId}
-							disabled={props.disabled}
-						/>
-					))
-
-					// shiftSelect
-					.with("shiftSelect", () => (
-						<ShiftSelect
-							value={field.value}
-							onChange={field.onChange}
-							placeholder={props.placeholder}
-							className={className}
-							disabled={props.disabled}
-						/>
-					))
-
-					// teacherSelect
-					.with("teacherSelect", () => (
-						<TeacherSelection
-							value={field.value}
-							onChange={field.onChange}
-							placeholder={props.placeholder}
-							className={className}
-						/>
-					))
-
-					// designationSelect
-					.with("designationSelect", () => (
-						<DesignationSelect
-							value={field.value}
-							onChange={field.onChange}
-							placeholder={props.placeholder}
-							className={className}
-							disabled={props.disabled}
-						/>
-					))
-
-					// departmentSelect
-					.with("departmentSelect", () => (
-						<DepartmentSelect
-							value={field.value}
-							onChange={field.onChange}
-							placeholder={props.placeholder}
-							className={className}
-							disabled={props.disabled}
-						/>
-					))
-
-					// schoolSelect
-					.with("schoolSelect", () => (
-						<SchoolSelect
-							value={field.value}
-							onChange={field.onChange}
-							placeholder={props.placeholder}
-							className={className}
-						/>
-					))
-
-					// subscriptionPlanSelect
-					.with("subscriptionPlanSelect", () => (
-						<SubscriptionPlanSelect
-							value={field.value}
-							onChange={field.onChange}
-							placeholder={props.placeholder}
-							className={className}
-						/>
-					))
-
-					// schoolSubscriptionSelect
-					.with("schoolSubscriptionSelect", () => (
-						<SchoolSubscriptionSelect
-							value={field.value}
-							onChange={field.onChange}
-							placeholder={props.placeholder}
-							className={className}
-							schoolId={props.dependencyId}
-						/>
-					))
-
-					// voucherSelect
-					.with("voucherSelect", () => (
-						<VoucherSelect
-							value={field.value}
-							onChange={field.onChange}
-							placeholder={props.placeholder}
-							className={className}
-							disabled={props.disabled}
-						/>
-					))
-
-					// native type
-					.with(
-						"text",
-						"email",
-						"date",
-						"tel",
-						"phone",
-						"url",
-						"search",
-						"color",
-						"time",
-						"datetime-local",
-						() => (
-							<Input
-								id={field.name}
-								type={isPhoneInput ? "tel" : type}
-								inputMode={isPhoneInput ? "numeric" : undefined}
-								pattern={isPhoneInput ? "[0-9]*" : undefined}
-								maxLength={isPhoneInput ? 11 : undefined}
-								min={props.min}
-								max={props.max}
-								placeholder={props.placeholder}
-								{...field}
-								onChange={handleNativeInputChange}
-								value={field.value ?? ""}
-								disabled={props.disabled}
-								className={cn(
-									fieldState.error ? "border-red-500 focus:ring-red-500" : "",
-									"focus:border-primary focus:ring-primary h-10 rounded-md shadow-none",
-									className
-								)}
-							/>
-						)
 					)
-					.otherwise(() => null)}
+				)
+				.otherwise(() => null)}
 
 			{helperText && (
 				<p data-helper-text className="text-sm text-gray-500">

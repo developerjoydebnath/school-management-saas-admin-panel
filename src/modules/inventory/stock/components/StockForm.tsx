@@ -56,7 +56,10 @@ export function StockForm({ id, defaultValues, isEdit = false }: Props) {
 		try {
 			const payload = cleanPayload(data);
 			if (payload.invoiceImageUrl instanceof File) {
-				const uploaded = await uploadImage(payload.invoiceImageUrl, "inventory_stock_invoice");
+				const uploaded = await uploadImage(
+					payload.invoiceImageUrl,
+					"inventory_stock_invoice"
+				);
 				payload.invoiceImageUrl = uploaded.url;
 				payload.invoicePlaceholder = uploaded.placeholder;
 			}
@@ -169,6 +172,7 @@ export function StockForm({ id, defaultValues, isEdit = false }: Props) {
 						placeholder="Upload invoice image"
 						placeholderBase64={form.watch("invoicePlaceholder")}
 						fieldClass="@3xl/page:col-span-2"
+						className="h-100"
 					/>
 					<InputField
 						control={form.control}
@@ -202,7 +206,7 @@ export function StockForm({ id, defaultValues, isEdit = false }: Props) {
 					/>
 				</CardContent>
 			</Card>
-			<div className="sticky bottom-0 z-10 flex justify-end gap-3 rounded-md border bg-background/95 p-4 backdrop-blur">
+			<div className="bg-background/95 sticky bottom-0 z-10 flex justify-end gap-3 rounded-md border p-4 backdrop-blur">
 				<Button
 					type="button"
 					variant="outline"
