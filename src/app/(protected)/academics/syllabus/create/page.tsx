@@ -1,7 +1,10 @@
 "use client";
 
 import SyllabusForm from "@/modules/academics/syllabus/components/SyllabusForm";
-import { SyllabusStatusEnum } from "@/modules/academics/syllabus/dto/syllabus.dto";
+import {
+	SyllabusModeEnum,
+	SyllabusStatusEnum,
+} from "@/modules/academics/syllabus/dto/syllabus.dto";
 import PageHeading from "@/shared/components/custom/PageHeading";
 import { PATHS } from "@/shared/configs/paths.config";
 import { useBreadcrumbStore } from "@/shared/stores/breadcrumb-store";
@@ -32,6 +35,8 @@ export default function CreateSyllabusPage() {
 					sectionIds: [],
 					title: "",
 					status: SyllabusStatusEnum.DRAFT,
+					mode: SyllabusModeEnum.STRUCTURED,
+					content: "",
 					subjects: [
 						{
 							subjectId: "",

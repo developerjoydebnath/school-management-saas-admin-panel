@@ -3,6 +3,7 @@ import { useTableData } from "@/shared/hooks/use-table-data";
 import {
 	StudentPaymentDetails,
 	StudentPaymentListItem,
+	StudentPaymentSummary,
 } from "../dto/student-payment.dto";
 
 export type UseStudentPaymentsParams = {
@@ -61,6 +62,20 @@ export function useStudentPayment(id: string | null) {
 		data: data?.data as StudentPaymentDetails | undefined,
 		isLoading,
 		error,
+		mutate,
+	};
+}
+
+export type UseStudentPaymentSummaryParams = {
+	sessionId?: string;
+};
+
+export function useStudentPaymentSummary(params?: UseStudentPaymentSummaryParams) {
+	const { data, isLoading, mutate } = useSWR("/student-payments/summary", params);
+
+	return {
+		data: data?.data as StudentPaymentSummary | undefined,
+		isLoading,
 		mutate,
 	};
 }

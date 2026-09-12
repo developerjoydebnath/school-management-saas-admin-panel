@@ -4,6 +4,7 @@ export const designationSchema = z.object({
 	name: z.string().min(1, "Name is required").max(100),
 	nameBn: z.string().max(100).optional().nullable(),
 	category: z.string().min(1, "Category is required").max(50),
+	type: z.string().min(1, "Type is required").max(20).default("teacher"),
 	applicableTo: z.array(z.string()).min(1, "At least one applicable group is required"),
 	level: z.coerce.number().min(0).optional().default(0),
 	isHeadRole: z.boolean().optional().default(false),

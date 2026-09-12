@@ -89,6 +89,12 @@ export const PATHS = {
 	},
 	ACADEMICS: {
 		ROOT: "/academics",
+		SCHOOL_CALENDAR: {
+			ROOT: "/academics/school-calendar",
+		},
+		HOLIDAYS: {
+			ROOT: "/academics/holidays",
+		},
 		CLASSES: {
 			ROOT: "/academics/classes",
 			CREATE: "/academics/classes/create",
@@ -101,6 +107,9 @@ export const PATHS = {
 		},
 		SESSION_CLASS_SETUP: {
 			ROOT: "/academics/session-class-setup",
+		},
+		SUBJECT_TEACHER_ASSIGNMENTS: {
+			ROOT: "/academics/subject-teacher-assignments",
 		},
 		CLASS_ROOMS: {
 			ROOT: "/academics/class-rooms",
@@ -120,6 +129,12 @@ export const PATHS = {
 			DETAILS: (id: number | string) => `/academics/syllabus/${id}/details`,
 			HISTORY: (id: number | string) => `/academics/syllabus/${id}/history`,
 			PROGRESS: (id: number | string) => `/academics/syllabus/${id}/progress`,
+		},
+		LESSON_PLANS: {
+			ROOT: "/academics/lesson-plans",
+			CREATE: "/academics/lesson-plans/create",
+			EDIT: (id: number | string) => `/academics/lesson-plans/${id}/edit`,
+			DETAILS: (id: number | string) => `/academics/lesson-plans/${id}/details`,
 		},
 		TIMETABLE: {
 			ROOT: "/academics/timetable",
@@ -172,12 +187,6 @@ export const PATHS = {
 			CREATE: "/admission/portal/create",
 			EDIT: (id: number | string) => `/admission/portal/${id}/edit`,
 			DETAILS: (id: number | string) => `/admission/portal/${id}/details`,
-		},
-		TRANSFER: {
-			ROOT: "/admission/transfer",
-			CREATE: "/admission/transfer/create",
-			EDIT: (id: number | string) => `/admission/transfer/${id}/edit`,
-			DETAILS: (id: number | string) => `/admission/transfer/${id}/details`,
 		},
 		SETTINGS: {
 			ROOT: "/admission/settings",
@@ -250,6 +259,12 @@ export const PATHS = {
 			CREATE: "/staff/attendance/create",
 			EDIT: (id: number | string) => `/staff/attendance/${id}/edit`,
 			DETAILS: (id: number | string) => `/staff/attendance/${id}/details`,
+			SETTINGS: "/staff/attendance/settings",
+			APPROVALS: "/staff/attendance/approvals",
+			REPORT: "/staff/attendance/report",
+			MY: "/staff/attendance/me",
+			EMPLOYEE: (employeeType: string, employeeId: string) =>
+				`/staff/attendance/${employeeType}/${employeeId}`,
 		},
 		DEPARTMENTS: {
 			ROOT: "/staff/departments",
@@ -287,11 +302,8 @@ export const PATHS = {
 	},
 	FINANCE: {
 		ROOT: "/finance",
-		FEES: {
-			ROOT: "/finance/fees",
-			CREATE: "/finance/fees/create",
-			EDIT: (id: number | string) => `/finance/fees/${id}/edit`,
-			DETAILS: (id: number | string) => `/finance/fees/${id}/details`,
+		FEE_STRUCTURE: {
+			ROOT: "/finance/fee-structure",
 		},
 		STUDENT_PAYMENTS: {
 			ROOT: "/finance/student-payments",
@@ -301,6 +313,14 @@ export const PATHS = {
 			CREATE: "/finance/expenses/create",
 			EDIT: (id: number | string) => `/finance/expenses/${id}/edit`,
 			DETAILS: (id: number | string) => `/finance/expenses/${id}/details`,
+		},
+		EXPENSE_CATEGORIES: {
+			ROOT: "/finance/expense-categories",
+			CREATE: "/finance/expense-categories/create",
+			EDIT: (id: number | string) => `/finance/expense-categories/${id}/edit`,
+		},
+		PROFIT_LOSS: {
+			ROOT: "/finance/profit-loss",
 		},
 		PAYROLL: {
 			ROOT: "/finance/payroll",
@@ -367,9 +387,19 @@ export const PATHS = {
 			CREATE: "/examinations/schedule/create",
 			EDIT: (id: number | string) => `/examinations/schedule/${id}/edit`,
 		},
+		CALENDAR: {
+			ROOT: "/examinations/calendar",
+		},
 		ROUTINE: {
 			ROOT: "/examinations/routine",
 			EXAM: (id: number | string) => `/examinations/routine/${id}`,
+		},
+		SEAT_PLANNING: {
+			ROOT: "/examinations/seat-planning",
+			EXAM: (id: number | string) => `/examinations/seat-planning/${id}`,
+			ROOM: (examId: number | string, classRoomId: number | string) =>
+				`/examinations/seat-planning/${examId}/rooms/${classRoomId}`,
+			TOKENS: (examId: number | string) => `/examinations/seat-planning/${examId}/tokens`,
 		},
 		MARKS: {
 			ROOT: "/examinations/marks",
@@ -427,6 +457,10 @@ export const PATHS = {
 			CREATE: "/library/reports/create",
 			EDIT: (id: number | string) => `/library/reports/${id}/edit`,
 			DETAILS: (id: number | string) => `/library/reports/${id}/details`,
+		},
+		SETTINGS: {
+			ROOT: "/library/settings",
+			EDIT: "/library/settings/edit",
 		},
 	},
 	COMMUNICATIONS: {

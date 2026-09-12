@@ -86,7 +86,7 @@ export default function IdCardPreview({ student, templateType }: IdCardPreviewPr
 									{t("card.class")}:
 								</span>
 								<span className="col-span-2 font-semibold">
-									{student.class} {student.section ? `(${student.section})` : ""}
+									{student.className} {student.sectionName ? `(${student.sectionName})` : ""}
 								</span>
 							</div>
 							<div className="grid grid-cols-3">
@@ -181,7 +181,7 @@ export default function IdCardPreview({ student, templateType }: IdCardPreviewPr
 						<div className="flex justify-between border-b border-slate-200 pb-1">
 							<span className="text-muted-foreground">{t("card.class")}</span>
 							<span className="font-semibold">
-								{student.class} {student.section ? `(${student.section})` : ""}
+								{student.className} {student.sectionName ? `(${student.sectionName})` : ""}
 							</span>
 						</div>
 						<div className="flex justify-between border-b border-slate-200 pb-1">
@@ -276,8 +276,8 @@ export default function IdCardPreview({ student, templateType }: IdCardPreviewPr
 										{t("card.class")}
 									</span>{" "}
 									<span className="font-semibold">
-										{student.class}{" "}
-										{student.section ? `(${student.section})` : ""}
+										{student.className}{" "}
+										{student.sectionName ? `(${student.sectionName})` : ""}
 									</span>
 								</div>
 								<div>
@@ -372,7 +372,7 @@ export default function IdCardPreview({ student, templateType }: IdCardPreviewPr
 						<div className="mt-6 text-center">
 							<h2 className="text-lg font-bold text-slate-800">{student.fullName}</h2>
 							<p className="text-xs font-medium text-slate-500 uppercase">
-								Student • {student.class}
+								Student • {student.className}
 							</p>
 						</div>
 						<div className="mt-4 w-full space-y-2 border-y border-slate-100 py-3 text-[11px]">
@@ -441,7 +441,7 @@ export default function IdCardPreview({ student, templateType }: IdCardPreviewPr
 							<p>
 								Class:{" "}
 								<span className="text-slate-800">
-									{student.class} {student.section}
+									{student.className} {student.sectionName}
 								</span>
 							</p>
 							<p>
@@ -507,7 +507,7 @@ export default function IdCardPreview({ student, templateType }: IdCardPreviewPr
 							</div>
 							<div className="flex justify-between border-b border-green-500/20 pb-1">
 								<span>SECTOR:</span>
-								<span>{student.class}</span>
+								<span>{student.className}</span>
 							</div>
 							<div className="flex justify-between pb-1">
 								<span>BLD_GRP:</span>
@@ -578,7 +578,7 @@ export default function IdCardPreview({ student, templateType }: IdCardPreviewPr
 								</div>
 								<div>
 									<span className="block text-[9px] text-slate-500">COURSE</span>
-									{student.class}
+									{student.className}
 								</div>
 								<div>
 									<span className="block text-[9px] text-slate-500">BLOOD</span>
@@ -667,7 +667,7 @@ export default function IdCardPreview({ student, templateType }: IdCardPreviewPr
 						<div>
 							<span className="text-muted-foreground">{t("card.class")}:</span>{" "}
 							<span className="font-semibold">
-								{student.class} {student.section ? `(${student.section})` : ""}
+								{student.className} {student.sectionName ? `(${student.sectionName})` : ""}
 							</span>
 						</div>
 						<div>

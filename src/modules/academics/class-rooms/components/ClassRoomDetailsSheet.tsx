@@ -17,6 +17,7 @@ import { Button } from "@/shared/components/ui/button";
 import { ArrowLeft, Eye } from "lucide-react";
 import { ItemDetailsContent } from "@/modules/inventory/items/components/ItemDetailsSheet";
 import { cn } from "@/shared/lib/utils";
+import { RoomLayoutPreview } from "./RoomLayoutPreview";
 
 type Props = {
 	id: string;
@@ -85,6 +86,8 @@ export function ClassRoomDetailsSheet({ id, open }: Props) {
 
 		const status = room.status === StatusEnum.ACTIVE ? "Active" : "Inactive";
 		const inventorySummary = (inventoryMeta as any)?.summary;
+		const layoutItems = Array.isArray(room.layoutConfig?.items) ? room.layoutConfig.items : [];
+		const hasLayout = Boolean(room.roomLength && room.roomWidth && layoutItems.length > 0);
 
 		return (
 			<div className="space-y-4 p-4">
@@ -98,6 +101,25 @@ export function ClassRoomDetailsSheet({ id, open }: Props) {
 						<CompactPair label="Building" value={room.building} />
 						<CompactPair label="Floor" value={room.floor} />
 					</div>
+				</div>
+
+				<div className="bg-muted/20 rounded-md border p-4">
+					<h3 className="text-sm font-normal">{t("visualLayout")}</h3>
+					<p className="text-muted-foreground mt-1 text-xs">{t("visualLayoutDescription")}</p>
+					{hasLayout ? (
+						<div className="mt-4">
+							<RoomLayoutPreview
+								roomLength={room.roomLength || 0}
+								roomWidth={room.roomWidth || 0}
+								dimensionUnit={room.dimensionUnit}
+								items={layoutItems}
+							/>
+						</div>
+					) : (
+						<div className="text-muted-foreground mt-4 rounded-md border border-dashed p-4 text-sm">
+							{t("noLayoutSaved")}
+						</div>
+					)}
 				</div>
 
 				<div className="bg-muted/20 rounded-md border p-4">

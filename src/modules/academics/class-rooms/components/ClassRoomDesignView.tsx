@@ -20,6 +20,8 @@ import { toast } from "sonner";
 import { useClassRoomDesign } from "../hooks/use-class-room";
 import { useClassRoomAssignedInventory } from "../hooks/use-class-room-inventory";
 import { updateClassRoomDesign } from "../hooks/use-class-room-mutations";
+import { RoomGridLayer } from "../utils/RoomGridLayer";
+import { useContainFitCanvas } from "../utils/use-contain-fit-canvas";
 
 type DimensionUnit = "feet" | "meter";
 type LayoutItemType =
@@ -72,17 +74,39 @@ type ActiveDrag =
 	  };
 
 // ─── Conversion ───────────────────────────────────────────────────────────────
-const FEET_TO_METER = 0.3048;
-const METER_TO_FEET = 3.28084;
+// Inventory items store a free-text dimensionUnit (e.g. "foot", "ft", "inch",
+// "cm") set at item-creation time — not constrained to the room's "feet"/
+// "meter" enum. Convert through a common base (meters) so any recognized
+// synonym lines up with the room's unit; unrecognized units pass through
+// unchanged rather than silently mis-scaling.
+const UNIT_TO_METERS: Record<string, number> = {
+	feet: 0.3048,
+	foot: 0.3048,
+	ft: 0.3048,
+	meter: 1,
+	metre: 1,
+	m: 1,
+	inch: 0.0254,
+	inches: 0.0254,
+	in: 0.0254,
+	cm: 0.01,
+	centimeter: 0.01,
+	centimetre: 0.01,
+};
+
+// ─── Canvas sizing ────────────────────────────────────────────────────────────
+const MIN_CANVAS_HEIGHT = 360;
+const MAX_CANVAS_HEIGHT = 640;
 
 function convertUnit(value: number, from: string, to: DimensionUnit): number {
 	if (!value || isNaN(value)) return 0;
-	const f = (from || "").toLowerCase();
-	const t = to.toLowerCase();
+	const f = (from || "").toLowerCase().trim();
+	const t = to.toLowerCase().trim();
 	if (f === t) return value;
-	if (f === "meter" && t === "feet") return value * METER_TO_FEET;
-	if (f === "feet" && t === "meter") return value * FEET_TO_METER;
-	return value;
+	const fMeters = UNIT_TO_METERS[f];
+	const tMeters = UNIT_TO_METERS[t];
+	if (!fMeters || !tMeters) return value;
+	return (value * fMeters) / tMeters;
 }
 
 function detectItemType(name: string): LayoutItemType {
@@ -200,50 +224,6 @@ function findNearestEmptyPosition(
 	return { x: tx, y: ty };
 }
 
-// ─── Grid overlay ─────────────────────────────────────────────────────────────
-function GridLayer({ cols, rows }: { cols: number; rows: number }) {
-	const vLines = [];
-	for (let i = 1; i < cols; i++) {
-		const x = (i / cols) * 100;
-		const isMajor = i % 5 === 0;
-		vLines.push(
-			<line
-				key={`v-${i}`}
-				x1={`${x}%`}
-				y1="0"
-				x2={`${x}%`}
-				y2="100%"
-				stroke={isMajor ? "rgba(255,255,255,0.1)" : "rgba(255,255,255,0.04)"}
-				strokeWidth={isMajor ? 1 : 0.5}
-			/>
-		);
-	}
-	const hLines = [];
-	for (let i = 1; i < rows; i++) {
-		const y = (i / rows) * 100;
-		const isMajor = i % 5 === 0;
-		hLines.push(
-			<line
-				key={`h-${i}`}
-				x1="0"
-				y1={`${y}%`}
-				x2="100%"
-				y2={`${y}%`}
-				stroke={isMajor ? "rgba(255,255,255,0.1)" : "rgba(255,255,255,0.04)"}
-				strokeWidth={isMajor ? 1 : 0.5}
-			/>
-		);
-	}
-	return (
-		<svg
-			className="pointer-events-none absolute inset-0 h-full w-full"
-			xmlns="http://www.w3.org/2000/svg"
-		>
-			{vLines}
-			{hLines}
-		</svg>
-	);
-}
 
 // ─── Canvas Item ──────────────────────────────────────────────────────────────
 function DesignItem({
@@ -325,7 +305,7 @@ function DesignItem({
 			) : (
 				<span
 					className="line-clamp-1 px-1 text-center leading-tight"
-					style={{ fontSize: Math.max(Math.min(displayH * 0.35, 11), 7) }}
+					style={{ fontSize: Math.max(Math.min(heightPx * 0.35, 11), 7) }}
 				>
 					{item.label}
 				</span>
@@ -386,8 +366,6 @@ export default function ClassRoomDesignView({ id }: { id: string }) {
 		useClassRoomAssignedInventory(id);
 
 	const roomRef = useRef<HTMLDivElement>(null);
-	const [roomWidthPx, setRoomWidthPx] = useState(600);
-	const [roomHeightPx, setRoomHeightPx] = useState(400);
 	const [roomLength, setRoomLength] = useState("");
 	const [roomWidth, setRoomWidth] = useState("");
 	const [dimensionUnit, setDimensionUnit] = useState<DimensionUnit>("feet");
@@ -403,20 +381,28 @@ export default function ClassRoomDesignView({ id }: { id: string }) {
 		itemsRef.current = items;
 	}, [items]);
 
-	// Measure canvas pixel size
-	const measureCanvas = useCallback(() => {
-		if (!roomRef.current) return;
-		const r = roomRef.current.getBoundingClientRect();
-		setRoomWidthPx(r.width);
-		setRoomHeightPx(r.height);
-	}, []);
+	const lengthNumber = Number(roomLength);
+	const widthNumber = Number(roomWidth);
 
-	useEffect(() => {
-		measureCanvas();
-		const obs = new ResizeObserver(measureCanvas);
-		if (roomRef.current) obs.observe(roomRef.current);
-		return () => obs.disconnect();
-	}, [measureCanvas, isReady]);
+	// Ratio-accurate canvas sizing (shared with RoomLayoutPreview/RoomSeatCanvas) —
+	// contain-fits the room's true width:length ratio so the rendered box's
+	// proportions always exactly match widthNumber:lengthNumber, for any room
+	// shape. Observe the WRAPPER, not roomRef — roomRef's size is JS-driven via
+	// inline width/height, so observing it would self-trigger a loop.
+	const { wrapRef: canvasWrapRef, canvasPx } = useContainFitCanvas({
+		widthUnits: widthNumber,
+		lengthUnits: lengthNumber,
+		minHeightPx: MIN_CANVAS_HEIGHT,
+		maxHeightPx: MAX_CANVAS_HEIGHT,
+	});
+	const roomWidthPx = canvasPx.w;
+	const roomHeightPx = canvasPx.h;
+
+	// Tracks the dimensionUnit that items[] was last in sync with, and guards
+	// against reconverting items that were just set by the seed-from-saved
+	// -design effect below (those items are already correct for that unit).
+	const prevUnitRef = useRef<DimensionUnit>(dimensionUnit);
+	const skipNextReconvertRef = useRef(false);
 
 	// Seed from saved design
 	useEffect(() => {
@@ -424,12 +410,38 @@ export default function ClassRoomDesignView({ id }: { id: string }) {
 		const nextLength = room.roomLength ? String(room.roomLength) : "";
 		const nextWidth = room.roomWidth ? String(room.roomWidth) : "";
 		const savedItems = Array.isArray(room.layoutConfig?.items) ? room.layoutConfig.items : [];
+		const nextUnit = room.dimensionUnit ?? "feet";
+		skipNextReconvertRef.current = true;
+		prevUnitRef.current = nextUnit;
 		setRoomLength(nextLength);
 		setRoomWidth(nextWidth);
-		setDimensionUnit(room.dimensionUnit ?? "feet");
+		setDimensionUnit(nextUnit);
 		setItems(savedItems);
 		setIsReady(Boolean(nextLength && nextWidth));
 	}, [room]);
+
+	// Reconvert already-placed items' physical dimensions when the user
+	// changes the Unit dropdown AFTER items exist, so their stored size
+	// stays expressed in the active unit (and thus ratio-accurate). Skips
+	// the change triggered by the seed effect above (items already match).
+	useEffect(() => {
+		const from = prevUnitRef.current;
+		prevUnitRef.current = dimensionUnit;
+
+		if (skipNextReconvertRef.current) {
+			skipNextReconvertRef.current = false;
+			return;
+		}
+		if (from === dimensionUnit) return;
+
+		setItems((prev) =>
+			prev.map((item) => ({
+				...item,
+				physicalWidth: convertUnit(item.physicalWidth, from, dimensionUnit),
+				physicalHeight: convertUnit(item.physicalHeight, from, dimensionUnit),
+			}))
+		);
+	}, [dimensionUnit]);
 
 	const palette = useMemo<PaletteItem[]>(() => {
 		if (!assignedInventory || !Array.isArray(assignedInventory)) return [];
@@ -467,9 +479,13 @@ export default function ClassRoomDesignView({ id }: { id: string }) {
 		return Array.from(map.values());
 	}, [assignedInventory, dimensionUnit]);
 
-	const lengthNumber = Number(roomLength);
-	const widthNumber = Number(roomWidth);
 	const selectedItem = items.find((i) => i.id === selectedId);
+
+	const benchSummary = useMemo(() => {
+		const benches = items.filter((i) => i.type === "bench");
+		const totalSeats = benches.reduce((sum, b) => sum + (b.seats || 0), 0);
+		return { benchCount: benches.length, totalSeats };
+	}, [items]);
 
 	// ── Pointer helpers ──────────────────────────────────────────────────────
 	const pctFromCanvasPointer = useCallback((clientX: number, clientY: number) => {
@@ -832,6 +848,13 @@ export default function ClassRoomDesignView({ id }: { id: string }) {
 							<p className="text-muted-foreground text-sm">
 								Place furniture according to the actual room arrangement.
 							</p>
+							{isReady && (
+								<p className="text-muted-foreground text-xs">
+									{benchSummary.benchCount} bench
+									{benchSummary.benchCount === 1 ? "" : "es"} placed ·{" "}
+									{benchSummary.totalSeats} seats
+								</p>
+							)}
 						</div>
 						<div className="flex gap-2">
 							<Button
@@ -859,67 +882,68 @@ export default function ClassRoomDesignView({ id }: { id: string }) {
 						</div>
 					</div>
 
-					{isReady ? (
-						<div
-							ref={roomRef}
-							onClick={(e) => {
-								// Only deselect if we clicked the canvas background (not an item)
-								if (e.target === e.currentTarget) setSelectedId(null);
-							}}
-							className="border-border bg-muted/10 relative mx-auto w-full overflow-hidden rounded-md border-2"
-							style={{
-								aspectRatio: `${widthNumber} / ${lengthNumber}`,
-								minHeight: 360,
-								maxHeight: 640,
-							}}
-						>
-							<GridLayer
-								cols={Math.floor(widthNumber)}
-								rows={Math.floor(lengthNumber)}
-							/>
+					<div ref={canvasWrapRef} className="w-full">
+						{isReady ? (
+							<div
+								ref={roomRef}
+								onClick={(e) => {
+									// Only deselect if we clicked the canvas background (not an item)
+									if (e.target === e.currentTarget) setSelectedId(null);
+								}}
+								className="border-border bg-muted/10 relative mx-auto overflow-hidden rounded-md border-2"
+								style={{
+									width: `${roomWidthPx}px`,
+									height: `${roomHeightPx}px`,
+								}}
+							>
+								<RoomGridLayer
+									cols={Math.floor(widthNumber)}
+									rows={Math.floor(lengthNumber)}
+								/>
 
-							{/* Dimension badge */}
-							<div className="bg-background/80 text-muted-foreground border-border absolute top-3 left-3 z-10 rounded border px-2 py-1 text-xs">
-								{widthNumber} × {lengthNumber} {dimensionUnit}
+								{/* Dimension badge */}
+								<div className="bg-background/80 text-muted-foreground border-border absolute top-3 left-3 z-10 rounded border px-2 py-1 text-xs">
+									{widthNumber} × {lengthNumber} {dimensionUnit}
+								</div>
+
+								{/* Palette ghost overlay while dragging over canvas */}
+								{activeDrag?.kind === "palette" && ghostCanvasPos && (
+									<PaletteGhost
+										item={activeDrag.item}
+										x={ghostCanvasPos.x}
+										y={ghostCanvasPos.y}
+										roomWidthPx={roomWidthPx}
+										roomHeightPx={roomHeightPx}
+										roomWidthFt={widthNumber}
+										roomLengthFt={lengthNumber}
+									/>
+								)}
+
+								{/* Layout items */}
+								{items.map((item) => (
+									<DesignItem
+										key={item.id}
+										item={item}
+										selected={selectedId === item.id}
+										dragging={
+											activeDrag?.kind === "canvas" &&
+											activeDrag.itemId === item.id
+										}
+										onSelect={() => setSelectedId(item.id)}
+										onPointerDown={(e) => handleCanvasItemPointerDown(e, item.id)}
+										roomWidthPx={roomWidthPx}
+										roomHeightPx={roomHeightPx}
+										roomWidthFt={widthNumber}
+										roomLengthFt={lengthNumber}
+									/>
+								))}
 							</div>
-
-							{/* Palette ghost overlay while dragging over canvas */}
-							{activeDrag?.kind === "palette" && ghostCanvasPos && (
-								<PaletteGhost
-									item={activeDrag.item}
-									x={ghostCanvasPos.x}
-									y={ghostCanvasPos.y}
-									roomWidthPx={roomWidthPx}
-									roomHeightPx={roomHeightPx}
-									roomWidthFt={widthNumber}
-									roomLengthFt={lengthNumber}
-								/>
-							)}
-
-							{/* Layout items */}
-							{items.map((item) => (
-								<DesignItem
-									key={item.id}
-									item={item}
-									selected={selectedId === item.id}
-									dragging={
-										activeDrag?.kind === "canvas" &&
-										activeDrag.itemId === item.id
-									}
-									onSelect={() => setSelectedId(item.id)}
-									onPointerDown={(e) => handleCanvasItemPointerDown(e, item.id)}
-									roomWidthPx={roomWidthPx}
-									roomHeightPx={roomHeightPx}
-									roomWidthFt={widthNumber}
-									roomLengthFt={lengthNumber}
-								/>
-							))}
-						</div>
-					) : (
-						<div className="border-border text-muted-foreground flex min-h-[420px] items-center justify-center rounded-md border border-dashed p-6 text-center text-sm">
-							Add room length and width, then click Make Visualization.
-						</div>
-					)}
+						) : (
+							<div className="border-border text-muted-foreground flex min-h-[420px] items-center justify-center rounded-md border border-dashed p-6 text-center text-sm">
+								Add room length and width, then click Make Visualization.
+							</div>
+						)}
+					</div>
 				</Card>
 			</div>
 		</div>

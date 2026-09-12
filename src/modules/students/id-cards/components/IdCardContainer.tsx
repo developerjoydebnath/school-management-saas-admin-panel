@@ -16,23 +16,34 @@ export default function IdCardContainer() {
 
 	const [filter, setFilter] = useState<{
 		classId: string;
-		section: string;
-		session: string;
+		sectionId: string;
+		sessionId: string;
 	} | null>(null);
 	const [selectedStudentIds, setSelectedStudentIds] = useState<string[]>([]);
 	const [activePreviewId, setActivePreviewId] = useState<string | undefined>();
 	const [templateType, setTemplateType] = useState<IdCardTemplate>("modern-vertical");
 
-	// Fetch students based on filter
-	const { data: students, isLoading } = useSWR(
-		filter ? `students` : null,
+	const { data: studentsRes, isLoading } = useSWR(
+		filter ? "/students" : null,
 		filter
-			? { class: filter.classId, section: filter.section, session: filter.session }
+			? {
+					sessionId: filter.sessionId,
+					classId: filter.classId,
+					...(filter.sectionId ? { sectionId: filter.sectionId } : {}),
+					limit: 200,
+				}
 			: undefined
 	);
+	const students: any[] = studentsRes?.data?.items || [];
 
-	const handleGenerate = (classId: string, section: string, session: string) => {
-		setFilter({ classId, section, session });
+	const handleGenerate = (classId: string, sectionId: string, sessionId: string) => {
+		setFilter({ classId, sectionId, sessionId });
+		setSelectedStudentIds([]);
+		setActivePreviewId(undefined);
+	};
+
+	const handleClear = () => {
+		setFilter(null);
 		setSelectedStudentIds([]);
 		setActivePreviewId(undefined);
 	};
@@ -44,7 +55,7 @@ export default function IdCardContainer() {
 	};
 
 	const handleSelectAll = (checked: boolean) => {
-		if (checked && students) {
+		if (checked) {
 			setSelectedStudentIds(students.map((s: any) => s.id));
 		} else {
 			setSelectedStudentIds([]);
@@ -183,13 +194,18 @@ export default function IdCardContainer() {
 
 			{/* Screen View */}
 			<div className="print:hidden space-y-6">
-				<IdCardFilter onGenerate={handleGenerate} isLoading={isLoading} />
+				<IdCardFilter
+					onGenerate={handleGenerate}
+					onClear={handleClear}
+					hasResults={!!filter}
+					isLoading={isLoading}
+				/>
 
 				<div className="grid grid-cols-1 gap-6 lg:grid-cols-12">
 				{/* Left Column: Student List */}
 				<div className="space-y-4 lg:col-span-5">
 					<IdCardStudentList
-						students={students || []}
+						students={students}
 						selectedStudentIds={selectedStudentIds}
 						onSelect={handleSelect}
 						onSelectAll={handleSelectAll}

@@ -3,17 +3,16 @@
 import { Card, CardContent } from "@/shared/components/ui/card";
 import { ChartConfig } from "@/shared/components/ui/chart";
 import { Skeleton } from "@/shared/components/ui/skeleton";
-import { useSWR } from "@/shared/hooks/use-swr";
 import { GraduationCap } from "lucide-react";
 import { useLocale } from "next-intl";
-import { useMemo, useState } from "react";
+import { useState } from "react";
+import { useAttendanceOverview, useAttendanceWeeklySummary } from "../hooks/use-attendance";
 import { AttendanceCharts } from "./overview/AttendanceCharts";
 import { ClassGridView } from "./overview/ClassGridView";
 import { ClassListView } from "./overview/ClassListView";
 import { StatsCards } from "./overview/StatsCards";
 import { ViewToggle } from "./overview/ViewToggle";
 
-// --- Chart Configs ---
 const overviewBarConfig = {
 	present: { label: "Present", color: "hsl(142, 76%, 36%)" },
 	absent: { label: "Absent", color: "hsl(0, 84%, 60%)" },
@@ -32,95 +31,24 @@ export default function AttendanceOverview() {
 	const locale = useLocale();
 	const [viewMode, setViewMode] = useState<ViewMode>("grid");
 
-	const { data: classes, isLoading: isLoadingClasses } = useSWR("/classes");
-	const { data: students, isLoading: isLoadingStudents } = useSWR("/students");
+	const { data: overview, isLoading } = useAttendanceOverview();
+	const { data: weeklySummary, isLoading: isLoadingWeekly } = useAttendanceWeeklySummary(7);
 
-	const isLoading = isLoadingClasses || isLoadingStudents;
+	const weeklyData = weeklySummary.map((day) => ({
+		date: day.date,
+		present: day.present,
+		absent: day.absent,
+		late: day.late,
+	}));
 
-	// Mock today's attendance summary by class
-	const classSummaries = useMemo(() => {
-		if (!classes || !students) return [];
-
-		return classes
-			.filter((cls: any) => cls.status === "ACTIVE")
-			.map((cls: any) => {
-				const sections = cls.sections || [];
-				const classStudents = students.filter(
-					(s: any) =>
-						(s.class === cls.id || s.class === `class-${cls.id}`) &&
-						s.status === "ACTIVE"
-				);
-
-				const total = classStudents.length;
-				// Generate deterministic demo data per class
-				const seed = cls.id?.charCodeAt(0) || 5;
-				const presentRate = 80 + (seed % 15);
-				const present = Math.round((total * presentRate) / 100);
-				const lateCount = Math.min(Math.round(total * 0.05), total - present);
-				const absent = total - present - lateCount;
-
-				const sectionData = sections.map((sec: any) => {
-					const secName = typeof sec === "string" ? sec : sec.name || sec;
-					const secStudents = classStudents.filter((s: any) => s.section === secName);
-					const secTotal = secStudents.length;
-					const secPresent = Math.round(
-						(secTotal * (78 + ((secName.charCodeAt(0) * 7) % 18))) / 100
-					);
-					const secLate = Math.min(Math.round(secTotal * 0.04), secTotal - secPresent);
-					return {
-						name: secName,
-						total: secTotal,
-						present: secPresent,
-						absent: secTotal - secPresent - secLate,
-						late: secLate,
-					};
-				});
-
-				return {
-					id: cls.id,
-					name: cls.name,
-					total,
-					present,
-					absent,
-					late: lateCount,
-					presentRate,
-					sections: sectionData,
-					hasSections: sections.length > 0,
-				};
-			});
-	}, [classes, students]);
-
-	// Aggregated totals
-	const totals = useMemo(() => {
-		return classSummaries.reduce(
-			(acc: any, cls: any) => ({
-				totalStudents: acc.totalStudents + cls.total,
-				present: acc.present + cls.present,
-				absent: acc.absent + cls.absent,
-				late: acc.late + cls.late,
-			}),
-			{ totalStudents: 0, present: 0, absent: 0, late: 0 }
-		);
-	}, [classSummaries]);
+	const classSummaries = overview?.classes || [];
+	const totals = overview?.totals || { totalStudents: 0, present: 0, absent: 0, late: 0 };
 
 	const presentPercentage =
 		totals.totalStudents > 0 ? Math.round((totals.present / totals.totalStudents) * 100) : 0;
 
-	// Weekly attendance data (mock)
-	const weeklyData = [
-		{ day: "Sun", present: 418, absent: 32, late: 12 },
-		{ day: "Mon", present: 435, absent: 18, late: 9 },
-		{ day: "Tue", present: 425, absent: 25, late: 12 },
-		{ day: "Wed", present: 440, absent: 12, late: 10 },
-		{ day: "Thu", present: 430, absent: 20, late: 12 },
-	];
-
 	const pieData = [
-		{
-			name: "Present",
-			value: totals.present,
-			fill: "hsl(142, 76%, 36%)",
-		},
+		{ name: "Present", value: totals.present, fill: "hsl(142, 76%, 36%)" },
 		{ name: "Absent", value: totals.absent, fill: "hsl(0, 84%, 60%)" },
 		{ name: "Late", value: totals.late, fill: "hsl(38, 92%, 50%)" },
 	];
@@ -136,6 +64,7 @@ export default function AttendanceOverview() {
 
 			{/* Charts Row */}
 			<AttendanceCharts
+				isLoading={isLoading || isLoadingWeekly}
 				weeklyData={weeklyData}
 				pieData={pieData}
 				overviewBarConfig={overviewBarConfig}

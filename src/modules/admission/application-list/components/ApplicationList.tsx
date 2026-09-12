@@ -41,7 +41,7 @@ import {
 } from "lucide-react";
 import { useTranslations } from "next-intl";
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useState, useRef } from "react";
 import { Area, AreaChart, CartesianGrid, XAxis, YAxis } from "recharts";
 import { toast } from "sonner";
 import ApplicationFilterBar from "./ApplicationFilterBar";
@@ -218,6 +218,7 @@ export default function ApplicationList() {
 	>("target");
 	const [isUpdatingStatus, setIsUpdatingStatus] = useState(false);
 	const [roll, setRoll] = useState("");
+	const autoSuggestedRollRef = useRef("");
 	const [paymentDetails, setPaymentDetails] = useState<any>(null);
 	const [isPaymentLoading, setIsPaymentLoading] = useState(false);
 	const [approvalTarget, setApprovalTarget] = useState({
@@ -378,6 +379,7 @@ export default function ApplicationList() {
 
 	const openStatusUpdate = (app: any, status: string) => {
 		setRoll("");
+autoSuggestedRollRef.current = "";
 		setPaymentDetails(null);
 		const target = {
 			sessionId: app.sessionId || "",
@@ -440,6 +442,7 @@ export default function ApplicationList() {
 						!items.some((item: any) => item.sectionId === current.sectionId)
 					) {
 						setRoll("");
+autoSuggestedRollRef.current = "";
 						return { ...current, sectionId: "" };
 					}
 					return current;
@@ -489,55 +492,7 @@ export default function ApplicationList() {
 		approvalRequiresSection,
 	]);
 
-	useEffect(() => {
-		if (
-			statusUpdate?.status !== "approved" ||
-			approvalStep !== "roll" ||
-			!approvalTarget.classId ||
-			!approvalTarget.sessionId ||
-			!isApprovalSectionSetupLoaded ||
-			(approvalRequiresSection && !approvalTarget.sectionId)
-		) {
-			return;
-		}
 
-		let isMounted = true;
-		setRoll("");
-		axios
-			.get("/admissions/rolls", {
-				params: {
-					classId: approvalTarget.classId,
-					sessionId: approvalTarget.sessionId,
-					sectionId: approvalRequiresSection
-						? approvalTarget.sectionId
-						: undefined,
-				},
-			})
-			.then((response) => {
-				if (!isMounted) return;
-				const items = Array.isArray(response?.data?.data) ? response.data.data : [];
-				const maxRoll = items.reduce((max: number, item: any) => {
-					const numericRoll = Number.parseInt(String(item.rollNumber || "0"), 10);
-					return Number.isFinite(numericRoll) ? Math.max(max, numericRoll) : max;
-				}, 0);
-				setRoll((current) => current || String(maxRoll + 1).padStart(3, "0"));
-			})
-			.catch(() => undefined);
-
-		return () => {
-			isMounted = false;
-		};
-	}, [
-		statusUpdate?.id,
-		statusUpdate?.status,
-		approvalStep,
-		approvalTarget.classId,
-		approvalTarget.sessionId,
-		approvalTarget.sectionId,
-		isApprovalSectionsLoading,
-		isApprovalSectionSetupLoaded,
-		approvalRequiresSection,
-	]);
 
 	const handleStatusUpdate = async () => {
 		if (!statusUpdate || !selectedApplication) return;
@@ -643,6 +598,7 @@ export default function ApplicationList() {
 			}
 			mutate();
 			setRoll("");
+autoSuggestedRollRef.current = "";
 			shouldCloseDialog = true;
 		} catch (err: any) {
 			// Shared axios interceptor already shows the backend message.
@@ -940,6 +896,7 @@ export default function ApplicationList() {
 					if (!open) {
 						setStatusUpdate(null);
 						setRoll("");
+autoSuggestedRollRef.current = "";
 						setPaymentDetails(null);
 						setApprovalStep("target");
 						setApprovalSections([]);
@@ -1165,6 +1122,7 @@ export default function ApplicationList() {
 													setApprovalSections([]);
 													setApprovalSectionSetupKey("");
 													setRoll("");
+autoSuggestedRollRef.current = "";
 												}}
 												placeholder="Select session"
 											/>
@@ -1195,6 +1153,7 @@ export default function ApplicationList() {
 													setApprovalSections([]);
 													setApprovalSectionSetupKey("");
 													setRoll("");
+autoSuggestedRollRef.current = "";
 												}}
 												placeholder="Select class"
 											/>
@@ -1219,6 +1178,7 @@ export default function ApplicationList() {
 														sectionId: value || "",
 													}));
 													setRoll("");
+autoSuggestedRollRef.current = "";
 												}}
 												placeholder={
 													approvalRequiresSection
@@ -1278,9 +1238,18 @@ export default function ApplicationList() {
 														? approvalTarget.sectionId
 														: undefined
 												}
-												onSuggestedRoll={(suggestedRoll) =>
-													setRoll((current) => current || suggestedRoll)
-												}
+												onSuggestedRoll={(suggestedRoll) => {
+													setRoll((current) => {
+														if (
+															current === "" ||
+															current === autoSuggestedRollRef.current
+														) {
+															autoSuggestedRollRef.current = suggestedRoll;
+															return suggestedRoll;
+														}
+														return current;
+													});
+												}}
 											/>
 										) : (
 											<div className="text-muted-foreground flex min-h-32 items-center rounded-md border border-dashed p-4 text-sm">

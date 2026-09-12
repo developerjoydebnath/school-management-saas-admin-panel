@@ -1,5 +1,11 @@
 "use client"
 
+// React Compiler would memoize the render-time `editor.isActive(...)` reads
+// below on the stable [editor, type] refs and never recompute them, freezing
+// every toolbar button in its first state. These hooks intentionally read the
+// editor fresh on each render and re-render via a transaction listener.
+"use no memo";
+
 import { useEffect, useState } from "react"
 import type { Editor } from "@tiptap/react"
 
@@ -53,6 +59,7 @@ export function getActiveHeadingLevel(
  * Custom hook that provides heading dropdown menu functionality for Tiptap editor
  */
 export function useHeadingDropdownMenu(config?: UseHeadingDropdownMenuConfig) {
+  "use no memo";
   const {
     editor: providedEditor,
     levels = [1, 2, 3, 4, 5, 6],

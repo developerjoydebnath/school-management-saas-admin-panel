@@ -2,9 +2,11 @@
 
 import * as React from "react";
 import * as DialogPrimitive from "@radix-ui/react-dialog";
+import { useTheme } from "next-themes";
 
 import { cn } from "@/shared/lib/utils";
 import { Button } from "@/shared/components/ui/button";
+import { preventCloseForFloatingLayer } from "@/shared/components/ui/floating-layer-guard";
 import { XIcon } from "lucide-react";
 
 function Dialog({ ...props }: React.ComponentProps<typeof DialogPrimitive.Root>) {
@@ -41,6 +43,7 @@ function DialogOverlay({
 
 function DialogContent({
 	className,
+	overlayClassName,
 	children,
 	showCloseButton = true,
 	onInteractOutside,
@@ -49,53 +52,44 @@ function DialogContent({
 	...props
 }: React.ComponentProps<typeof DialogPrimitive.Content> & {
 	showCloseButton?: boolean;
+	/** Opt-in stronger/different backdrop for a single dialog — the shared
+	 * default (`bg-black/10`) stays untouched for every other consumer. */
+	overlayClassName?: string;
 }) {
-	const hasOpenFloatingLayer = () =>
-		Boolean(
-			document.body.hasAttribute("data-select-layer-open") ||
-			document.querySelector(
-				[
-					'[data-slot="select-content"][data-state="open"]',
-					'[data-slot="popover-content"][data-state="open"]',
-				].join(",")
-			)
-		);
-
-	const preventDialogCloseForFloatingLayer = (event: Event) => {
-		if (hasOpenFloatingLayer()) {
-			event.preventDefault();
-			return true;
-		}
-		return false;
-	};
+	// The portal mounts at document.body, and this app's custom (Next.js 16)
+	// runtime doesn't reliably carry the `.dark` class down into it — same
+	// issue Sonner's Toaster works around (see ui/sonner.tsx) by reading
+	// next-themes directly instead of depending on ambient CSS inheritance.
+	const { resolvedTheme } = useTheme();
 
 	const handleInteractOutside: React.ComponentProps<
 		typeof DialogPrimitive.Content
 	>["onInteractOutside"] = (event) => {
-		if (preventDialogCloseForFloatingLayer(event)) return;
+		if (preventCloseForFloatingLayer(event)) return;
 		onInteractOutside?.(event);
 	};
 
 	const handlePointerDownOutside: React.ComponentProps<
 		typeof DialogPrimitive.Content
 	>["onPointerDownOutside"] = (event) => {
-		if (preventDialogCloseForFloatingLayer(event)) return;
+		if (preventCloseForFloatingLayer(event)) return;
 		onPointerDownOutside?.(event);
 	};
 
 	const handleFocusOutside: React.ComponentProps<
 		typeof DialogPrimitive.Content
 	>["onFocusOutside"] = (event) => {
-		if (preventDialogCloseForFloatingLayer(event)) return;
+		if (preventCloseForFloatingLayer(event)) return;
 		onFocusOutside?.(event);
 	};
 
 	return (
 		<DialogPortal>
-			<DialogOverlay />
+			<DialogOverlay className={cn(resolvedTheme, overlayClassName)} />
 			<DialogPrimitive.Content
 				data-slot="dialog-content"
 				className={cn(
+					resolvedTheme,
 					"bg-popover text-popover-foreground ring-foreground/10 data-[state=open]:animate-in data-[state=open]:fade-in-0 data-[state=open]:zoom-in-95 data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=closed]:zoom-out-95 fixed top-1/2 left-1/2 z-50 grid w-full max-w-[calc(100%-2rem)] -translate-x-1/2 -translate-y-1/2 gap-6 rounded-xl p-6 text-sm ring-1 duration-100 outline-none sm:max-w-md",
 					className
 				)}

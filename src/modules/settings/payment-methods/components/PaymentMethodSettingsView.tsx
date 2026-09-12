@@ -4,254 +4,35 @@ import ConfirmationModal from "@/shared/components/custom/ConfirmationModal";
 import { AlertDialogTrigger } from "@/shared/components/ui/alert-dialog";
 import { Badge } from "@/shared/components/ui/badge";
 import { Button } from "@/shared/components/ui/button";
-import { Card, CardContent, CardHeader } from "@/shared/components/ui/card";
-import { ScrollArea } from "@/shared/components/ui/scroll-area";
-import {
-	Sheet,
-	SheetContent,
-	SheetDescription,
-	SheetHeader,
-	SheetTitle,
-	SheetTrigger,
-} from "@/shared/components/ui/sheet";
+import { Card, CardAction, CardContent, CardHeader } from "@/shared/components/ui/card";
 import { Skeleton } from "@/shared/components/ui/skeleton";
 import { PATHS } from "@/shared/configs/paths.config";
 import { cn } from "@/shared/lib/utils";
-import {
-	CreditCard,
-	Eye,
-	Landmark,
-	Plus,
-	Settings2,
-	Smartphone,
-	Trash2,
-	Wallet,
-} from "lucide-react";
+import { CreditCard, Landmark, Plus, Settings2, Trash2, Wallet } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useRouter } from "next/navigation";
-import { useMemo } from "react";
-import { toast } from "sonner";
+import { useEffect, useMemo, useState } from "react";
 import type {
 	PaymentMethodProviderTemplate,
 	PaymentMethodSetting,
 } from "../dto/payment-method-setting.dto";
 import {
-	deletePaymentMethod,
-	updatePaymentMethodAvailability,
-	updatePaymentMethodStatus,
 	usePaymentMethodProviders,
 	usePaymentMethods,
 } from "../hooks/use-payment-method-settings";
+import { PaymentMethodListView } from "./PaymentMethodListView";
+import {
+	categoryIcons,
+	getTemplate,
+	normalizeText,
+	PaymentMethodDetailsSheet,
+	performAvailabilityToggle,
+	performDeleteMethod,
+	performStatusToggle,
+} from "./payment-method-shared";
+import { PaymentMethodViewToggle, type PaymentMethodViewMode } from "./PaymentMethodViewToggle";
 
-const categoryIcons: Record<string, any> = {
-	manual: Wallet,
-	bank: Landmark,
-	mobile_banking: Smartphone,
-	gateway: CreditCard,
-	custom: Settings2,
-};
-
-function normalizeText(value: string) {
-	return value.replace(/_/g, " ").replace(/\b\w/g, (char) => char.toUpperCase());
-}
-
-function getTemplate(
-	providers: PaymentMethodProviderTemplate[],
-	provider: string
-) {
-	return providers.find((item) => item.provider === provider);
-}
-
-function formatFieldValue(value: unknown) {
-	if (value === null || value === undefined || value === "") {
-		return "Not configured";
-	}
-
-	if (typeof value === "boolean") {
-		return value ? "Yes" : "No";
-	}
-
-	if (Array.isArray(value)) {
-		return value.length ? value.join(", ") : "Not configured";
-	}
-
-	if (typeof value === "object") {
-		return JSON.stringify(value, null, 2);
-	}
-
-	return String(value);
-}
-
-function isSensitiveCredential(key: string, type?: string) {
-	return (
-		type === "password" ||
-		/(password|secret|private|token|credential|storePassword)/i.test(key)
-	);
-}
-
-function CompactPair({
-	label,
-	value,
-	fullWidth,
-}: {
-	label: string;
-	value?: string | number | null;
-	fullWidth?: boolean;
-}) {
-	return (
-		<div className={cn("min-w-0", fullWidth && "@xl/body:col-span-2")}>
-			<p className="text-muted-foreground text-[11px] leading-4">{label}</p>
-			<p className="mt-0.5 break-words text-sm leading-5 whitespace-pre-wrap">
-				{value || "-"}
-			</p>
-		</div>
-	);
-}
-
-function PaymentMethodDetailsSheet({
-	method,
-	template,
-}: {
-	method: PaymentMethodSetting;
-	template?: PaymentMethodProviderTemplate;
-}) {
-	const credentialFields = template?.credentialFields || [];
-	const unlistedCredentialEntries = Object.entries(method.credentialData || {}).filter(
-		([key]) => !credentialFields.some((field) => field.key === key)
-	);
-	const callbackFields = credentialFields.filter((field) =>
-		/(successUrl|failUrl|cancelUrl|ipnUrl)/i.test(field.key)
-	);
-
-	return (
-		<Sheet>
-			<SheetTrigger asChild>
-				<Button variant="outline" size="sm">
-					<Eye className="size-4" />
-					Details
-				</Button>
-			</SheetTrigger>
-			<SheetContent className="w-full gap-0 p-0 sm:max-w-none @3xl/body:w-[64vw] @5xl/body:w-[54vw]">
-				<SheetHeader className="border-b p-4">
-					<SheetTitle className="text-base font-normal leading-6">
-						{method.displayName}
-					</SheetTitle>
-					<SheetDescription className="text-xs">
-						{method.description || template?.description || "Review payment method setup."}
-					</SheetDescription>
-				</SheetHeader>
-				<ScrollArea className="h-[calc(100vh-73px)]">
-					<div className="space-y-4 p-4">
-						<div className="rounded-md border bg-muted/20 p-4">
-							<h3 className="text-sm font-normal">Method Information</h3>
-							<div className="mt-3 grid grid-cols-1 gap-x-4 gap-y-3 @xl/body:grid-cols-2">
-								<CompactPair
-									label="Provider"
-									value={method.providerLabel || normalizeText(method.provider)}
-								/>
-								<CompactPair label="Mode" value={normalizeText(method.mode)} />
-								<CompactPair label="Status" value={normalizeText(method.status)} />
-								<CompactPair label="Currency" value={method.currency || "BDT"} />
-								<CompactPair
-									label="Default Method"
-									value={method.isDefault ? "Yes" : "No"}
-								/>
-								<CompactPair
-									label="Admin Panel"
-									value={method.adminEnabled ? "Enabled" : "Disabled"}
-								/>
-								<CompactPair
-									label="Public Portal"
-									value={method.publicEnabled ? "Enabled" : "Disabled"}
-								/>
-								<CompactPair label="Sort Order" value={method.sortOrder ?? 0} />
-							</div>
-						</div>
-
-						<div className="rounded-md border bg-muted/20 p-4">
-							<h3 className="text-sm font-normal">Credentials</h3>
-							<p className="text-muted-foreground mt-1 text-xs">
-								Sensitive values are masked. Use edit mode to update credentials.
-							</p>
-							<div className="mt-3 grid grid-cols-1 gap-x-4 gap-y-3 @xl/body:grid-cols-2">
-								{credentialFields.length || unlistedCredentialEntries.length ? (
-									<>
-										{credentialFields.map((field) => {
-											const value = method.credentialData?.[field.key];
-											const displayValue = isSensitiveCredential(field.key, field.type)
-												? value
-													? "********"
-													: "Not configured"
-												: formatFieldValue(value);
-
-											return (
-												<CompactPair
-													key={field.key}
-													label={field.label}
-													value={displayValue}
-													fullWidth={field.type === "textarea" || field.type === "url"}
-												/>
-											);
-										})}
-										{unlistedCredentialEntries.map(([key, value]) => (
-											<CompactPair
-												key={key}
-												label={normalizeText(key)}
-												value={
-													isSensitiveCredential(key)
-														? "********"
-														: formatFieldValue(value)
-												}
-											/>
-										))}
-									</>
-								) : (
-									<p className="text-muted-foreground rounded-md border border-dashed p-4 text-sm @xl/body:col-span-2">
-										No credentials are required for this payment method.
-									</p>
-								)}
-							</div>
-						</div>
-
-						{callbackFields.length > 0 && (
-							<div className="rounded-md border bg-muted/20 p-4">
-								<h3 className="text-sm font-normal">Callback URLs</h3>
-								<p className="text-muted-foreground mt-1 text-xs">
-									Empty callback URLs use the system default backend endpoints.
-								</p>
-								<div className="mt-3 grid grid-cols-1 gap-x-4 gap-y-3 @xl/body:grid-cols-2">
-									{callbackFields.map((field) => (
-										<CompactPair
-											key={field.key}
-											label={field.label}
-											value={
-												method.credentialData?.[field.key]
-													? String(method.credentialData[field.key])
-													: "System default will be used"
-											}
-											fullWidth
-										/>
-									))}
-								</div>
-							</div>
-						)}
-
-						<div className="rounded-md border bg-muted/20 p-4">
-							<h3 className="text-sm font-normal">Instructions</h3>
-							<div className="mt-3 grid grid-cols-1 gap-x-4 gap-y-3 @xl/body:grid-cols-2">
-								<CompactPair
-									label="Payment Instructions"
-									value={method.instructions || "No instructions added."}
-									fullWidth
-								/>
-							</div>
-						</div>
-					</div>
-				</ScrollArea>
-			</SheetContent>
-		</Sheet>
-	);
-}
+const VIEW_MODE_STORAGE_KEY = "payment-methods:view-mode";
 
 function PaymentMethodCard({
 	method,
@@ -267,19 +48,6 @@ function PaymentMethodCard({
 	const template = getTemplate(providers, method.provider);
 	const Icon = categoryIcons[template?.category || "custom"] || Settings2;
 	const isActive = method.status === "ACTIVE";
-	const nextStatus = isActive ? "INACTIVE" : "ACTIVE";
-
-	const toggleStatus = async () => {
-		await updatePaymentMethodStatus(method.id, nextStatus);
-		toast.success("Payment method status updated successfully");
-		onChanged();
-	};
-
-	const toggleAvailability = async (key: "adminEnabled" | "publicEnabled") => {
-		await updatePaymentMethodAvailability(method.id, { [key]: !method[key] });
-		toast.success("Payment method availability updated successfully");
-		onChanged();
-	};
 
 	return (
 		<Card className="@container/card shadow-none bg-accent/20 px-0 py-2">
@@ -335,7 +103,7 @@ function PaymentMethodCard({
 						description="This controls whether school staff can use this method inside the admin panel."
 						confirmText={method.adminEnabled ? "Disable Admin" : "Enable Admin"}
 						variant={method.adminEnabled ? "destructive" : "default"}
-						onConfirm={() => toggleAvailability("adminEnabled")}
+						onConfirm={() => performAvailabilityToggle(method, "adminEnabled", onChanged)}
 					>
 						<AlertDialogTrigger asChild>
 							<Button variant="outline" size="sm">
@@ -348,7 +116,7 @@ function PaymentMethodCard({
 						description="This controls whether parents/students can use this method from the public payment page."
 						confirmText={method.publicEnabled ? "Disable Public" : "Enable Public"}
 						variant={method.publicEnabled ? "destructive" : "default"}
-						onConfirm={() => toggleAvailability("publicEnabled")}
+						onConfirm={() => performAvailabilityToggle(method, "publicEnabled", onChanged)}
 					>
 						<AlertDialogTrigger asChild>
 							<Button variant="outline" size="sm">
@@ -365,7 +133,7 @@ function PaymentMethodCard({
 						}
 						confirmText={isActive ? t("disable") : t("enable")}
 						variant={isActive ? "destructive" : "default"}
-						onConfirm={toggleStatus}
+						onConfirm={() => performStatusToggle(method, onChanged)}
 					>
 						<AlertDialogTrigger asChild>
 							<Button variant="outline" size="sm">
@@ -385,11 +153,7 @@ function PaymentMethodCard({
 						description={t("deleteDescription")}
 						confirmText="Delete"
 						variant="destructive"
-						onConfirm={async () => {
-							await deletePaymentMethod(method.id);
-							toast.success("Payment method deleted successfully");
-							onChanged();
-						}}
+						onConfirm={() => performDeleteMethod(method, onChanged)}
 					>
 						<AlertDialogTrigger asChild>
 							<Button variant="destructive" size="icon-sm" title={t("deleteTitle")}>
@@ -408,6 +172,28 @@ export function PaymentMethodSettingsView() {
 	const router = useRouter();
 	const { items, mutate, isLoading } = usePaymentMethods();
 	const { providers } = usePaymentMethodProviders();
+	const [viewMode, setViewMode] = useState<PaymentMethodViewMode>("list");
+
+	// Restore the viewer's last-used view mode after hydration, so the very
+	// first client render always matches the server-rendered "list" markup.
+	useEffect(() => {
+		try {
+			const saved = window.localStorage.getItem(VIEW_MODE_STORAGE_KEY);
+			if (saved === "grid" || saved === "list") {
+				setViewMode(saved);
+			}
+		} catch {
+			// Ignore storage failures (private browsing, quota, etc.)
+		}
+	}, []);
+
+	useEffect(() => {
+		try {
+			window.localStorage.setItem(VIEW_MODE_STORAGE_KEY, viewMode);
+		} catch {
+			// Ignore storage failures (private browsing, quota, etc.)
+		}
+	}, [viewMode]);
 
 	const stats = useMemo(() => {
 		const active = items.filter((item) => item.status === "ACTIVE").length;
@@ -458,47 +244,59 @@ export function PaymentMethodSettingsView() {
 					<p className="text-muted-foreground text-sm">
 						Only active methods are shown in admission, fee collection, and payment filters.
 					</p>
+					<CardAction>
+						<PaymentMethodViewToggle viewMode={viewMode} onChange={setViewMode} />
+					</CardAction>
 				</CardHeader>
 				<CardContent className="grid gap-4">
-					{isLoading ? (
-						Array.from({ length: 3 }).map((_, index) => (
-							<Card key={index} className="@container/card">
-								<CardContent className="flex flex-col gap-4 p-4">
-									<div className="flex items-start gap-3">
-										<Skeleton className="size-10 shrink-0 rounded-md" />
-										<div className="min-w-0 flex-1 space-y-2">
-											<Skeleton className="h-5 w-40" />
-											<Skeleton className="h-4 w-2/3" />
-										</div>
-									</div>
-									<div className="grid gap-3 @md/card:grid-cols-3">
-										<Skeleton className="h-16 rounded-md" />
-										<Skeleton className="h-16 rounded-md" />
-										<Skeleton className="h-16 rounded-md" />
-									</div>
-									<div className="flex justify-end gap-2">
-										<Skeleton className="h-8 w-20 rounded-md" />
-										<Skeleton className="h-8 w-28 rounded-md" />
-										<Skeleton className="h-8 w-8 rounded-md" />
-									</div>
-								</CardContent>
-							</Card>
-						))
-					) : items.length ? (
-						<div className="grid gap-4 @4xl:grid-cols-2">
-							{items.map((method) => (
-								<PaymentMethodCard
-									key={method.id}
-									method={method}
-									providers={providers}
-									onChanged={() => mutate()}
-								/>
-							))}
-						</div>
-					) : (
+					{items.length === 0 && !isLoading ? (
 						<div className="text-muted-foreground rounded-md border border-dashed p-6 text-center">
 							No payment methods configured yet.
 						</div>
+					) : viewMode === "grid" ? (
+						isLoading ? (
+							Array.from({ length: 3 }).map((_, index) => (
+								<Card key={index} className="@container/card">
+									<CardContent className="flex flex-col gap-4 p-4">
+										<div className="flex items-start gap-3">
+											<Skeleton className="size-10 shrink-0 rounded-md" />
+											<div className="min-w-0 flex-1 space-y-2">
+												<Skeleton className="h-5 w-40" />
+												<Skeleton className="h-4 w-2/3" />
+											</div>
+										</div>
+										<div className="grid gap-3 @md/card:grid-cols-3">
+											<Skeleton className="h-16 rounded-md" />
+											<Skeleton className="h-16 rounded-md" />
+											<Skeleton className="h-16 rounded-md" />
+										</div>
+										<div className="flex justify-end gap-2">
+											<Skeleton className="h-8 w-20 rounded-md" />
+											<Skeleton className="h-8 w-28 rounded-md" />
+											<Skeleton className="h-8 w-8 rounded-md" />
+										</div>
+									</CardContent>
+								</Card>
+							))
+						) : (
+							<div className="grid gap-4 @4xl:grid-cols-2">
+								{items.map((method) => (
+									<PaymentMethodCard
+										key={method.id}
+										method={method}
+										providers={providers}
+										onChanged={() => mutate()}
+									/>
+								))}
+							</div>
+						)
+					) : (
+						<PaymentMethodListView
+							items={items}
+							providers={providers}
+							isLoading={isLoading}
+							onChanged={() => mutate()}
+						/>
 					)}
 				</CardContent>
 			</Card>

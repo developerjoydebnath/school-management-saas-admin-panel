@@ -17,6 +17,8 @@ interface DesignationSelectProps {
 	placeholder?: string;
 	className?: string;
 	disabled?: boolean;
+	/** Narrows the list to a designation type ("teacher" | "staff"). */
+	type?: string;
 }
 
 export default function DesignationSelect({
@@ -25,8 +27,12 @@ export default function DesignationSelect({
 	placeholder = "Select Designation",
 	className,
 	disabled,
+	type,
 }: DesignationSelectProps) {
-	const { data: response, isLoading } = useSWR("/designations/active-list");
+	const { data: response, isLoading } = useSWR(
+		"/designations/active-list",
+		type ? { type } : undefined
+	);
 	const designations = response?.data || response || [];
 
 	if (isLoading) return <Skeleton className="h-10 w-full" />;

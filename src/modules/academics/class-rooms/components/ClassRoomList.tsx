@@ -21,6 +21,7 @@ import Link from "next/link";
 import { useState } from "react";
 import { toast } from "sonner";
 import { deleteClassRoom, updateClassRoom } from "../hooks/use-class-room-mutations";
+import { useClassRoomAssignedInventory } from "../hooks/use-class-room-inventory";
 import { useClassRooms } from "../hooks/use-class-rooms";
 import { ClassRoomModel } from "../models/class-room.model";
 import { ClassRoomCreate } from "./ClassRoomCreate";
@@ -54,6 +55,42 @@ function ClassRoomDetailsAction({ id }: { id: string }) {
 			</SheetTrigger>
 			<ClassRoomDetailsSheet id={id} open={hasOpened} />
 		</Sheet>
+	);
+}
+
+function ClassRoomInventoryCell({ id }: { id: string }) {
+	const t = useTranslations("ClassRooms");
+	const tc = useTranslations("Common");
+	const { data: items, isLoading } = useClassRoomAssignedInventory(id);
+
+	if (isLoading) {
+		return (
+			<span className="text-muted-foreground text-xs">
+				{tc("loading")}
+			</span>
+		);
+	}
+
+	if (!items || items.length === 0) {
+		return (
+			<span className="text-muted-foreground text-xs">
+				{t("noAssignedInventory")}
+			</span>
+		);
+	}
+
+	return (
+		<div className="flex flex-wrap gap-1">
+			{items.map((record: any) => (
+				<span
+					key={record.id}
+					className="bg-muted text-muted-foreground inline-flex items-center rounded-full px-2 py-0.5 text-xs"
+				>
+					{record.item?.name}
+					{record.quantity > 1 ? ` ×${record.quantity}` : ""}
+				</span>
+			))}
+		</div>
 	);
 }
 
@@ -131,13 +168,9 @@ export default function ClassRoomList() {
 			),
 		},
 		{
-			id: "furniture",
-			header: t("furniture"),
-			cell: ({ row }) => (
-				<span className="text-sm">
-					Bench {row.original.highBench + row.original.lowBench}, Chair {row.original.chair}, Table {row.original.table}
-				</span>
-			),
+			id: "items",
+			header: t("items"),
+			cell: ({ row }) => <ClassRoomInventoryCell id={row.original.id} />,
 		},
 		{
 			id: "status",

@@ -1,7 +1,10 @@
 "use client";
 
 import SyllabusForm from "@/modules/academics/syllabus/components/SyllabusForm";
-import { SyllabusStatusEnum } from "@/modules/academics/syllabus/dto/syllabus.dto";
+import {
+	SyllabusModeEnum,
+	SyllabusStatusEnum,
+} from "@/modules/academics/syllabus/dto/syllabus.dto";
 import { useSyllabus } from "@/modules/academics/syllabus/hooks/use-syllabus";
 import PageHeading from "@/shared/components/custom/PageHeading";
 import { Skeleton } from "@/shared/components/ui/skeleton";
@@ -47,6 +50,8 @@ export default function EditSyllabusPage({ params }: { params: Promise<{ id: str
 					sectionIds: data.sectionId ? [data.sectionId] : [],
 					title: data.title || "",
 					status: data.status || SyllabusStatusEnum.DRAFT,
+					mode: data.mode || SyllabusModeEnum.STRUCTURED,
+					content: data.content || "",
 					subjects: (data.subjects || []).map((subject: any) => ({
 						subjectId: subject.subjectId || "",
 						teacherId: subject.teacherId || "",

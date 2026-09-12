@@ -42,7 +42,15 @@ const sourceOptions: TOption[] = [
 	{ label: "Online Portal", value: "online_portal" },
 ];
 
-const purposeOptions: TOption[] = [{ label: "Admission Fee", value: "admission_fee" }];
+const purposeOptions: TOption[] = [
+	{ label: "Admission Fee", value: "admission_fee" },
+	{ label: "Tuition Fee", value: "tuition_fee" },
+	{ label: "Exam Fee", value: "exam_fee" },
+	{ label: "Transport Fee", value: "transport_fee" },
+	{ label: "Library Fee", value: "library_fee" },
+	{ label: "Hostel Fee", value: "hostel_fee" },
+	{ label: "Other", value: "other" },
+];
 
 const listFromResponse = (response: any) => {
 	if (Array.isArray(response?.data)) return response.data;

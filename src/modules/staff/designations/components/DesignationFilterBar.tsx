@@ -30,6 +30,11 @@ const categoryOptions = [
 	{ label: "Support Staff", value: "SUPPORT_STAFF" },
 ];
 
+const typeOptions = [
+	{ label: "Teacher", value: "teacher" },
+	{ label: "Staff", value: "staff" },
+];
+
 export default function DesignationFilterBar({ children, filter, setFilter }: Props) {
 	return (
 		<div>
@@ -40,6 +45,13 @@ export default function DesignationFilterBar({ children, filter, setFilter }: Pr
 					onSelect={(values: string[]) => setFilter({ ...filter, isActive: values })}
 					clearFilter={() => setFilter({ ...filter, isActive: [] })}
 					options={statusOptions}
+				/>
+				<FilterButton
+					title="Type"
+					selected={filter.type}
+					onSelect={(values: string[]) => setFilter({ ...filter, type: values })}
+					clearFilter={() => setFilter({ ...filter, type: [] })}
+					options={typeOptions}
 				/>
 				<FilterButton
 					title="Category"
@@ -66,6 +78,13 @@ export default function DesignationFilterBar({ children, filter, setFilter }: Pr
 							onSelect={(values: string[]) => setFilter({ ...filter, isActive: values })}
 							clearFilter={() => setFilter({ ...filter, isActive: [] })}
 							options={statusOptions}
+						/>
+						<FilterButton
+							title="Type"
+							selected={filter.type}
+							onSelect={(values: string[]) => setFilter({ ...filter, type: values })}
+							clearFilter={() => setFilter({ ...filter, type: [] })}
+							options={typeOptions}
 						/>
 						<FilterButton
 							title="Category"

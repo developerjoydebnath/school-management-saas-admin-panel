@@ -1,5 +1,11 @@
 "use client"
 
+// React Compiler would memoize the render-time `editor.isActive(...)` reads
+// below on the stable [editor, type] refs and never recompute them, freezing
+// every toolbar button in its first state. These hooks intentionally read the
+// editor fresh on each render and re-render via a transaction listener.
+"use no memo";
+
 import { useCallback, useEffect, useState } from "react"
 import type { Editor } from "@tiptap/react"
 
@@ -108,6 +114,7 @@ export function shouldShowLinkButton(props: {
  * Custom hook for handling link operations in a Tiptap editor
  */
 export function useLinkHandler(props: LinkHandlerProps) {
+  "use no memo";
   const { editor, onSetLink } = props
   const [url, setUrl] = useState<string | null>(null)
 
@@ -197,6 +204,7 @@ export function useLinkState(props: {
   editor: Editor | null
   hideWhenUnavailable: boolean
 }) {
+  "use no memo";
   const { editor, hideWhenUnavailable = false } = props
 
   const canSet = canSetLink(editor)
@@ -238,6 +246,7 @@ export function useLinkState(props: {
  * Main hook that provides link popover functionality for Tiptap editor
  */
 export function useLinkPopover(config?: UseLinkPopoverConfig) {
+  "use no memo";
   const {
     editor: providedEditor,
     hideWhenUnavailable = false,

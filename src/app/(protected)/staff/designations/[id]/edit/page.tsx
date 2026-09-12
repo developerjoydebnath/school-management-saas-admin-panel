@@ -51,6 +51,7 @@ export default function EditDesignationPage() {
 		name: designation.name,
 		nameBn: designation.nameBn,
 		category: designation.category,
+		type: designation.type || "teacher",
 		applicableTo: designation.applicableTo || [],
 		level: designation.level,
 		isHeadRole: designation.isHeadRole,

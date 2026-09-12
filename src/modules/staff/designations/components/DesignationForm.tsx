@@ -37,6 +37,11 @@ const categoryOptions = [
 	{ label: "Support Staff", value: "SUPPORT_STAFF" },
 ];
 
+const typeOptions = [
+	{ label: "Teacher", value: "teacher" },
+	{ label: "Staff", value: "staff" },
+];
+
 const statusOptions = [
 	{ label: "ACTIVE", value: "true" },
 	{ label: "INACTIVE", value: "false" },
@@ -107,6 +112,15 @@ export default function DesignationForm({ id, defaultValues, isEdit = false }: P
 						type="select"
 						placeholder="Select Category"
 						options={categoryOptions}
+						required
+					/>
+					<InputField
+						control={form.control}
+						name="type"
+						label="Type"
+						type="select"
+						placeholder="Select Type"
+						options={typeOptions}
 						required
 					/>
 					<InputField

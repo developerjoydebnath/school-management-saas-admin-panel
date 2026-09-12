@@ -255,3 +255,40 @@ body[data-scroll-locked] {
   padding-right: 0 !important;
   margin-right: 0 !important;
 }
+/* ---------------------------------------------------------------------------
+   Printing a library label sheet.
+
+   The sheet is rendered twice: an on-screen preview inside the dialog, and a
+   print-only copy in `#library-print-root`, a plain block at the end of body.
+
+   Printing the dialog copy was tried first and does not work. A Radix dialog is
+   `position: fixed` and centred with a -50% transform, and `DialogPortal`
+   renders no element of its own -- Radix merges it away with `asChild` -- so
+   there is nothing stable to aim a rule at. The sheet came out clipped to the
+   top-left corner, two labels of ten. A normal block in body flow paginates by
+   itself.
+
+   Everything is scoped to `body.library-label-print`, a class the labels dialog
+   adds while it is open. Without that scope, hiding the app shell would break
+   every OTHER print in the app -- the student ID cards print from a normal page
+   and would come out blank.
+   --------------------------------------------------------------------------- */
+@media print {
+  body.library-label-print > *:not(#library-print-root) {
+    display: none !important;
+  }
+
+  body.library-label-print #library-print-root {
+    display: block !important;
+    position: static !important;
+    background: #ffffff !important;
+    color: #000000 !important;
+    print-color-adjust: exact;
+    -webkit-print-color-adjust: exact;
+  }
+
+  @page {
+    size: A4;
+    margin: 8mm;
+  }
+}

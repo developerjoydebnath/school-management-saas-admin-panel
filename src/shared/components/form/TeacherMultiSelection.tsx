@@ -84,9 +84,9 @@ export default function TeacherMultiSelection({
 	};
 
 	return (
-		<div className={cn("w-full space-y-2", className)}>
+		<div className={cn("w-full space-y-1.5", className)}>
 			{isLoading ? (
-				<Skeleton className="h-10 w-full rounded-md" />
+				<Skeleton className="h-9 w-full rounded-md" />
 			) : (
 				<Popover open={open} onOpenChange={setOpen}>
 					<PopoverTrigger asChild>
@@ -94,7 +94,7 @@ export default function TeacherMultiSelection({
 							variant="outline"
 							role="combobox"
 							aria-expanded={open}
-							className="bg-input/30 hover:bg-input/50 h-10! w-full justify-between font-normal"
+							className="bg-input/30 hover:bg-input/50 h-9! w-full justify-between text-sm font-normal"
 						>
 							<span className="truncate">
 								{selectedTeachers.length
@@ -149,11 +149,11 @@ export default function TeacherMultiSelection({
 			)}
 
 			{selectedTeachers.length ? (
-				<div className="flex flex-wrap gap-1.5">
+				<div className="flex flex-wrap gap-1">
 					{selectedTeachers.map((teacher: Teacher) => (
 						<span
 							key={teacher.id}
-							className="bg-muted text-muted-foreground inline-flex max-w-full items-center gap-1 rounded-full px-2 py-1 text-xs"
+							className="bg-muted text-muted-foreground inline-flex max-w-full items-center gap-1 rounded-full px-2 py-0.5 text-xs"
 						>
 							<span className="max-w-32 truncate">
 								{getLocalizedName(teacher.name, locale)}

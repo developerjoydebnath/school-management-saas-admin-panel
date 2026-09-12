@@ -57,11 +57,11 @@ export default function CertificatesPreview({ student, templateType }: Certifica
 						was a bona fide student of this school.
 					</p>
 					<p className="mb-4">
-						He/She was admitted to the school on <strong>{student.admissionDate || "______________"}</strong> in Class <strong>{student.class}</strong>.
+						He/She was admitted to the school on <strong>{student.admissionDate || "______________"}</strong> in Class <strong>{student.className}</strong>.
 						His/Her date of birth according to the Admission Register is <strong>{student.dob || "______________"}</strong>.
 					</p>
 					<p className="mb-8">
-						He/She leaves the school having passed the examination for Class <strong>{student.class}</strong>.
+						He/She leaves the school having passed the examination for Class <strong>{student.className}</strong>.
 						All dues to the school have been paid. His/Her conduct and character during the stay in the school were good.
 					</p>
 
@@ -94,7 +94,7 @@ export default function CertificatesPreview({ student, templateType }: Certifica
 					<div className="flex-1 flex flex-col justify-center items-center">
 						<p className="mb-6">
 							This is to certify that <strong>{student.fullName}</strong>
-							(ID: <strong>{student.studentId}</strong>) has been a student of our institution in Class <strong>{student.class}</strong>.
+							(ID: <strong>{student.studentId}</strong>) has been a student of our institution in Class <strong>{student.className}</strong>.
 						</p>
 						<p className="mb-6 italic text-slate-700">
 							To the best of my knowledge, he/she bears an excellent moral character and conduct.
@@ -126,7 +126,7 @@ export default function CertificatesPreview({ student, templateType }: Certifica
 					<h2 className="text-4xl font-serif text-emerald-700 italic my-6">{student.fullName}</h2>
 					<div className="h-1 w-24 bg-blue-500 mx-auto my-6 rounded-full"></div>
 					<p className="text-lg text-slate-600 max-w-lg mx-auto">
-						In recognition of successfully completing the academic requirements for Class <strong>{student.class}</strong> for the session <strong>{student.session || "2023-2024"}</strong>.
+						In recognition of successfully completing the academic requirements for Class <strong>{student.className}</strong> for the session <strong>{student.session || "2023-2024"}</strong>.
 					</p>
 				</div>
 
@@ -166,7 +166,7 @@ export default function CertificatesPreview({ student, templateType }: Certifica
 					<h2 className="text-5xl font-serif text-white mb-6">{student.fullName}</h2>
 					<div className="h-px w-48 bg-gradient-to-r from-transparent via-yellow-500 to-transparent mx-auto mb-6"></div>
 					<p className="text-lg text-slate-300 max-w-lg mx-auto">
-						For outstanding academic performance and exceptional dedication in Class <strong>{student.class}</strong>.
+						For outstanding academic performance and exceptional dedication in Class <strong>{student.className}</strong>.
 					</p>
 
 					<div className="flex w-full justify-around mt-16 z-10">

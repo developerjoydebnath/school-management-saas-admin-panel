@@ -17,6 +17,18 @@ export class SyllabusModel {
 		return this._original.status || "DRAFT";
 	}
 
+	get mode(): string {
+		return this._original.mode || "STRUCTURED";
+	}
+
+	get isManual(): boolean {
+		return this.mode === "MANUAL";
+	}
+
+	get content(): string {
+		return this._original.content || "";
+	}
+
 	get exam(): any {
 		return this._original.exam;
 	}

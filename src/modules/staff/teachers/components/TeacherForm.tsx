@@ -541,6 +541,7 @@ export default function TeacherForm({ id, defaultValues, isEdit = false }: Props
 						name="designationId"
 						label="Designation"
 						type="designationSelect"
+						designationType="teacher"
 						placeholder="Select Designation"
 						required
 					/>

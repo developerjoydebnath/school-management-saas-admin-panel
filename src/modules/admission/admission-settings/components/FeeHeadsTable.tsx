@@ -106,7 +106,9 @@ interface FeeTableRowProps {
 
 function FeeTableRow({ fee, onUpdate, onDelete }: FeeTableRowProps) {
 	const t = useTranslations("AdmissionSettings");
-	const isMandatoryLocked = fee.isSystem && fee.name === "Admission Fee";
+	// Keyed on the stable code, never the display name -- renaming the head to
+	// "ভর্তি ফি" used to silently unlock the mandatory switch.
+	const isMandatoryLocked = fee.isSystem && fee.code === "admission_fee";
 	const typeLabel =
 		fee.type === "one_time" ? "One-time" : fee.type === "monthly" ? "Monthly" : "Yearly";
 

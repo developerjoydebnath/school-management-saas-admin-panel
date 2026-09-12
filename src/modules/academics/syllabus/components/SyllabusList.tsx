@@ -5,6 +5,7 @@ import PermissionGuard from "@/shared/components/custom/PermissionGuard";
 import DataTable from "@/shared/components/table/DataTable";
 import TableFilter from "@/shared/components/table/TableFilter";
 import { AlertDialogTrigger } from "@/shared/components/ui/alert-dialog";
+import { Badge } from "@/shared/components/ui/badge";
 import { Button } from "@/shared/components/ui/button";
 import { Card, CardContent, CardHeader } from "@/shared/components/ui/card";
 import { Progress } from "@/shared/components/ui/progress";
@@ -21,13 +22,17 @@ import { PERMISSIONS } from "@/shared/configs/permissions.config";
 import { useAuthStore } from "@/shared/stores/authStore";
 import { hasAccess } from "@/shared/utils/permission";
 import { ColumnDef } from "@tanstack/react-table";
-import { Activity, Eye, History, Pencil, Trash2 } from "lucide-react";
-import { useTranslations } from "next-intl";
+import { Activity, Download, Eye, FileText, History, Pencil, Trash2 } from "lucide-react";
+import { useLocale, useTranslations } from "next-intl";
 import Link from "next/link";
 import { useState } from "react";
 import { toast } from "sonner";
 import { SyllabusStatusEnum } from "../dto/syllabus.dto";
-import { deleteSyllabus, updateSyllabusStatus } from "../hooks/use-syllabus-mutations";
+import {
+	deleteSyllabus,
+	downloadSyllabusPdf,
+	updateSyllabusStatus,
+} from "../hooks/use-syllabus-mutations";
 import { useSyllabuses } from "../hooks/use-syllabuses";
 import { SyllabusModel } from "../models/syllabus.model";
 import { SyllabusCreate } from "./SyllabusCreate";
@@ -70,6 +75,44 @@ function SyllabusDetailsAction({ id }: { id: string }) {
 			</SheetTrigger>
 			<SyllabusDetailsSheet id={id} open={hasOpened} />
 		</Sheet>
+	);
+}
+
+function SyllabusDownloadAction({ syllabus }: { syllabus: SyllabusModel }) {
+	const [isDownloading, setIsDownloading] = useState(false);
+	const t = useTranslations("Syllabus");
+	const locale = useLocale();
+
+	const handleDownload = async () => {
+		setIsDownloading(true);
+		try {
+			const parts = [
+				syllabus.exam?.name,
+				syllabus.class?.enName,
+				syllabus.section?.name,
+				"syllabus",
+			].filter(Boolean);
+			await downloadSyllabusPdf({
+				id: syllabus.id,
+				locale,
+				fileName: `${parts.join("-").replace(/\s+/g, "-").toLowerCase()}.pdf`,
+			});
+		} finally {
+			setIsDownloading(false);
+		}
+	};
+
+	return (
+		<Button
+			type="button"
+			variant="outline"
+			size="icon-sm"
+			title={t("downloadPdf")}
+			disabled={isDownloading}
+			onClick={handleDownload}
+		>
+			<Download className="text-muted-foreground hover:text-foreground h-4 w-4" />
+		</Button>
 	);
 }
 
@@ -185,26 +228,36 @@ export default function SyllabusList() {
 		{
 			id: "content",
 			header: t("content"),
-			cell: ({ row }) => (
-				<span className="text-sm">
-					{row.original.totalSubjects} subject, {row.original.totalChapters} chapter, {row.original.totalTopics} topic
-				</span>
-			),
+			cell: ({ row }) =>
+				row.original.isManual ? (
+					<Badge variant="secondary" className="gap-1 font-normal">
+						<FileText className="h-3 w-3" />
+						{t("manualSyllabus")}
+					</Badge>
+				) : (
+					<span className="text-sm">
+						{row.original.totalSubjects} subject, {row.original.totalChapters} chapter, {row.original.totalTopics} topic
+					</span>
+				),
 		},
 		{
 			id: "progress",
 			header: t("progress"),
-			cell: ({ row }) => (
-				<div className="min-w-32 space-y-1">
-					<div className="flex justify-between text-xs">
-						<span>
-							{row.original.completedTopics}/{row.original.totalTopics}
-						</span>
-						<span>{row.original.completionPercent.toFixed(0)}%</span>
+			// A manual syllabus is a document, so there is nothing to complete.
+			cell: ({ row }) =>
+				row.original.isManual ? (
+					<span className="text-muted-foreground text-xs">—</span>
+				) : (
+					<div className="min-w-32 space-y-1">
+						<div className="flex justify-between text-xs">
+							<span>
+								{row.original.completedTopics}/{row.original.totalTopics}
+							</span>
+							<span>{row.original.completionPercent.toFixed(0)}%</span>
+						</div>
+						<Progress value={row.original.completionPercent} className="h-1.5" />
 					</div>
-					<Progress value={row.original.completionPercent} className="h-1.5" />
-				</div>
-			),
+				),
 		},
 		{
 			id: "status",
@@ -243,17 +296,28 @@ export default function SyllabusList() {
 						</PermissionGuard>
 						<PermissionGuard
 							permissions={[
-								PERMISSIONS.ACADEMICS.SYLLABUS.EDIT,
+								PERMISSIONS.ACADEMICS.SYLLABUS.VIEW,
 								PERMISSIONS.ACADEMICS.SYLLABUS.ALL,
 								PERMISSIONS.ACADEMICS.ALL,
 							]}
 						>
-							<Button asChild variant="outline" size="icon-sm" title={t("updateProgress")}>
-								<Link href={PATHS.ACADEMICS.SYLLABUS.PROGRESS(syllabus.id)}>
-									<Activity className="text-muted-foreground hover:text-foreground h-4 w-4" />
-								</Link>
-							</Button>
+							<SyllabusDownloadAction syllabus={syllabus} />
 						</PermissionGuard>
+						{!syllabus.isManual ? (
+							<PermissionGuard
+								permissions={[
+									PERMISSIONS.ACADEMICS.SYLLABUS.EDIT,
+									PERMISSIONS.ACADEMICS.SYLLABUS.ALL,
+									PERMISSIONS.ACADEMICS.ALL,
+								]}
+							>
+								<Button asChild variant="outline" size="icon-sm" title={t("updateProgress")}>
+									<Link href={PATHS.ACADEMICS.SYLLABUS.PROGRESS(syllabus.id)}>
+										<Activity className="text-muted-foreground hover:text-foreground h-4 w-4" />
+									</Link>
+								</Button>
+							</PermissionGuard>
+						) : null}
 						<PermissionGuard
 							permissions={[
 								PERMISSIONS.ACADEMICS.SYLLABUS.VIEW,

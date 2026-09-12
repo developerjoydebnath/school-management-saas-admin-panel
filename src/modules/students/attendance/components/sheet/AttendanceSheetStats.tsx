@@ -80,11 +80,11 @@ export function AttendanceSheetStats({ stats }: AttendanceSheetStatsProps) {
 							<p
 								className={cn(
 									"text-lg font-bold",
-									stat.color === "blue" && "text-blue-700",
-									stat.color === "green" && "text-green-700",
-									stat.color === "red" && "text-red-700",
-									stat.color === "amber" && "text-amber-700",
-									stat.color === "emerald" && "text-emerald-700"
+									stat.color === "blue" && "text-blue-700 dark:text-blue-400",
+									stat.color === "green" && "text-green-700 dark:text-green-400",
+									stat.color === "red" && "text-red-700 dark:text-red-400",
+									stat.color === "amber" && "text-amber-700 dark:text-amber-400",
+									stat.color === "emerald" && "text-emerald-700 dark:text-emerald-400"
 								)}
 							>
 								{stat.value}

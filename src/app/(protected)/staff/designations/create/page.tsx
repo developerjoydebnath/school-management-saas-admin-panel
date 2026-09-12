@@ -11,6 +11,7 @@ const defaultValues = {
 	name: "",
 	nameBn: "",
 	category: "",
+	type: "teacher",
 	applicableTo: [],
 	level: 0,
 	isHeadRole: false,

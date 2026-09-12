@@ -1,3 +1,5 @@
+"use client";
+
 import UploadImage from "@/shared/components/form/UploadImage";
 import { Checkbox } from "@/shared/components/ui/checkbox";
 import { Input } from "@/shared/components/ui/input";
@@ -14,6 +16,7 @@ import {
 import { Switch } from "@/shared/components/ui/switch";
 import { Textarea } from "@/shared/components/ui/textarea";
 import { cn } from "@/shared/lib/utils";
+import dynamic from "next/dynamic";
 import type { ChangeEvent } from "react";
 import { useController, type UseControllerProps } from "react-hook-form";
 import { match } from "ts-pattern";
@@ -46,7 +49,35 @@ import UploadDocumentMulti from "./UploadDocumentMulti";
 import UploadDocumentSingle from "./UploadDocumentSingle";
 import UserSingleSelection from "./UserSingleSelection";
 import VoucherSelect from "./VoucherSelect";
-import { SimpleEditor } from "./rich-editor/simple-editor";
+
+/**
+ * The rich editor is loaded on demand, never with the form.
+ *
+ * It used to be a plain static import, which dragged the whole tiptap and
+ * ProseMirror graph into EVERY page that renders an InputField -- around a
+ * megabyte of editor for forms that only have text boxes and selects.
+ *
+ * That also caused a real crash. `prosemirror-gapcursor` registers itself
+ * globally at module scope (`Selection.jsonID("gapcursor", ...)`), which throws
+ * "Duplicate use of selection JSON ID gapcursor" if the module body ever runs
+ * twice. Reachable statically from every form route, it was being emitted into
+ * more than one chunk, so the second such page visited in a session
+ * re-registered it and died. One lazily-loaded chunk is fetched once and cached
+ * by the module runtime, so it can only register once.
+ *
+ * `ssr: false` because the editor is browser-only anyway (it touches document,
+ * selection and the speech APIs), and because per the Next docs the option is
+ * only honoured inside a Client Component -- hence the "use client" above.
+ */
+const SimpleEditor = dynamic(
+	() => import("./rich-editor/simple-editor").then((mod) => mod.SimpleEditor),
+	{
+		ssr: false,
+		loading: () => (
+			<div className="bg-muted/40 h-64 w-full animate-pulse rounded-md border" />
+		),
+	},
+);
 
 interface FormFieldProps extends UseControllerProps {
 	label?: string;
@@ -59,17 +90,38 @@ interface FormFieldProps extends UseControllerProps {
 	className?: string;
 	labelClass?: string;
 	helperText?: string;
+	/**
+	 * Reserves the height of a block label above a `switch`/`checkbox`.
+	 *
+	 * Those two render their own label INSIDE the control box, so in a grid
+	 * beside a select or input they start a label's height higher than their
+	 * neighbour and the row looks broken. Opt-in rather than automatic: a
+	 * switch standing on its own must not gain the extra space.
+	 */
+	alignWithLabel?: boolean;
 	min?: number | string;
 	max?: number | string;
 	step?: number | string;
 	control: any;
 	dependencyId?: string;
 	sessionId?: string;
+	/**
+	 * Secondary scope for selects that filter on more than one parent, e.g.
+	 * `examSelect` narrows by session (via `dependencyId`) *and* class.
+	 */
+	classId?: string;
+	/** Narrows `designationSelect` to a designation type ("teacher" | "staff"). */
+	designationType?: string;
 	placeholderBase64?: string | null;
 	disabled?: boolean;
 	fieldClass?: string;
 	skipLocalization?: boolean;
 	excludeId?: string;
+	/** Rich-text editor options, forwarded to SimpleEditor for `textEditor`. */
+	enableTables?: boolean;
+	documentMode?: boolean;
+	enableVoiceInput?: boolean;
+	editorClassName?: string;
 }
 
 export default function InputField({
@@ -78,6 +130,7 @@ export default function InputField({
 	labelClass,
 	className,
 	helperText,
+	alignWithLabel,
 	...props
 }: FormFieldProps) {
 	const { field, fieldState } = useController(props);
@@ -93,8 +146,13 @@ export default function InputField({
 
 	return (
 		<div className={cn("flex w-full flex-col gap-2", props.fieldClass)}>
+			{alignWithLabel && (type === "switch" || type === "checkbox") && (
+				<span aria-hidden className="invisible w-full text-sm font-medium">
+					{props.label || " "}
+				</span>
+			)}
 			{/* Checkbox and Switch render their own inline label – skip the block label */}
-			{props.label && (
+			{props.label && type !== "switch" && type !== "checkbox" && (
 				<Label
 					htmlFor={
 						[
@@ -181,6 +239,10 @@ export default function InputField({
 						value={field.value}
 						onValueChange={field.onChange}
 						className={className}
+						enableTables={props.enableTables}
+						documentMode={props.documentMode}
+						enableVoiceInput={props.enableVoiceInput}
+						editorClassName={props.editorClassName}
 					/>
 				))
 
@@ -497,6 +559,7 @@ export default function InputField({
 						placeholder={props.placeholder}
 						className={className}
 						sessionId={props.dependencyId}
+						classId={props.classId}
 						disabled={props.disabled}
 					/>
 				))
@@ -530,6 +593,7 @@ export default function InputField({
 						placeholder={props.placeholder}
 						className={className}
 						disabled={props.disabled}
+						type={props.designationType}
 					/>
 				))
 

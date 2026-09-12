@@ -1,5 +1,12 @@
 "use client";
 
+import {
+	Accordion,
+	AccordionContent,
+	AccordionItem,
+	AccordionTrigger,
+} from "@/shared/components/ui/accordion";
+import { Badge } from "@/shared/components/ui/badge";
 import { Progress } from "@/shared/components/ui/progress";
 import { ScrollArea } from "@/shared/components/ui/scroll-area";
 import {
@@ -60,60 +67,106 @@ export function SyllabusDetailsSheet({ id, open }: Props) {
 									<Item label="Status" value={data.status} />
 									<Item
 										label="Progress"
-										value={`${percent(data.completionPercent)}%`}
+										value={
+											data.mode === "MANUAL" ? "-" : `${percent(data.completionPercent)}%`
+										}
 									/>
 								</div>
-								<Progress value={Number(data.completionPercent || 0)} className="mt-4 h-2" />
+								{data.mode === "MANUAL" ? null : (
+									<Progress
+										value={Number(data.completionPercent || 0)}
+										className="mt-4 h-2"
+									/>
+								)}
 							</section>
+							{data.mode === "MANUAL" ? (
+								<section className="bg-card rounded-md border p-4">
+									<h3 className="text-sm font-normal">{t("syllabusDocument")}</h3>
+									<p className="text-muted-foreground mt-1 text-xs">
+										{t("syllabusDocumentDescription")}
+									</p>
+									{/* Authored in the app's own rich-text editor. */}
+									<div
+										className="prose prose-sm dark:prose-invert mt-3 max-w-none [&_table]:w-full [&_table]:border-collapse [&_td]:border [&_td]:p-1.5 [&_th]:border [&_th]:bg-muted/40 [&_th]:p-1.5"
+										dangerouslySetInnerHTML={{ __html: data.content || "" }}
+									/>
+								</section>
+							) : (
 							<section className="rounded-md border bg-card p-4">
 								<h3 className="text-sm font-normal">{t("subjectPlan")}</h3>
 								<p className="text-muted-foreground mt-1 text-xs">
 									{t("subjectPlanDescription")}
 								</p>
-								<div className="mt-3 space-y-3">
+								{/* One collapsible panel per subject. A published syllabus can carry
+								    a dozen subjects with 20+ chapters each, so keeping every subject
+								    collapsed by default makes the subject list itself scannable. */}
+								<Accordion type="multiple" className="mt-3 gap-3">
 									{data.subjects?.map((subject: any) => (
-										<div key={subject.id} className="rounded-md border p-3">
-											<div className="flex items-center justify-between gap-3">
-												<p className="text-sm">{subject.subject?.enName}</p>
-												<p className="text-muted-foreground text-xs">
-													{subject.completedTopics}/{subject.totalTopics} ·{" "}
-													{percent(subject.completionPercent)}%
-												</p>
-											</div>
-											<Progress
-												value={Number(subject.completionPercent || 0)}
-												className="mt-2 h-1.5"
-											/>
-											<div className="mt-3 space-y-2">
-												{subject.chapters?.map((chapter: any) => (
-													<div key={chapter.id} className="rounded-md bg-muted/30 p-2">
-														<div className="flex items-center justify-between gap-3">
-															<p className="text-sm">{chapter.title}</p>
-															<p className="text-muted-foreground text-xs">
-																{percent(chapter.completionPercent)}%
-															</p>
-														</div>
-														<Progress
-															value={Number(chapter.completionPercent || 0)}
-															className="mt-2 h-1"
-														/>
-														<div className="mt-2 flex flex-wrap gap-2">
-															{chapter.topics?.map((topic: any) => (
-																<span
-																	key={topic.id}
-																	className="rounded-md border px-2 py-1 text-xs"
-																>
-																	{topic.title} · {percent(topic.progressPercent)}%
-																</span>
-															))}
-														</div>
+										<AccordionItem
+											key={subject.id}
+											value={subject.id}
+											className="rounded-md border px-3"
+										>
+											<AccordionTrigger className="py-3 hover:no-underline">
+												<div className="flex min-w-0 flex-1 flex-col gap-2 pr-3">
+													<div className="flex items-center justify-between gap-3">
+														<span className="flex min-w-0 items-center gap-2">
+															<span className="truncate text-sm font-medium">
+																{subject.subject?.enName}
+															</span>
+															<Badge
+																variant="secondary"
+																className="h-5 shrink-0 px-1.5 text-[11px] font-normal"
+															>
+																{subject.chapters?.length || 0} ch
+															</Badge>
+														</span>
+														<span className="text-muted-foreground shrink-0 text-xs tabular-nums">
+															{subject.completedTopics}/{subject.totalTopics} ·{" "}
+															{percent(subject.completionPercent)}%
+														</span>
 													</div>
-												))}
-											</div>
-										</div>
+													<Progress
+														value={Number(subject.completionPercent || 0)}
+														className="h-1.5"
+													/>
+												</div>
+											</AccordionTrigger>
+											<AccordionContent className="pb-4">
+												<div className="space-y-2">
+													{subject.chapters?.map((chapter: any) => (
+														<div key={chapter.id} className="rounded-md bg-muted/30 p-2">
+															<div className="flex items-center justify-between gap-3">
+																<p className="text-sm">
+																	{chapter.chapterNo}. {chapter.title}
+																</p>
+																<p className="text-muted-foreground text-xs tabular-nums">
+																	{percent(chapter.completionPercent)}%
+																</p>
+															</div>
+															<Progress
+																value={Number(chapter.completionPercent || 0)}
+																className="mt-2 h-1"
+															/>
+															<div className="mt-2 flex flex-wrap gap-2">
+																{chapter.topics?.map((topic: any) => (
+																	<span
+																		key={topic.id}
+																		className="rounded-md border px-2 py-1 text-xs"
+																	>
+																		{topic.title} · {percent(topic.progressPercent)}%
+																	</span>
+																))}
+															</div>
+														</div>
+													))}
+												</div>
+											</AccordionContent>
+										</AccordionItem>
 									))}
-								</div>
+								</Accordion>
 							</section>
+							)}
 						</>
 					)}
 				</div>

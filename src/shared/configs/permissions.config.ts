@@ -108,12 +108,24 @@ export const PERMISSIONS = {
 	ACADEMICS: {
 		VIEW: "academics.view",
 		ALL: "academics.all",
+		HOLIDAYS: {
+			ALL: "academics.holidays.all",
+			VIEW: "academics.holidays.view",
+			CREATE: "academics.holidays.create",
+			EDIT: "academics.holidays.edit",
+			DELETE: "academics.holidays.delete",
+		},
 		CLASSES: {
 			ALL: "academics.classes.all",
 			VIEW: "academics.classes.view",
 			CREATE: "academics.classes.create",
 			EDIT: "academics.classes.edit",
 			DELETE: "academics.classes.delete",
+		},
+		SUBJECT_TEACHER_ASSIGNMENTS: {
+			ALL: "academics.subject_teacher_assignments.all",
+			VIEW: "academics.subject_teacher_assignments.view",
+			EDIT: "academics.subject_teacher_assignments.edit",
 		},
 		CLASS_ROOMS: {
 			ALL: "academics.class_rooms.all",
@@ -135,6 +147,13 @@ export const PERMISSIONS = {
 			CREATE: "academics.syllabus.create",
 			EDIT: "academics.syllabus.edit",
 			DELETE: "academics.syllabus.delete",
+		},
+		LESSON_PLANS: {
+			ALL: "academics.lesson_plans.all",
+			VIEW: "academics.lesson_plans.view",
+			CREATE: "academics.lesson_plans.create",
+			EDIT: "academics.lesson_plans.edit",
+			DELETE: "academics.lesson_plans.delete",
 		},
 		TIMETABLE: {
 			ALL: "academics.timetable.all",
@@ -196,13 +215,6 @@ export const PERMISSIONS = {
 			CREATE: "admission.portal.create",
 			EDIT: "admission.portal.edit",
 			DELETE: "admission.portal.delete",
-		},
-		TRANSFER: {
-			ALL: "admission.transfer.all",
-			VIEW: "admission.transfer.view",
-			CREATE: "admission.transfer.create",
-			EDIT: "admission.transfer.edit",
-			DELETE: "admission.transfer.delete",
 		},
 		SETTINGS: {
 			ALL: "admission.settings.all",
@@ -288,6 +300,9 @@ export const PERMISSIONS = {
 			CREATE: "staff.attendance.create",
 			EDIT: "staff.attendance.edit",
 			DELETE: "staff.attendance.delete",
+			APPROVE: "staff.attendance.approve",
+			SETTINGS: "staff.attendance.settings",
+			SELF: "staff.attendance.self",
 		},
 		DEPARTMENTS: {
 			ALL: "staff.departments.all",
@@ -332,16 +347,27 @@ export const PERMISSIONS = {
 	FINANCE: {
 		VIEW: "finance.view",
 		ALL: "finance.all",
-		FEES: {
-			ALL: "finance.fees.all",
-			VIEW: "finance.fees.view",
-			CREATE: "finance.fees.create",
-			EDIT: "finance.fees.edit",
-			DELETE: "finance.fees.delete",
-		},
+		/**
+		 * Cross-namespace alias: the UI reads these under FINANCE, but the
+		 * strings live in the `students.` namespace and are granted in the wild.
+		 * Renaming them would revoke access for every existing school, so the
+		 * aliasing stays.
+		 */
 		STUDENT_PAYMENTS: {
 			ALL: "students.payments.all",
 			VIEW: "students.payments.view",
+			CREATE: "students.payments.create",
+			EDIT: "students.payments.edit",
+			DELETE: "students.payments.delete",
+		},
+		/** The fee catalogue -- heads, class-wise amounts, billing rulebook. */
+		FEE_STRUCTURE: {
+			ALL: "finance.fee_structure.all",
+			VIEW: "finance.fee_structure.view",
+			CREATE: "finance.fee_structure.create",
+			EDIT: "finance.fee_structure.edit",
+			DELETE: "finance.fee_structure.delete",
+			SETTINGS: "finance.fee_structure.settings",
 		},
 		EXPENSES: {
 			ALL: "finance.expenses.all",
@@ -350,6 +376,17 @@ export const PERMISSIONS = {
 			EDIT: "finance.expenses.edit",
 			DELETE: "finance.expenses.delete",
 		},
+		EXPENSE_CATEGORIES: {
+			ALL: "finance.expense_categories.all",
+			VIEW: "finance.expense_categories.view",
+			CREATE: "finance.expense_categories.create",
+			EDIT: "finance.expense_categories.edit",
+			DELETE: "finance.expense_categories.delete",
+		},
+		PROFIT_LOSS: {
+			ALL: "finance.profit_loss.all",
+			VIEW: "finance.profit_loss.view",
+		},
 		PAYROLL: {
 			ALL: "finance.payroll.all",
 			VIEW: "finance.payroll.view",
@@ -357,12 +394,10 @@ export const PERMISSIONS = {
 			EDIT: "finance.payroll.edit",
 			DELETE: "finance.payroll.delete",
 		},
+		/** Read-only: dues are derived from the structure, never stored. */
 		LEDGER: {
 			ALL: "finance.ledger.all",
 			VIEW: "finance.ledger.view",
-			CREATE: "finance.ledger.create",
-			EDIT: "finance.ledger.edit",
-			DELETE: "finance.ledger.delete",
 		},
 		SCHOLARSHIPS: {
 			ALL: "finance.scholarships.all",
@@ -370,6 +405,8 @@ export const PERMISSIONS = {
 			CREATE: "finance.scholarships.create",
 			EDIT: "finance.scholarships.edit",
 			DELETE: "finance.scholarships.delete",
+			/** Forgiving money is its own decision, as it is in Library. */
+			APPROVE: "finance.scholarships.approve",
 		},
 		BUDGET: {
 			ALL: "finance.budget.all",
@@ -428,6 +465,13 @@ export const PERMISSIONS = {
 			EDIT: "examinations.schedule.edit",
 			DELETE: "examinations.schedule.delete",
 		},
+		SEAT_PLANNING: {
+			ALL: "examinations.seat_planning.all",
+			VIEW: "examinations.seat_planning.view",
+			CREATE: "examinations.seat_planning.create",
+			EDIT: "examinations.seat_planning.edit",
+			DELETE: "examinations.seat_planning.delete",
+		},
 		MARKS: {
 			ALL: "examinations.marks.all",
 			VIEW: "examinations.marks.view",
@@ -467,6 +511,9 @@ export const PERMISSIONS = {
 	LIBRARY: {
 		VIEW: "library.view",
 		ALL: "library.all",
+		// Loan limits, fine rates and the accession counter -- rule changes,
+		// deliberately separate from CATALOG.EDIT.
+		SETTINGS: "library.settings",
 		CATALOG: {
 			ALL: "library.catalog.all",
 			VIEW: "library.catalog.view",
@@ -485,8 +532,11 @@ export const PERMISSIONS = {
 			ALL: "library.fines.all",
 			VIEW: "library.fines.view",
 			CREATE: "library.fines.create",
+			// Collecting the money.
 			EDIT: "library.fines.edit",
 			DELETE: "library.fines.delete",
+			// Forgiving the money -- its own decision, so its own key.
+			WAIVE: "library.fines.waive",
 		},
 		REPORTS: {
 			ALL: "library.reports.all",

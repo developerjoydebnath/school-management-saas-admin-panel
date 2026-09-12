@@ -1,5 +1,7 @@
 "use client";
 
+import { Badge } from "@/shared/components/ui/badge";
+import { Button } from "@/shared/components/ui/button";
 import { Checkbox } from "@/shared/components/ui/checkbox";
 import { Input } from "@/shared/components/ui/input";
 import {
@@ -13,6 +15,7 @@ import {
 import { useTranslations } from "next-intl";
 import { useState } from "react";
 import { Search } from "lucide-react";
+import type { CertificateTemplate } from "./CertificatesPreview";
 
 interface CertificatesStudentListProps {
 	students: any[];
@@ -20,7 +23,9 @@ interface CertificatesStudentListProps {
 	onSelect: (id: string, checked: boolean) => void;
 	onSelectAll: (checked: boolean) => void;
 	onPreviewSelect: (student: any) => void;
+	onQuickSelect: (student: any) => void;
 	activePreviewId?: string;
+	templateType: CertificateTemplate;
 }
 
 export default function CertificatesStudentList({
@@ -29,7 +34,9 @@ export default function CertificatesStudentList({
 	onSelect,
 	onSelectAll,
 	onPreviewSelect,
+	onQuickSelect,
 	activePreviewId,
+	templateType,
 }: CertificatesStudentListProps) {
 	const t = useTranslations("StudentCertificates");
 	const [search, setSearch] = useState("");
@@ -40,8 +47,15 @@ export default function CertificatesStudentList({
 			s.studentId?.toLowerCase().includes(search.toLowerCase())
 	);
 
-	const allSelected = filteredStudents.length > 0 && selectedStudentIds.length === filteredStudents.length;
-	const someSelected = selectedStudentIds.length > 0 && selectedStudentIds.length < filteredStudents.length;
+	const selectableStudents = filteredStudents.filter((s) => s.status !== "transferred");
+	const allSelected =
+		selectableStudents.length > 0 && selectedStudentIds.length === selectableStudents.length;
+	const someSelected =
+		selectedStudentIds.length > 0 && selectedStudentIds.length < selectableStudents.length;
+
+	// The transfer certificate is generated one student at a time, so a single
+	// "Select" action replaces bulk checkboxes for that template only.
+	const isSingleSelectFlow = templateType === "transfer-certificate";
 
 	if (students.length === 0) {
 		return (
@@ -72,33 +86,41 @@ export default function CertificatesStudentList({
 					<TableHeader>
 						<TableRow>
 							<TableHead className="w-12 text-center">
-								<Checkbox
-									checked={(allSelected ? true : someSelected ? "indeterminate" : false) as any}
-									onCheckedChange={(checked) => onSelectAll(!!checked)}
-									aria-label={t("list.selectAll")}
-								/>
+								{!isSingleSelectFlow && (
+									<Checkbox
+										checked={(allSelected ? true : someSelected ? "indeterminate" : false) as any}
+										onCheckedChange={(checked) => onSelectAll(!!checked)}
+										aria-label={t("list.selectAll")}
+									/>
+								)}
 							</TableHead>
 							<TableHead>{t("list.id")}</TableHead>
 							<TableHead>{t("list.name")}</TableHead>
 							<TableHead>{t("list.class")}</TableHead>
+							<TableHead>{t("list.status")}</TableHead>
+							{isSingleSelectFlow && <TableHead className="text-right">{t("list.select")}</TableHead>}
 						</TableRow>
 					</TableHeader>
 					<TableBody>
 						{filteredStudents.map((student) => {
 							const isSelected = selectedStudentIds.includes(student.id);
 							const isActive = activePreviewId === student.id;
+							const isTransferred = student.status === "transferred";
 
 							return (
-								<TableRow 
+								<TableRow
 									key={student.id}
-									className={`cursor-pointer transition-colors ${isActive ? 'bg-primary/5' : ''}`}
+									className={`cursor-pointer transition-colors ${isActive ? "bg-primary/5" : ""}`}
 									onClick={() => onPreviewSelect(student)}
 								>
 									<TableCell className="text-center" onClick={(e) => e.stopPropagation()}>
-										<Checkbox
-											checked={isSelected}
-											onCheckedChange={(checked) => onSelect(student.id, !!checked)}
-										/>
+										{!isSingleSelectFlow && (
+											<Checkbox
+												checked={isSelected}
+												disabled={isTransferred}
+												onCheckedChange={(checked) => onSelect(student.id, !!checked)}
+											/>
+										)}
 									</TableCell>
 									<TableCell className="font-mono text-sm">{student.studentId}</TableCell>
 									<TableCell>
@@ -107,7 +129,32 @@ export default function CertificatesStudentList({
 											<p className="text-xs text-muted-foreground">Roll: {student.roll}</p>
 										</div>
 									</TableCell>
-									<TableCell>{student.class} {student.section ? `(${student.section})` : ''}</TableCell>
+									<TableCell>
+										{student.className} {student.sectionName ? `(${student.sectionName})` : ""}
+									</TableCell>
+									<TableCell>
+										{isTransferred ? (
+											<Badge variant="outline" className="bg-amber-50 text-amber-600 border-amber-200">
+												{t("list.transferred")}
+											</Badge>
+										) : (
+											<Badge variant="outline" className="bg-green-50 text-green-600 border-green-200">
+												{t("list.active")}
+											</Badge>
+										)}
+									</TableCell>
+									{isSingleSelectFlow && (
+										<TableCell className="text-right" onClick={(e) => e.stopPropagation()}>
+											<Button
+												size="sm"
+												variant={isSelected ? "default" : "outline"}
+												disabled={isTransferred}
+												onClick={() => onQuickSelect(student)}
+											>
+												{isSelected ? t("list.selected") : t("list.select")}
+											</Button>
+										</TableCell>
+									)}
 								</TableRow>
 							);
 						})}

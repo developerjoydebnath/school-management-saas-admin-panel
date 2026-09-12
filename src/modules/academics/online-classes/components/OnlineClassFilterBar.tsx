@@ -1,54 +1,118 @@
 "use client";
 
+import {
+	FilterContainer,
+	FilterContent,
+	FilterDesktopWrapper,
+	FilterMobileWrapper,
+	FilterTriggerButton,
+} from "@/shared/components/custom/Filter";
 import FilterButton from "@/shared/components/form/FilterButton";
+import { useSessionStore } from "@/shared/stores/session-store";
+import { IconFilter } from "@tabler/icons-react";
 import { useTranslations } from "next-intl";
+import React from "react";
+import { onlineClassPlatformOptions, onlineClassStatusOptions } from "../dto/online-class.dto";
+import { useOnlineClassFilterOptions } from "../hooks/use-online-class-filter-options";
 import { OnlineClassFilter } from "./OnlineClassList";
 
 type Props = {
+	children?: React.ReactNode;
 	filter: OnlineClassFilter;
 	setFilter: (filter: OnlineClassFilter) => void;
 };
 
-export default function OnlineClassFilterBar({ filter, setFilter }: Props) {
+/**
+ * Every filter uses the shared FilterButton for one consistent look, matching
+ * the homework filter bar. They are multi-select by default; class is the
+ * exception, because section and subject scope to it and that only has a
+ * single answer.
+ */
+function OnlineClassFilters({ filter, setFilter }: Omit<Props, "children">) {
 	const t = useTranslations("OnlineClasses");
-	const filterFields = [
-		{
-			title: t("platform"),
-			selected: filter.platform,
-			onSelect: (opt: any) => setFilter({ ...filter, platform: opt }),
-			clearFilter: () => setFilter({ ...filter, platform: [] }),
-			options: [
-				{ label: "Zoom", value: "Zoom" },
-				{ label: "Google Meet", value: "Google Meet" },
-				{ label: "Teams", value: "Teams" },
-			],
-		},
-		{
-			title: t("status"),
-			selected: filter.status,
-			onSelect: (opt: any) => setFilter({ ...filter, status: opt }),
-			clearFilter: () => setFilter({ ...filter, status: [] }),
-			options: [
-				{ label: t("scheduled"), value: "Scheduled" },
-				{ label: t("ongoing"), value: "Ongoing" },
-				{ label: t("completed"), value: "Completed" },
-				{ label: t("cancelled"), value: "Cancelled" },
-			],
-		},
-	];
+	const { selectedSessionId } = useSessionStore();
+
+	const { classOptions, sectionOptions, subjectOptions, teacherOptions } =
+		useOnlineClassFilterOptions({
+			classId: filter.classId[0],
+			sessionId: selectedSessionId || undefined,
+		});
 
 	return (
-		<div className="flex flex-wrap gap-2 sm:gap-4">
-			{filterFields.map((field) => (
-				<FilterButton
-					key={field.title}
-					title={field.title}
-					selected={field.selected}
-					onSelect={field.onSelect}
-					clearFilter={field.clearFilter}
-					options={field.options}
-				/>
-			))}
+		<>
+			<FilterButton
+				title={t("class")}
+				selected={filter.classId}
+				// Section/subject picks from the previous class would silently filter
+				// to nothing, so both are cleared alongside the class.
+				onSelect={(values: string[]) =>
+					setFilter({ ...filter, classId: values, sectionId: [], subjectId: [] })
+				}
+				clearFilter={() => setFilter({ ...filter, classId: [], sectionId: [], subjectId: [] })}
+				options={classOptions}
+				singleSelect
+			/>
+			<FilterButton
+				title={t("section")}
+				selected={filter.sectionId}
+				onSelect={(values: string[]) => setFilter({ ...filter, sectionId: values })}
+				clearFilter={() => setFilter({ ...filter, sectionId: [] })}
+				// Stays empty until a class is chosen — a section has no meaning without one.
+				options={filter.classId.length ? sectionOptions : []}
+			/>
+			<FilterButton
+				title={t("subject")}
+				selected={filter.subjectId}
+				onSelect={(values: string[]) => setFilter({ ...filter, subjectId: values })}
+				clearFilter={() => setFilter({ ...filter, subjectId: [] })}
+				options={subjectOptions}
+			/>
+			<FilterButton
+				title={t("teacher")}
+				selected={filter.teacherId}
+				onSelect={(values: string[]) => setFilter({ ...filter, teacherId: values })}
+				clearFilter={() => setFilter({ ...filter, teacherId: [] })}
+				options={teacherOptions}
+			/>
+			<FilterButton
+				title={t("platform")}
+				selected={filter.platform}
+				onSelect={(values: string[]) => setFilter({ ...filter, platform: values })}
+				clearFilter={() => setFilter({ ...filter, platform: [] })}
+				options={onlineClassPlatformOptions}
+			/>
+			<FilterButton
+				title={t("status")}
+				selected={filter.status}
+				onSelect={(values: string[]) => setFilter({ ...filter, status: values })}
+				clearFilter={() => setFilter({ ...filter, status: [] })}
+				options={onlineClassStatusOptions}
+			/>
+		</>
+	);
+}
+
+export default function OnlineClassFilterBar({ children, filter, setFilter }: Props) {
+	return (
+		<div>
+			<FilterDesktopWrapper>
+				<OnlineClassFilters filter={filter} setFilter={setFilter} />
+			</FilterDesktopWrapper>
+
+			<FilterMobileWrapper>
+				{children}
+				<FilterContainer>
+					<FilterTriggerButton className="w-fit">
+						<span className="flex items-center gap-2">
+							<IconFilter strokeWidth={1.5} className="size-4" />
+							<span>Filter</span>
+						</span>
+					</FilterTriggerButton>
+					<FilterContent>
+						<OnlineClassFilters filter={filter} setFilter={setFilter} />
+					</FilterContent>
+				</FilterContainer>
+			</FilterMobileWrapper>
 		</div>
 	);
 }

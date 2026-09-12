@@ -1,21 +1,16 @@
 "use client";
 
-import OnlineClassForm from "@/modules/academics/online-classes/components/OnlineClassForm";
+import { OnlineClassCreate } from "@/modules/academics/online-classes/components/OnlineClassCreate";
 import OnlineClassList from "@/modules/academics/online-classes/components/OnlineClassList";
 import PageHeading from "@/shared/components/custom/PageHeading";
-import { Button } from "@/shared/components/ui/button";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/shared/components/ui/dialog";
 import { PATHS } from "@/shared/configs/paths.config";
 import { useBreadcrumbStore } from "@/shared/stores/breadcrumb-store";
-import { Plus } from "lucide-react";
 import { useTranslations } from "next-intl";
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 
 export default function OnlineClassesPage() {
 	const { setBreadcrumbs } = useBreadcrumbStore();
 	const tNav = useTranslations("Navigation");
-	const t = useTranslations("OnlineClasses");
-	const [isCreateOpen, setIsCreateOpen] = useState(false);
 
 	useEffect(() => {
 		setBreadcrumbs([
@@ -26,20 +21,11 @@ export default function OnlineClassesPage() {
 	}, [setBreadcrumbs, tNav]);
 
 	return (
-		<div className="space-y-6">
+		<div className="@container/page space-y-6">
 			<PageHeading routeName="OnlineClasses">
-				<Dialog open={isCreateOpen} onOpenChange={setIsCreateOpen}>
-					<DialogTrigger asChild><Button />
-						<Plus className="h-4 w-4" />
-						{t("addOnlineClass")}
-					</DialogTrigger>
-					<DialogContent>
-						<DialogHeader>
-							<DialogTitle>{t("addOnlineClassTitle")}</DialogTitle>
-						</DialogHeader>
-						<OnlineClassForm onSuccess={() => setIsCreateOpen(false)} />
-					</DialogContent>
-				</Dialog>
+				<div className="hidden @3xl/page:flex">
+					<OnlineClassCreate />
+				</div>
 			</PageHeading>
 			<OnlineClassList />
 		</div>

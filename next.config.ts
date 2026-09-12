@@ -8,7 +8,7 @@ const backendUrlObj = new URL(BACKEND_URL);
 
 const nextConfig: NextConfig = {
 	reactCompiler: true,
-	allowedDevOrigins: ["192.168.1.101"],
+	allowedDevOrigins: ["192.168.1.101", "100.80.212.74"],
 	images: {
 		// Use our custom loader for all images
 		loaderFile: "./image.loader.ts",

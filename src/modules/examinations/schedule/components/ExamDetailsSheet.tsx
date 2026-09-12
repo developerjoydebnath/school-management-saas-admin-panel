@@ -1,5 +1,12 @@
 "use client";
 
+import {
+	Accordion,
+	AccordionContent,
+	AccordionItem,
+	AccordionTrigger,
+} from "@/shared/components/ui/accordion";
+import { Badge } from "@/shared/components/ui/badge";
 import { ScrollArea } from "@/shared/components/ui/scroll-area";
 import {
 	SheetContent,
@@ -110,8 +117,8 @@ export function ExamDetailsSheet({ id, open }: Props) {
 								<p className="text-muted-foreground mt-1 text-xs">
 									{t("subjectsDescription")}
 								</p>
-								<div className="mt-3 space-y-4">
-									{Object.entries(
+								{(() => {
+									const grouped = Object.entries(
 										data.subjects?.reduce(
 											(acc: any, item: any) => {
 												const className =
@@ -124,34 +131,52 @@ export function ExamDetailsSheet({ id, open }: Props) {
 											},
 											{} as Record<string, any[]>
 										) || {}
-									)
-										.sort(([classA], [classB]) => getClassSortValue(classA) - getClassSortValue(classB))
-										.map(([className, subjects]: [string, any]) => (
-											<div key={className} className="space-y-1.5">
-												<h4 className="text-muted-foreground px-1 text-xs font-semibold tracking-wider uppercase">
-													{className}
-												</h4>
-												<div className="bg-background/20 overflow-hidden rounded-md border">
-													{subjects.map((item: any) => (
-														<div
-															key={item.id}
-															className="hover:bg-muted/5 grid grid-cols-1 gap-2 border-b px-3 py-2 text-sm transition-colors last:border-b-0 @xl/body:grid-cols-3"
-														>
-															<span className="text-foreground font-medium">
-																{item.subject?.enName}
-															</span>
-															<span className="text-muted-foreground">
-																{item.passMarks} / {item.totalMarks}
-															</span>
-															<span className="text-muted-foreground">
-																{format(item.markDivision)}
-															</span>
+									).sort(
+										([classA], [classB]) =>
+											getClassSortValue(classA) - getClassSortValue(classB)
+									) as [string, any[]][];
+
+									return (
+										<Accordion
+											type="multiple"
+											defaultValue={grouped[0] ? [grouped[0][0]] : []}
+											className="mt-3"
+										>
+											{grouped.map(([className, subjects]) => (
+												<AccordionItem key={className} value={className}>
+													<AccordionTrigger className="py-2.5">
+														<span className="flex items-center gap-2 text-sm font-medium">
+															{className}
+															<Badge variant="secondary" className="h-5 px-1.5 text-[11px] font-normal">
+																{subjects.length}
+															</Badge>
+														</span>
+													</AccordionTrigger>
+													<AccordionContent className="pt-0 pb-3">
+														<div className="bg-background/20 overflow-hidden rounded-md border">
+															{subjects.map((item: any) => (
+																<div
+																	key={item.id}
+																	className="hover:bg-muted/5 grid grid-cols-1 gap-2 border-b px-3 py-2 text-sm transition-colors last:border-b-0 @xl/body:grid-cols-3"
+																>
+																	<span className="text-foreground font-medium">
+																		{item.subject?.enName}
+																	</span>
+																	<span className="text-muted-foreground">
+																		{item.passMarks} / {item.totalMarks}
+																	</span>
+																	<span className="text-muted-foreground">
+																		{format(item.markDivision)}
+																	</span>
+																</div>
+															))}
 														</div>
-													))}
-												</div>
-											</div>
-										))}
-								</div>
+													</AccordionContent>
+												</AccordionItem>
+											))}
+										</Accordion>
+									);
+								})()}
 							</section>
 						</>
 					)}

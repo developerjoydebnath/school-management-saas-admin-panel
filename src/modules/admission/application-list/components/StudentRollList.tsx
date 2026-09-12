@@ -36,7 +36,7 @@ export default function StudentRollList({
 		}),
 		[classId, sessionId, section]
 	);
-	const { data: response, isLoading } = useSWR(
+	const { data: response, isLoading, isValidating } = useSWR(
 		"/admissions/rolls",
 		query,
 		{ revalidateOnMount: true }
@@ -44,14 +44,14 @@ export default function StudentRollList({
 	const students = Array.isArray(response?.data) ? response.data : [];
 
 	useEffect(() => {
-		if (isLoading) return;
+		if (isLoading || isValidating) return;
 		if (!Array.isArray(students) || !onSuggestedRoll) return;
 		const maxRoll = students.reduce((max, student: any) => {
 			const roll = Number.parseInt(String(student.rollNumber || "0"), 10);
 			return Number.isFinite(roll) ? Math.max(max, roll) : max;
 		}, 0);
 		onSuggestedRoll(String(maxRoll + 1).padStart(3, "0"));
-	}, [isLoading, students, onSuggestedRoll]);
+	}, [isLoading, isValidating, students, onSuggestedRoll]);
 
 	if (isLoading) {
 		return (
@@ -62,7 +62,7 @@ export default function StudentRollList({
 	}
 
 	return (
-		<ScrollArea className="max-h-[420px] w-full overflow-auto rounded-md border">
+		<ScrollArea className="max-h-[250px] w-full overflow-auto rounded-md border">
 			<Table className="min-w-[560px]">
 				<TableHeader>
 					<TableRow>

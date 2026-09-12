@@ -4,7 +4,16 @@ import { ProgressiveImage } from "@/shared/components/media/ProgressiveImage";
 import { Badge } from "@/shared/components/ui/badge";
 import { Button } from "@/shared/components/ui/button";
 import { Card, CardContent } from "@/shared/components/ui/card";
-import { Edit, Mail, Phone, Printer } from "lucide-react";
+import {
+	BadgeCheck,
+	Edit,
+	GraduationCap,
+	Hash,
+	Mail,
+	Phone,
+	Printer,
+	Users,
+} from "lucide-react";
 import { useTranslations } from "next-intl";
 import Link from "next/link";
 
@@ -31,34 +40,48 @@ function formatStatus(status: unknown) {
 		.join(" ");
 }
 
+function InfoItem({
+	icon: Icon,
+	children,
+}: {
+	icon: React.ComponentType<{ className?: string }>;
+	children: React.ReactNode;
+}) {
+	return (
+		<div className="bg-muted/60 flex items-center gap-1.5 rounded-full px-3 py-1 text-sm text-muted-foreground">
+			<Icon className="h-3.5 w-3.5 shrink-0" />
+			<span className="text-foreground/90 font-medium">{children}</span>
+		</div>
+	);
+}
+
 export default function StudentProfileHeader({
 	student,
 	classId,
 }: StudentProfileHeaderProps) {
 	const t = useTranslations("StudentProfile");
 	const status = String(student.status || "ACTIVE").toUpperCase();
+	const className = student.className || student.class || "-";
 
 	return (
-		<Card className="overflow-hidden py-0">
+		<Card className="py-0">
 			<CardContent className="p-6 sm:p-8">
-				<div className="grid gap-6 lg:grid-cols-[240px_1fr_auto] lg:items-center">
-					<div className="mx-auto w-full max-w-[220px]">
-						<div className="relative aspect-square overflow-hidden rounded-xl border bg-muted">
+				<div className="flex flex-col gap-6 sm:flex-row sm:items-center sm:justify-between">
+					<div className="flex flex-col items-center gap-5 text-center sm:flex-row sm:text-left">
+						<div className="border-border bg-muted relative h-24 w-24 shrink-0 overflow-hidden rounded-2xl border shadow-sm sm:h-28 sm:w-28">
 							<ProgressiveImage
 								src={student.photoUrl || "/images/avatar.png"}
 								alt={student.fullName || "Student photo"}
 								placeholderBase64={student.photoPlaceholder}
 								fallback="/images/avatar.png"
 								fill
-								sizes="220px"
+								sizes="112px"
 								className="object-cover"
 							/>
 						</div>
-					</div>
 
-					<div className="space-y-4 text-center lg:text-left">
-						<div className="space-y-2">
-							<div className="flex flex-wrap items-center justify-center gap-2 lg:justify-start">
+						<div className="space-y-3">
+							<div className="flex flex-wrap items-center justify-center gap-2 sm:justify-start">
 								<h1 className="text-2xl font-bold tracking-tight">
 									{student.fullName}
 								</h1>
@@ -71,29 +94,36 @@ export default function StudentProfileHeader({
 									{formatStatus(status)}
 								</Badge>
 							</div>
-							<p className="text-sm font-medium text-muted-foreground">
-								ID: {student.studentId || "-"} | Class {student.class || "-"} |{" "}
-								Section {student.section || "-"} | Roll {student.roll || "-"}
-							</p>
-						</div>
 
-						<div className="flex flex-wrap items-center justify-center gap-3 text-sm text-muted-foreground lg:justify-start">
-							{student.mobile && (
-								<div className="flex items-center gap-1">
-									<Phone className="h-3.5 w-3.5" />
-									<span>{student.mobile}</span>
-								</div>
-							)}
-							{student.email && (
-								<div className="flex items-center gap-1">
-									<Mail className="h-3.5 w-3.5" />
-									<span>{student.email}</span>
+							<div className="flex flex-wrap items-center justify-center gap-2 sm:justify-start">
+								<InfoItem icon={BadgeCheck}>{student.studentId || "-"}</InfoItem>
+								<InfoItem icon={GraduationCap}>
+									{className}
+									{student.section ? ` - ${student.section}` : ""}
+								</InfoItem>
+								<InfoItem icon={Hash}>Roll {student.roll || "-"}</InfoItem>
+							</div>
+
+							{(student.mobile || student.email) && (
+								<div className="flex flex-wrap items-center justify-center gap-x-4 gap-y-1.5 text-sm text-muted-foreground sm:justify-start">
+									{student.mobile && (
+										<div className="flex items-center gap-1.5">
+											<Phone className="h-3.5 w-3.5" />
+											<span>{student.mobile}</span>
+										</div>
+									)}
+									{student.email && (
+										<div className="flex items-center gap-1.5">
+											<Mail className="h-3.5 w-3.5" />
+											<span>{student.email}</span>
+										</div>
+									)}
 								</div>
 							)}
 						</div>
 					</div>
 
-					<div className="flex items-center justify-center gap-3 lg:justify-end">
+					<div className="flex items-center justify-center gap-3">
 						<Button variant="outline" size="sm" className="gap-2">
 							<Printer className="h-4 w-4" />
 							{t("print")}

@@ -1,8 +1,10 @@
 "use client";
 
+import ConfirmationModal from "@/shared/components/custom/ConfirmationModal";
 import PermissionGuard from "@/shared/components/custom/PermissionGuard";
 import DataTable from "@/shared/components/table/DataTable";
 import TableFilter from "@/shared/components/table/TableFilter";
+import { AlertDialogTrigger } from "@/shared/components/ui/alert-dialog";
 import { Badge } from "@/shared/components/ui/badge";
 import { Button } from "@/shared/components/ui/button";
 import { Card, CardContent, CardHeader } from "@/shared/components/ui/card";
@@ -10,11 +12,15 @@ import { Sheet, SheetTrigger } from "@/shared/components/ui/sheet";
 import { PERMISSIONS } from "@/shared/configs/permissions.config";
 import { ColumnDef } from "@tanstack/react-table";
 import { format } from "date-fns";
-import { Eye } from "lucide-react";
+import { Eye, Pencil, Trash2 } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useState } from "react";
-import { StudentPaymentListItem } from "../dto/student-payment.dto";
-import { useStudentPayments } from "../hooks/use-student-payments";
+import { toast } from "sonner";
+import { StudentPaymentDetails, StudentPaymentListItem } from "../dto/student-payment.dto";
+import { deleteStudentPayment } from "../hooks/use-student-payment-mutations";
+import { useStudentPaymentSummary, useStudentPayments } from "../hooks/use-student-payments";
+import PaymentCollectionSummary from "./PaymentCollectionSummary";
+import PaymentFormDialog from "./PaymentFormDialog";
 import { StudentPaymentDetailsSheet } from "./StudentPaymentDetailsSheet";
 import StudentPaymentFilterBar from "./StudentPaymentFilterBar";
 
@@ -87,6 +93,8 @@ export function StudentPaymentList() {
 	const [filter, setFilter] = useState<StudentPaymentFilter>(initialFilters);
 	const [page, setPage] = useState(1);
 	const [limit, setLimit] = useState(10);
+	const [editingPayment, setEditingPayment] = useState<StudentPaymentDetails | null>(null);
+	const [deletingId, setDeletingId] = useState<string | null>(null);
 
 	const { data, meta, isLoading, isError } = useStudentPayments({
 		page,
@@ -102,6 +110,26 @@ export function StudentPaymentList() {
 		dateFrom: filter.dateFrom,
 		dateTo: filter.dateTo,
 	});
+
+	const { data: summary } = useStudentPaymentSummary({
+		sessionId: filter.sessionId[0] || undefined,
+	});
+
+	const handleSelectPurpose = (purpose: string | null) => {
+		setFilter({ ...filter, purpose: purpose ? [purpose] : [] });
+	};
+
+	const confirmDelete = async (id: string) => {
+		setDeletingId(id);
+		try {
+			await deleteStudentPayment(id);
+			toast.success(t("deleteSuccess"));
+		} catch {
+			// Global axios interceptor already shows a toast for the error.
+		} finally {
+			setDeletingId(null);
+		}
+	};
 
 	const columns: ColumnDef<StudentPaymentListItem>[] = [
 		{
@@ -188,9 +216,47 @@ export function StudentPaymentList() {
 			id: "actions",
 			header: tc("actions"),
 			cell: ({ row }) => (
-				<PermissionGuard permissions={[PERMISSIONS.FINANCE.STUDENT_PAYMENTS.VIEW]}>
-					<StudentPaymentDetailsAction id={row.original.id} />
-				</PermissionGuard>
+				<div className="flex items-center gap-2">
+					<PermissionGuard permissions={[PERMISSIONS.FINANCE.STUDENT_PAYMENTS.VIEW]}>
+						<StudentPaymentDetailsAction id={row.original.id} />
+					</PermissionGuard>
+					<PermissionGuard
+						permissions={[
+							PERMISSIONS.FINANCE.STUDENT_PAYMENTS.EDIT,
+							PERMISSIONS.FINANCE.STUDENT_PAYMENTS.ALL,
+						]}
+					>
+						<Button
+							variant="outline"
+							size="icon-sm"
+							title={t("editPaymentTitle")}
+							onClick={() => setEditingPayment(row.original as unknown as StudentPaymentDetails)}
+						>
+							<Pencil className="text-muted-foreground hover:text-foreground h-4 w-4" />
+						</Button>
+					</PermissionGuard>
+					<PermissionGuard
+						permissions={[
+							PERMISSIONS.FINANCE.STUDENT_PAYMENTS.DELETE,
+							PERMISSIONS.FINANCE.STUDENT_PAYMENTS.ALL,
+						]}
+					>
+						<ConfirmationModal
+							onConfirm={() => confirmDelete(row.original.id)}
+							title={t("deleteTitle")}
+							description={t("deleteDescription")}
+							confirmText={tc("delete")}
+							variant="destructive"
+							isLoading={deletingId === row.original.id}
+						>
+							<AlertDialogTrigger asChild>
+								<Button variant="destructive" size="icon-sm">
+									<Trash2 className="h-4 w-4 text-red-500 hover:text-red-600" />
+								</Button>
+							</AlertDialogTrigger>
+						</ConfirmationModal>
+					</PermissionGuard>
+				</div>
 			),
 		},
 	];
@@ -202,11 +268,16 @@ export function StudentPaymentList() {
 	};
 
 	return (
-		<Card className="p-6 shadow-none ring-0">
+		<Card className="@container/page p-4 shadow-none ring-0 sm:p-6">
 			<CardHeader className="p-0">
 				<StudentPaymentFilterBar filter={filter} setFilter={setFilter} />
 			</CardHeader>
 			<CardContent className="space-y-4 p-0">
+				<PaymentCollectionSummary
+					summary={summary}
+					selectedPurpose={filter.purpose[0]}
+					onSelectPurpose={handleSelectPurpose}
+				/>
 				<TableFilter filter={filter} setFilter={setFilter} resetFilters={resetFilters} />
 				<DataTable
 					columns={columns}
@@ -226,6 +297,16 @@ export function StudentPaymentList() {
 					}}
 				/>
 			</CardContent>
+
+			<PaymentFormDialog
+				open={!!editingPayment}
+				onOpenChange={(open) => {
+					if (!open) setEditingPayment(null);
+				}}
+				mode="edit"
+				initialData={editingPayment}
+				onSuccess={() => setEditingPayment(null)}
+			/>
 		</Card>
 	);
 }

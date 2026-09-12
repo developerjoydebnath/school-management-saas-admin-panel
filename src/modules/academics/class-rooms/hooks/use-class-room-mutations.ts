@@ -18,7 +18,7 @@ export const updateClassRoom = async (id: string, data: Partial<ClassRoomFormVal
 };
 
 export const updateClassRoomDesign = async (id: string, data: Partial<ClassRoomFormValues>) => {
-	const response = await axios.patch(`/class-rooms/${id}`, data);
+	const response = await axios.patch(`/class-rooms/${id}/design`, data);
 	await refreshClassRoomCaches();
 	return response.data;
 };

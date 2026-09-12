@@ -347,6 +347,7 @@ export default function NewAdmissionForm({
 	const [createdStudent, setCreatedStudent] = useState<any>(null);
 	const [rollDialogOpen, setRollDialogOpen] = useState(false);
 	const [directRoll, setDirectRoll] = useState("");
+	const [submitOnlyLoading, setSubmitOnlyLoading] = useState(false);
 	const [pendingAdmission, setPendingAdmission] = useState<{
 		payload: Record<string, any>;
 		values: Record<string, any>;
@@ -1064,6 +1065,35 @@ export default function NewAdmissionForm({
 		pendingAdmission,
 	]);
 
+	/** Saves the application as-is (status "pending") without provisioning a
+	 * student/login — no roll number needed since that's an approval-time
+	 * concern. Staff approve it later from the Application List, which
+	 * creates the student then via the same /admissions/:id/approve flow. */
+	const submitAdmissionOnly = useCallback(async () => {
+		if (!pendingAdmission) return;
+
+		setSubmitOnlyLoading(true);
+		try {
+			const response = await axios.post("/admissions", pendingAdmission.payload);
+			clearDraft();
+			setRollDialogOpen(false);
+			setPendingAdmission(null);
+			setDirectRoll("");
+			toast.success(
+				response.data?.message || "Admission application submitted successfully."
+			);
+			onSuccess?.();
+		} catch (err) {
+			console.error("Error submitting admission:", err);
+			toast.error(
+				(err as any)?.response?.data?.message ||
+				"Failed to submit admission. Please try again."
+			);
+		} finally {
+			setSubmitOnlyLoading(false);
+		}
+	}, [clearDraft, onSuccess, pendingAdmission]);
+
 	if (step === "success" && createdStudent) {
 		return (
 			<AdmissionSuccessView
@@ -1294,15 +1324,19 @@ export default function NewAdmissionForm({
 			<Dialog
 				open={rollDialogOpen}
 				onOpenChange={(open) => {
-					if (loading) return;
+					if (loading || submitOnlyLoading) return;
 					setRollDialogOpen(open);
 				}}
 			>
-				<DialogContent className="max-w-2xl">
+				<DialogContent
+					className="max-w-3xl sm:max-w-3xl"
+					overlayClassName="bg-black/70 backdrop-blur-sm"
+				>
 					<DialogHeader>
 						<DialogTitle>Approve Admission</DialogTitle>
 						<DialogDescription>
-							Review existing students for this class and confirm the new student&apos;s roll number.
+							Review existing students for this class, then either save the application
+							as-is or approve it now with a roll number to create the student.
 						</DialogDescription>
 					</DialogHeader>
 
@@ -1330,7 +1364,8 @@ export default function NewAdmissionForm({
 								placeholder="e.g. 001"
 							/>
 							<p className="text-muted-foreground text-xs">
-								Roll must be unique for the selected session, class, and section.
+								Only needed to approve and create the student now. Roll must be unique
+								for the selected session, class, and section.
 							</p>
 						</div>
 					</div>
@@ -1338,15 +1373,30 @@ export default function NewAdmissionForm({
 					<DialogFooter>
 						<Button
 							type="button"
-							variant="outline"
-							disabled={loading}
+							variant="destructive"
+							disabled={loading || submitOnlyLoading}
 							onClick={() => setRollDialogOpen(false)}
 						>
 							Cancel
 						</Button>
 						<Button
 							type="button"
-							disabled={loading}
+							variant="outline"
+							disabled={loading || submitOnlyLoading}
+							onClick={submitAdmissionOnly}
+						>
+							{submitOnlyLoading ? (
+								<>
+									<Loader2 className="h-4 w-4 animate-spin" />
+									Submitting...
+								</>
+							) : (
+								"Submit Application"
+							)}
+						</Button>
+						<Button
+							type="button"
+							disabled={loading || submitOnlyLoading}
 							onClick={completeDirectAdmission}
 						>
 							{loading ? (

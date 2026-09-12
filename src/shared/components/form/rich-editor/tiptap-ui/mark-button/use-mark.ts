@@ -1,5 +1,11 @@
 "use client"
 
+// React Compiler would memoize the render-time `editor.isActive(...)` reads
+// below on the stable [editor, type] refs and never recompute them, freezing
+// every toolbar button in its first state. These hooks intentionally read the
+// editor fresh on each render and re-render via a transaction listener.
+"use no memo";
+
 import { useCallback, useEffect, useState } from "react"
 import type { Editor } from "@tiptap/react"
 
@@ -164,6 +170,7 @@ export function getFormattedMarkName(type: Mark): string {
  * Custom hook that provides mark functionality for Tiptap editor
  */
 export function useMark(config: UseMarkConfig) {
+  "use no memo";
   const {
     editor: providedEditor,
     type,

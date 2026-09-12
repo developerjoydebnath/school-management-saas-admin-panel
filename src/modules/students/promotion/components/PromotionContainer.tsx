@@ -1,13 +1,8 @@
 "use client";
 
+import ConfirmationModal from "@/shared/components/custom/ConfirmationModal";
 import { Button } from "@/shared/components/ui/button";
-import {
-	Card,
-	CardContent,
-	CardDescription,
-	CardHeader,
-	CardTitle,
-} from "@/shared/components/ui/card";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/shared/components/ui/card";
 import {
 	Select,
 	SelectContent,
@@ -16,216 +11,278 @@ import {
 	SelectValue,
 } from "@/shared/components/ui/select";
 import { useSWR } from "@/shared/hooks/use-swr";
-import { getLocalizedName } from "@/shared/utils/localization";
 import { Save, Settings2 } from "lucide-react";
-import { useLocale, useTranslations } from "next-intl";
-import { useEffect, useState } from "react";
+import { useTranslations } from "next-intl";
+import { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 
+import { emptyPromotionRow, PromotionRowState } from "../dto/student-promotion.dto";
+import { usePromotionOptions } from "../hooks/use-promotion-options";
+import { getNextRoll, processPromotion } from "../hooks/use-promotion-mutations";
 import PromotionFilter from "./PromotionFilter";
 import PromotionTable from "./PromotionTable";
 
+type SourceFilter = { sessionId: string; classId: string; sectionId: string };
+
 export default function PromotionContainer() {
 	const t = useTranslations("StudentPromotion");
-	const locale = useLocale();
 
-	const [filter, setFilter] = useState<{
-		classId: string;
-		section: string;
-		session: string;
-	} | null>(null);
-	const [promotionData, setPromotionData] = useState<Record<string, any>>({});
+	const [sourceFilter, setSourceFilter] = useState<SourceFilter | null>(null);
+	const [rows, setRows] = useState<Record<string, PromotionRowState>>({});
 
-	// Bulk settings state
-	const [bulkClass, setBulkClass] = useState("");
-	const [bulkSection, setBulkSection] = useState("");
+	const [toSessionId, setToSessionId] = useState("");
+	const [bulkClassId, setBulkClassId] = useState("");
+	const [bulkSectionId, setBulkSectionId] = useState("");
+	const [applying, setApplying] = useState(false);
 
-	const { data: classes } = useSWR("classes");
+	const [confirmOpen, setConfirmOpen] = useState(false);
+	const [submitting, setSubmitting] = useState(false);
 
-	const { data: students, isLoading } = useSWR(
-		filter ? `students` : null,
-		filter
-			? { class: filter.classId, section: filter.section, session: filter.session }
+	const { data: studentsRes, isLoading } = useSWR(
+		sourceFilter ? "/students" : null,
+		sourceFilter
+			? {
+					sessionId: sourceFilter.sessionId,
+					classId: sourceFilter.classId,
+					...(sourceFilter.sectionId ? { sectionId: sourceFilter.sectionId } : {}),
+					limit: 300,
+				}
 			: undefined
 	);
+	const students: any[] = useMemo(() => studentsRes?.data?.items || [], [studentsRes]);
 
-	// Determine sections for bulk class
-	const activeBulkClass = classes?.find((c: any) => c.id === bulkClass);
-	const bulkSections = activeBulkClass?.sections || [];
+	const { sessionOptions, classOptions: bulkClassOptions, sectionOptions: bulkSectionOptions } =
+		usePromotionOptions({ sessionId: toSessionId, classId: bulkClassId });
 
-	const handleFetchStudents = (classId: string, section: string, session: string) => {
-		setFilter({ classId, section, session });
-		setPromotionData({});
-		setBulkClass("");
-		setBulkSection("");
+	const targetSessionOptions = useMemo(
+		() => sessionOptions.filter((option) => option.value !== sourceFilter?.sessionId),
+		[sessionOptions, sourceFilter]
+	);
+
+	useEffect(() => {
+		if (students.length > 0 && Object.keys(rows).length === 0) {
+			const initial: Record<string, PromotionRowState> = {};
+			students.forEach((student) => {
+				initial[student.id] = emptyPromotionRow();
+			});
+			setRows(initial);
+		}
+	}, [students, rows]);
+
+	const handleFetchStudents = (sessionId: string, classId: string, sectionId: string) => {
+		setSourceFilter({ sessionId, classId, sectionId });
+		setRows({});
+		setToSessionId("");
+		setBulkClassId("");
+		setBulkSectionId("");
 	};
 
-	// Initialize promotion data when students are loaded
-	useEffect(() => {
-		if (students && students.length > 0 && Object.keys(promotionData).length === 0) {
-			const initialData: Record<string, any> = {};
+	const handleRowChange = (studentId: string, patch: Partial<PromotionRowState>) => {
+		setRows((prev) => {
+			const current = prev[studentId];
+			let next: PromotionRowState = { ...current, ...patch };
 
-			// Simple auto-increment for next class guess (e.g. class-1 -> class-2)
-			let guessedNextClass = "";
-			if (filter?.classId) {
-				const parts = filter.classId.split("-");
-				if (parts.length === 2 && !isNaN(Number(parts[1]))) {
-					const nextNum = Number(parts[1]) + 1;
-					guessedNextClass = `${parts[0]}-${nextNum}`;
-					// Verify it exists
-					if (!classes?.find((c: any) => c.id === guessedNextClass)) {
-						guessedNextClass = "";
-					}
-				}
+			if (patch.action === "retain" && sourceFilter) {
+				// Retaining means repeating the same class next session --
+				// always reset to the source class, discarding any class the
+				// student was previously (bulk-)assigned to as "promote".
+				next = { ...next, toClassId: sourceFilter.classId, toSectionId: "", toRoll: "" };
+			}
+			if (patch.action === "leave") {
+				next = { ...next, toClassId: "", toSectionId: "", toRoll: "" };
 			}
 
-			students.forEach((student: any) => {
-				initialData[student.id] = {
-					status: "promote",
-					nextClass: guessedNextClass || "",
-					nextSection: "",
-					nextRoll: "",
+			return { ...prev, [studentId]: next };
+		});
+	};
+
+	const applyBulkSettings = async () => {
+		if (!toSessionId || !bulkClassId) {
+			toast.error(t("bulk.selectTargetFirst"));
+			return;
+		}
+		setApplying(true);
+		try {
+			const base = await getNextRoll({
+				sessionId: toSessionId,
+				classId: bulkClassId,
+				sectionId: bulkSectionId || undefined,
+			});
+			let next = parseInt(base, 10) || 1;
+			setRows((prev) => {
+				const updated = { ...prev };
+				students.forEach((student) => {
+					const current = updated[student.id];
+					// Only rows still marked "promote" take the bulk target --
+					// retained students stay in the source class, and leaving
+					// students need no target at all.
+					if (!current || current.action !== "promote") return;
+					updated[student.id] = {
+						...current,
+						toClassId: bulkClassId,
+						toSectionId: bulkSectionId,
+						toRoll: String(next).padStart(3, "0"),
+					};
+					next += 1;
+				});
+				return updated;
+			});
+			toast.success(t("bulk.applySuccess"));
+		} finally {
+			setApplying(false);
+		}
+	};
+
+	const summary = useMemo(() => {
+		const counts = { promoted: 0, retained: 0, left: 0 };
+		Object.values(rows).forEach((row) => {
+			if (row.action === "promote") counts.promoted += 1;
+			else if (row.action === "retain") counts.retained += 1;
+			else if (row.action === "leave") counts.left += 1;
+		});
+		return counts;
+	}, [rows]);
+
+	const handleOpenConfirm = () => {
+		if (!toSessionId) {
+			toast.error(t("validation.targetSessionRequired"));
+			return;
+		}
+		const missingTarget = students.some((student) => {
+			const row = rows[student.id];
+			return row?.action !== "leave" && !row?.toClassId;
+		});
+		if (missingTarget) {
+			toast.error(t("validation.targetClassRequired"));
+			return;
+		}
+		setConfirmOpen(true);
+	};
+
+	const handleConfirmSubmit = async () => {
+		if (!sourceFilter) return;
+		setSubmitting(true);
+		try {
+			const decisions = students.map((student) => {
+				const row = rows[student.id];
+				return {
+					studentId: student.id,
+					action: row.action,
+					toClassId: row.action === "leave" ? undefined : row.toClassId,
+					toSectionId: row.action === "leave" ? undefined : row.toSectionId || undefined,
+					toRoll: row.action === "leave" ? undefined : row.toRoll || undefined,
+					remarks: row.remarks || undefined,
 				};
 			});
-			setPromotionData(initialData);
-			if (guessedNextClass) setBulkClass(guessedNextClass);
-		}
-	}, [students, classes, filter]);
 
-	const handleDataChange = (studentId: string, field: string, value: any) => {
-		setPromotionData((prev) => ({
-			...prev,
-			[studentId]: {
-				...prev[studentId],
-				[field]: value,
-			},
-		}));
-	};
-
-	const applyBulkSettings = () => {
-		if (!students || students.length === 0) return;
-		if (!bulkClass && !bulkSection) {
-			toast.error("Please select at least a class or section to apply.");
-			return;
-		}
-
-		setPromotionData((prev) => {
-			const newData = { ...prev };
-
-			// Auto generate rolls if applying bulk section
-			let nextRollCounter = 1;
-
-			students.forEach((student: any) => {
-				if (
-					newData[student.id]?.status === "promote" ||
-					newData[student.id]?.status === "retain"
-				) {
-					if (bulkClass) newData[student.id].nextClass = bulkClass;
-					if (bulkSection) newData[student.id].nextSection = bulkSection;
-
-					if (bulkClass && bulkSection) {
-						// Format roll as 3 digits
-						newData[student.id].nextRoll = nextRollCounter.toString().padStart(3, "0");
-						nextRollCounter++;
-					}
-				}
+			const result = await processPromotion({
+				fromSessionId: sourceFilter.sessionId,
+				fromClassId: sourceFilter.classId,
+				fromSectionId: sourceFilter.sectionId || undefined,
+				toSessionId,
+				decisions,
 			});
-			return newData;
-		});
 
-		toast.success("Bulk settings applied to all eligible students");
-	};
-
-	const handleSubmit = async () => {
-		if (!students || students.length === 0) return;
-
-		// Validate data
-		const missingData = students.some((s: any) => {
-			const d = promotionData[s.id];
-			if (d?.status !== "leave") {
-				return !d?.nextClass || !d?.nextSection || !d?.nextRoll;
-			}
-			return false;
-		});
-
-		if (missingData) {
-			toast.error(
-				"Please fill in next class, section, and roll for all promoted/retained students."
+			toast.success(
+				t("submitSuccess", {
+					promoted: result.promoted,
+					retained: result.retained,
+					left: result.left,
+				})
 			);
-			return;
+			setSourceFilter(null);
+			setRows({});
+			setToSessionId("");
+			setBulkClassId("");
+			setBulkSectionId("");
+		} finally {
+			setSubmitting(false);
 		}
-
-		toast.loading("Processing promotions...");
-
-		// Simulate API call
-		setTimeout(() => {
-			toast.dismiss();
-			toast.success(`Successfully processed promotion for ${students.length} students!`);
-			// In real app, we would re-fetch or clear
-		}, 1500);
 	};
 
 	return (
 		<div className="space-y-6">
 			<PromotionFilter onFetchStudents={handleFetchStudents} isLoading={isLoading} />
 
-			{filter && students && students.length > 0 && (
+			{sourceFilter && students.length > 0 && (
 				<Card className="border-primary/20 bg-primary/5 gap-0 shadow-none">
-					<CardHeader className="pb-6">
+					<CardHeader className="pb-4">
 						<div className="flex items-center gap-2">
 							<Settings2 className="text-primary h-5 w-5" />
 							<div>
-								<CardTitle className="text-lg">{t("bulk.title")}</CardTitle>
-								<CardDescription>{t("bulk.description")}</CardDescription>
+								<CardTitle className="text-base">{t("bulk.title")}</CardTitle>
+								<CardDescription className="text-xs">{t("bulk.description")}</CardDescription>
 							</div>
 						</div>
 					</CardHeader>
 					<CardContent>
-						<div className="flex flex-wrap items-end gap-4">
-							<div className="min-w-[200px] flex-1">
-								<label className="text-muted-foreground mb-1 block text-xs font-semibold uppercase">
-									{t("bulk.targetClass")}
+						<div className="flex flex-wrap items-end gap-3">
+							<div className="min-w-45 flex-1 space-y-1">
+								<label className="text-muted-foreground text-xs font-semibold uppercase">
+									{t("bulk.targetSession")}
 								</label>
 								<Select
-									value={bulkClass}
+									value={toSessionId}
 									onValueChange={(val) => {
-										setBulkClass(val || "");
-										setBulkSection("");
+										setToSessionId(val || "");
+										setBulkClassId("");
+										setBulkSectionId("");
 									}}
 								>
 									<SelectTrigger className="bg-background h-10! w-full">
-										<SelectValue placeholder={t("bulk.targetClass")} />
+										<SelectValue placeholder={t("bulk.targetSession")} />
 									</SelectTrigger>
 									<SelectContent>
-										{classes?.map((c: any) => (
-											<SelectItem className="py-2" key={c.id} value={c.id}>
-												{getLocalizedName(c.name, locale)}
+										{targetSessionOptions.map((option) => (
+											<SelectItem className="py-2" key={option.value} value={option.value}>
+												{option.label}
 											</SelectItem>
 										))}
 									</SelectContent>
 								</Select>
 							</div>
 
-							<div className="min-w-[200px] flex-1">
-								<label className="text-muted-foreground mb-1 block text-xs font-semibold uppercase">
+							<div className="min-w-45 flex-1 space-y-1">
+								<label className="text-muted-foreground text-xs font-semibold uppercase">
+									{t("bulk.targetClass")}
+								</label>
+								<Select
+									value={bulkClassId}
+									onValueChange={(val) => {
+										setBulkClassId(val || "");
+										setBulkSectionId("");
+									}}
+									disabled={!toSessionId}
+								>
+									<SelectTrigger className="bg-background h-10! w-full">
+										<SelectValue placeholder={t("bulk.targetClass")} />
+									</SelectTrigger>
+									<SelectContent>
+										{bulkClassOptions.map((option) => (
+											<SelectItem className="py-2" key={option.value} value={option.value}>
+												{option.label}
+											</SelectItem>
+										))}
+									</SelectContent>
+								</Select>
+							</div>
+
+							<div className="min-w-45 flex-1 space-y-1">
+								<label className="text-muted-foreground text-xs font-semibold uppercase">
 									{t("bulk.targetSection")}
 								</label>
 								<Select
-									value={bulkSection}
-									onValueChange={(val) => setBulkSection(val || "")}
-									disabled={!bulkClass || bulkSections.length === 0}
+									value={bulkSectionId}
+									onValueChange={(val) => setBulkSectionId(val || "")}
+									disabled={!bulkClassId}
 								>
 									<SelectTrigger className="bg-background h-10! w-full">
 										<SelectValue placeholder={t("bulk.targetSection")} />
 									</SelectTrigger>
 									<SelectContent>
-										{bulkSections.map((sec: any) => (
-											<SelectItem
-												className="py-2"
-												key={sec.name}
-												value={sec.name}
-											>
-												Section {sec.name}
+										{bulkSectionOptions.map((option) => (
+											<SelectItem className="py-2" key={option.value} value={option.value}>
+												{option.label}
 											</SelectItem>
 										))}
 									</SelectContent>
@@ -235,10 +292,11 @@ export default function PromotionContainer() {
 							<Button
 								onClick={applyBulkSettings}
 								variant="outline"
+								disabled={!toSessionId || !bulkClassId || applying}
 								className="h-10 gap-2"
 							>
 								<Save className="h-4 w-4" />
-								{t("bulk.apply")}
+								{applying ? "..." : t("bulk.apply")}
 							</Button>
 						</div>
 					</CardContent>
@@ -246,20 +304,54 @@ export default function PromotionContainer() {
 			)}
 
 			<PromotionTable
-				students={students || []}
-				classes={classes || []}
-				promotionData={promotionData}
-				onPromotionDataChange={handleDataChange}
+				students={students}
+				rows={rows}
+				toSessionId={toSessionId}
+				onRowChange={handleRowChange}
 			/>
 
-			{students && students.length > 0 && (
-				<div className="flex justify-end border-t pt-4">
-					<Button onClick={handleSubmit} size="lg" className="gap-2">
+			{sourceFilter && students.length > 0 && (
+				<div className="flex flex-wrap items-center justify-between gap-3 border-t pt-4">
+					<div className="flex gap-4 text-xs font-medium">
+						<span className="text-green-600 dark:text-green-400">
+							{summary.promoted} {t("table.promote")}
+						</span>
+						<span className="text-amber-600 dark:text-amber-400">
+							{summary.retained} {t("table.retain")}
+						</span>
+						<span className="text-red-600 dark:text-red-400">
+							{summary.left} {t("table.leave")}
+						</span>
+					</div>
+					<Button onClick={handleOpenConfirm} size="lg" className="gap-2">
 						<Save className="h-4 w-4" />
 						{t("submit")}
 					</Button>
 				</div>
 			)}
+
+			<ConfirmationModal
+				open={confirmOpen}
+				onOpenChange={setConfirmOpen}
+				onConfirm={handleConfirmSubmit}
+				isLoading={submitting}
+				title={t("confirm.title")}
+				description={t("confirm.description")}
+				confirmText={t("submit")}
+				body={
+					<div className="flex gap-4 text-sm">
+						<span>
+							<strong>{summary.promoted}</strong> {t("table.promote")}
+						</span>
+						<span>
+							<strong>{summary.retained}</strong> {t("table.retain")}
+						</span>
+						<span>
+							<strong>{summary.left}</strong> {t("table.leave")}
+						</span>
+					</div>
+				}
+			/>
 		</div>
 	);
 }

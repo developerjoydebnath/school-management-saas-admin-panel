@@ -13,7 +13,7 @@ export function useClassRoom(id?: string) {
 }
 
 export function useClassRoomDesign(id?: string) {
-	const { data, isLoading, isError, mutate } = useSWR(id ? `/class-rooms/${id}` : null);
+	const { data, isLoading, isError, mutate } = useSWR(id ? `/class-rooms/${id}/design` : null);
 
 	return {
 		data: data?.data ? new ClassRoomModel(data.data) : null,

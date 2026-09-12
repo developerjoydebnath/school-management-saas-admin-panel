@@ -60,12 +60,36 @@ When rendering dropdown fields through `InputField`, always use `type="select"`.
 
 **Why:** The app uses the shared styled select for consistent behavior, theme, spacing, and interaction across create/update forms.
 
-### Dialog Selection Rule
+### Dialog & Sheet Selection Rule
 
-When a selection field is rendered inside a `Dialog` or dialog-based form, use the popover + command combobox pattern used by `SubjectSingleSelection`. Do not use Radix `Select` / `SelectContent` inside dialogs.
+When a selection field is rendered inside a `Dialog` or a `Sheet`, use the shared `NativeSelect` (`@/shared/components/ui/native-select`) instead of the styled `Select` / `SelectContent` (`@/shared/components/ui/select`).
 
 ```tsx
-// Correct inside DialogContent
+// ✅ Correct inside DialogContent or SheetContent
+import { NativeSelect, NativeSelectOption } from "@/shared/components/ui/native-select";
+
+<NativeSelect value={sessionId} onChange={(e) => setSessionId(e.target.value)}>
+	<NativeSelectOption value="">Select session</NativeSelectOption>
+	{sessions.map((s) => (
+		<NativeSelectOption key={s.id} value={s.id}>{s.name}</NativeSelectOption>
+	))}
+</NativeSelect>
+
+// ❌ Wrong inside DialogContent or SheetContent
+<Select value={sessionId} onValueChange={setSessionId}>
+	<SelectTrigger><SelectValue placeholder="Select session" /></SelectTrigger>
+	<SelectContent>...</SelectContent>
+</Select>
+```
+
+**Why:** Radix `Select`/`SelectContent` renders into a portal outside the `Dialog`/`Sheet` DOM subtree. `DismissableLayer`'s outside-click detection then reads a click on the select's popover as a click "outside the dialog," and closes the whole dialog/sheet instead of just the select's own options — reproducible any time a user opens a select inside a dialog or sheet, then clicks blank dialog/sheet space that is outside the select popup. A native `<select>` renders browser-native dropdown chrome that never enters a separate portal, so it can never trigger that conflict.
+
+This also applies to `InputField`: do not use `type="select"` for a field rendered inside a dialog or sheet form, since that type renders the portalled `Select` internally. Use a direct `NativeSelect` field in dialog/sheet forms instead.
+
+**Exception — searchable/large option lists:** When a selection needs typeahead search over a large list (e.g. `SubjectSingleSelection`), `NativeSelect` isn't sufficient (no search). Use the popover + command combobox pattern instead — it has the same outside-click safety as `NativeSelect` because `Command`/`CommandList` render inline inside the `Popover`, not via a separate top-level portal that fights the dialog's own layer.
+
+```tsx
+// Correct inside DialogContent — only for searchable large lists
 <Popover>
 	<PopoverTrigger asChild>
 		<Button role="combobox" variant="outline">Select option</Button>
@@ -85,8 +109,6 @@ When a selection field is rendered inside a `Dialog` or dialog-based form, use t
 	</PopoverContent>
 </Popover>
 ```
-
-**Why:** Select popovers are portalled outside the dialog tree and can trigger dialog outside-interaction behavior. The popover + command combobox pattern keeps the dialog open when the user clicks inside the dialog after opening options.
 
 Command/combobox options must show a pointer cursor on hover. Every popover-command selection must wrap the `CommandList` in the shared `ScrollArea` with a max height, so long lists scroll with the app scrollbar and short lists keep their natural height.
 
@@ -268,15 +290,13 @@ export default function ExamplePage() {
     </Button>
     ```
 
-3. **Trigger Buttons**: Use `render` prop for `AlertDialogTrigger` and similar.
+3. **Trigger Buttons**: `AlertDialogTrigger` is the classic `@radix-ui/react-alert-dialog` primitive (`src/shared/components/ui/alert-dialog.tsx`), not the `render`/`nativeButton` unified-primitives API `Button`/`Dialog`/`Select` use elsewhere in this repo. Use `asChild` with a nested `Button`, not `render` — `render` doesn't exist on this component and fails typecheck.
     ```tsx
-    <AlertDialogTrigger
-    	render={
-    		<Button variant="destructive">
-    			<Trash2 className="size-4" />
-    		</Button>
-    	}
-    />
+    <AlertDialogTrigger asChild>
+    	<Button variant="destructive">
+    		<Trash2 className="size-4" />
+    	</Button>
+    </AlertDialogTrigger>
     ```
 
 ---

@@ -2,6 +2,13 @@
 
 import { useSyllabus } from "@/modules/academics/syllabus/hooks/use-syllabus";
 import { toggleSyllabusTopic } from "@/modules/academics/syllabus/hooks/use-syllabus-mutations";
+import {
+	Accordion,
+	AccordionContent,
+	AccordionItem,
+	AccordionTrigger,
+} from "@/shared/components/ui/accordion";
+import { Badge } from "@/shared/components/ui/badge";
 import { Button } from "@/shared/components/ui/button";
 import {
 	Card,
@@ -14,8 +21,10 @@ import { Input } from "@/shared/components/ui/input";
 import { Progress } from "@/shared/components/ui/progress";
 import { Separator } from "@/shared/components/ui/separator";
 import { Skeleton } from "@/shared/components/ui/skeleton";
+import { PATHS } from "@/shared/configs/paths.config";
 import { Check, Save } from "lucide-react";
 import { useTranslations } from "next-intl";
+import Link from "next/link";
 import { useState } from "react";
 import { toast } from "sonner";
 
@@ -56,6 +65,23 @@ export function SyllabusProgressView({ id }: Props) {
 		);
 	}
 
+	// Manual syllabuses carry no topic tree, so there is nothing to track here.
+	// The list hides this action for them; this covers a direct URL visit.
+	if (data.mode === "MANUAL") {
+		return (
+			<div className="mx-auto max-w-7xl">
+				<Card className="border-dashed shadow-none ring-0">
+					<CardContent className="text-muted-foreground flex min-h-48 flex-col items-center justify-center gap-2 text-center text-sm">
+						<p>{t("progressNotAvailableManual")}</p>
+						<Button asChild variant="outline" size="sm">
+							<Link href={PATHS.ACADEMICS.SYLLABUS.EDIT(id)}>{t("editSyllabus")}</Link>
+						</Button>
+					</CardContent>
+				</Card>
+			</div>
+		);
+	}
+
 	return (
 		<div className="mx-auto max-w-7xl space-y-6">
 			<Card className="shadow-none ring-0">
@@ -72,16 +98,33 @@ export function SyllabusProgressView({ id }: Props) {
 				</CardContent>
 			</Card>
 
-			{data.subjects?.map((subject: any) => (
-				<Card key={subject.id} className="shadow-none ring-0">
-					<CardHeader>
-						<CardTitle>{subject.subject?.enName || "-"}</CardTitle>
-						<CardDescription>
-							{percent(subject.completionPercent).toFixed(0)}%
-						</CardDescription>
-					</CardHeader>
-					<CardContent className="space-y-4">
-						{subject.chapters?.map((chapter: any) => (
+			{/* One collapsible panel per subject — a published syllabus can carry
+			    a dozen subjects with dozens of chapters/topics each, so every
+			    subject expanded at once would make this page unusable. */}
+			<Accordion type="multiple" className="gap-4">
+				{data.subjects?.map((subject: any) => (
+					<AccordionItem
+						key={subject.id}
+						value={subject.id}
+						className="bg-card rounded-md border px-6"
+					>
+						<AccordionTrigger className="py-4 hover:no-underline">
+							<div className="flex min-w-0 flex-1 items-center justify-between gap-3 pr-3">
+								<span className="flex min-w-0 items-center gap-2">
+									<span className="truncate text-sm font-medium">
+										{subject.subject?.enName || "-"}
+									</span>
+									<Badge variant="secondary" className="h-5 shrink-0 px-1.5 text-[11px] font-normal">
+										{subject.chapters?.length || 0} ch
+									</Badge>
+								</span>
+								<span className="text-muted-foreground shrink-0 text-xs tabular-nums">
+									{percent(subject.completionPercent).toFixed(0)}%
+								</span>
+							</div>
+						</AccordionTrigger>
+						<AccordionContent className="space-y-4 pb-6">
+							{subject.chapters?.map((chapter: any) => (
 							<div key={chapter.id} className="rounded-md border bg-muted/20 p-4">
 								<div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
 									<div>
@@ -166,9 +209,10 @@ export function SyllabusProgressView({ id }: Props) {
 								</div>
 							</div>
 						))}
-					</CardContent>
-				</Card>
-			))}
+						</AccordionContent>
+					</AccordionItem>
+				))}
+			</Accordion>
 		</div>
 	);
 }

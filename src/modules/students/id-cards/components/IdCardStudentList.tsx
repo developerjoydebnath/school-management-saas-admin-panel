@@ -107,7 +107,7 @@ export default function IdCardStudentList({
 											<p className="text-xs text-muted-foreground">Roll: {student.roll}</p>
 										</div>
 									</TableCell>
-									<TableCell>{student.class} {student.section ? `(${student.section})` : ''}</TableCell>
+									<TableCell>{student.className} {student.sectionName ? `(${student.sectionName})` : ''}</TableCell>
 								</TableRow>
 							);
 						})}

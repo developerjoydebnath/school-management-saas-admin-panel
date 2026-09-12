@@ -2,7 +2,7 @@
 
 import { Badge } from "@/shared/components/ui/badge";
 import { Button } from "@/shared/components/ui/button";
-import { ArrowLeft, CalendarCheck, Lock } from "lucide-react";
+import { ArrowLeft, CalendarCheck, CalendarOff, Lock } from "lucide-react";
 import Link from "next/link";
 
 interface AttendanceSheetHeaderProps {
@@ -11,7 +11,7 @@ interface AttendanceSheetHeaderProps {
 	selectedDate: Date;
 	isDateSubmitted: boolean;
 	isToday: boolean;
-	isSubmitted: boolean;
+	isHoliday: boolean;
 }
 
 export function AttendanceSheetHeader({
@@ -20,7 +20,7 @@ export function AttendanceSheetHeader({
 	selectedDate,
 	isDateSubmitted,
 	isToday,
-	isSubmitted,
+	isHoliday,
 }: AttendanceSheetHeaderProps) {
 	return (
 		<div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
@@ -49,17 +49,26 @@ export function AttendanceSheetHeader({
 				</div>
 			</div>
 			<div className="flex items-center gap-2">
-				{isDateSubmitted && (
-					<Badge variant="default" className="gap-1 bg-green-600 hover:bg-green-600">
-						<Lock className="h-3 w-3" />
-						Submitted
+				{isHoliday ? (
+					<Badge variant="destructive" className="gap-1">
+						<CalendarOff className="h-3 w-3" />
+						School Holiday
 					</Badge>
-				)}
-				{isToday && !isSubmitted && !isDateSubmitted && (
-					<Badge variant="outline" className="gap-1 border-blue-500 text-blue-600">
-						<CalendarCheck className="h-3 w-3" />
-						Today
-					</Badge>
+				) : (
+					<>
+						{isDateSubmitted && (
+							<Badge variant="default" className="gap-1 bg-green-600 hover:bg-green-600">
+								<Lock className="h-3 w-3" />
+								Submitted
+							</Badge>
+						)}
+						{isToday && !isDateSubmitted && (
+							<Badge variant="outline" className="gap-1 border-blue-500 text-blue-600">
+								<CalendarCheck className="h-3 w-3" />
+								Today
+							</Badge>
+						)}
+					</>
 				)}
 			</div>
 		</div>

@@ -5,6 +5,7 @@ import * as DialogPrimitive from "@radix-ui/react-dialog"
 
 import { cn } from "@/shared/lib/utils"
 import { Button } from "@/shared/components/ui/button"
+import { preventCloseForFloatingLayer } from "@/shared/components/ui/floating-layer-guard"
 import { XIcon } from "lucide-react"
 
 function Sheet({ ...props }: React.ComponentProps<typeof DialogPrimitive.Root>) {
@@ -41,11 +42,35 @@ function SheetContent({
   children,
   side = "right",
   showCloseButton = true,
+  onInteractOutside,
+  onPointerDownOutside,
+  onFocusOutside,
   ...props
 }: React.ComponentProps<typeof DialogPrimitive.Content> & {
   side?: "top" | "right" | "bottom" | "left"
   showCloseButton?: boolean
 }) {
+  const handleInteractOutside: React.ComponentProps<
+    typeof DialogPrimitive.Content
+  >["onInteractOutside"] = (event) => {
+    if (preventCloseForFloatingLayer(event)) return
+    onInteractOutside?.(event)
+  }
+
+  const handlePointerDownOutside: React.ComponentProps<
+    typeof DialogPrimitive.Content
+  >["onPointerDownOutside"] = (event) => {
+    if (preventCloseForFloatingLayer(event)) return
+    onPointerDownOutside?.(event)
+  }
+
+  const handleFocusOutside: React.ComponentProps<
+    typeof DialogPrimitive.Content
+  >["onFocusOutside"] = (event) => {
+    if (preventCloseForFloatingLayer(event)) return
+    onFocusOutside?.(event)
+  }
+
   return (
     <SheetPortal>
       <SheetOverlay />
@@ -60,6 +85,9 @@ function SheetContent({
           side === "bottom" && "inset-x-0 bottom-0 h-auto border-t data-[state=closed]:slide-out-to-bottom data-[state=open]:slide-in-from-bottom",
           className
         )}
+        onInteractOutside={handleInteractOutside}
+        onPointerDownOutside={handlePointerDownOutside}
+        onFocusOutside={handleFocusOutside}
         {...props}
       >
         {children}

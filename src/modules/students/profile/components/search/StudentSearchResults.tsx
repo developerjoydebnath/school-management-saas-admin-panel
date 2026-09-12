@@ -49,7 +49,11 @@ export default function StudentSearchResults({
 
 	const getClassLabel = (classId: string) => {
 		const classItem = classes.find((c) => c.id === classId);
-		return classItem ? getLocalizedName(classItem.name, locale) : classId;
+		if (!classItem) return classId;
+		return getLocalizedName(
+			{ en: classItem.enName, bn: classItem.bnName },
+			locale
+		);
 	};
 
 	if (isLoading) {
@@ -99,8 +103,7 @@ export default function StudentSearchResults({
 							<TableHead>{t("table.roll")}</TableHead>
 							<TableHead>{t("table.class")}</TableHead>
 							<TableHead>{t("table.section")}</TableHead>
-							<TableHead>{t("table.mobile")}</TableHead>
-							<TableHead>{t("table.guardianMobile")}</TableHead>
+							<TableHead>{t("table.guardian")}</TableHead>
 							<TableHead className="pr-4 text-right">{t("table.actions")}</TableHead>
 						</TableRow>
 					</TableHeader>
@@ -134,13 +137,9 @@ export default function StudentSearchResults({
 									</Badge>
 								</TableCell>
 								<TableCell>{student.section}</TableCell>
-								<TableCell className="text-muted-foreground text-sm">
-									{student.mobile}
-								</TableCell>
-								<TableCell className="text-muted-foreground text-sm">
-									{(student as any).emergencyContact ||
-										(student as any).fatherPhone ||
-										"-"}
+								<TableCell className="text-sm">
+									<div className="font-medium">{student.fatherName || "-"}</div>
+									<div className="text-muted-foreground">{student.mobile || "-"}</div>
 								</TableCell>
 								<TableCell className="pr-4 text-right">
 									<Link

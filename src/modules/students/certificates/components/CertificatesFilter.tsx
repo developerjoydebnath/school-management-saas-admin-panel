@@ -9,67 +9,87 @@ import {
 	SelectTrigger,
 	SelectValue,
 } from "@/shared/components/ui/select";
-import { useSWR } from "@/shared/hooks/use-swr";
-import { getLocalizedName } from "@/shared/utils/localization";
-import { useLocale, useTranslations } from "next-intl";
+import { useSessionStore } from "@/shared/stores/session-store";
+import { Search, X } from "lucide-react";
+import { useTranslations } from "next-intl";
 import { useEffect, useState } from "react";
+import { useCertificateFilterOptions } from "../hooks/use-certificate-filter-options";
 
 interface CertificatesFilterProps {
-	onGenerate: (classId: string, section: string, session: string) => void;
+	onSearch: (sessionId: string, classId: string, sectionId: string) => void;
+	onClear: () => void;
+	hasResults?: boolean;
 	isLoading?: boolean;
 }
 
-export default function CertificatesFilter({ onGenerate, isLoading }: CertificatesFilterProps) {
+export default function CertificatesFilter({
+	onSearch,
+	onClear,
+	hasResults,
+	isLoading,
+}: CertificatesFilterProps) {
 	const t = useTranslations("StudentCertificates");
-	const locale = useLocale();
+	const { selectedSessionId } = useSessionStore();
 
+	const [session, setSession] = useState("");
 	const [selectedClass, setSelectedClass] = useState("");
 	const [selectedSection, setSelectedSection] = useState("");
-	const [selectedSession, setSelectedSession] = useState("");
 
-	const { data: classes } = useSWR("classes");
-	const { data: sessions } = useSWR("sessions");
+	const { sessionOptions, classOptions, sectionOptions } = useCertificateFilterOptions({
+		classId: selectedClass,
+		sessionId: session,
+	});
 
-	// Determine available sections for the selected class
-	const activeClass = classes?.find((c: any) => c.id === selectedClass);
-	const availableSections = activeClass?.sections || [];
-
-	// Automatically select the active session if available
+	// Default to the globally selected session rather than guessing at "the"
+	// active one — matches every other filter bar in this app.
 	useEffect(() => {
-		if (sessions && !selectedSession) {
-			const activeSession = sessions.find((s: any) => s.status === "ACTIVE") || sessions[0];
-			if (activeSession) {
-				setSelectedSession(activeSession.id);
-			}
-		}
-	}, [sessions, selectedSession]);
+		if (selectedSessionId && !session) setSession(selectedSessionId);
+	}, [selectedSessionId, session]);
 
-	// Reset section when class changes
+	// Section is scoped to the class, so a stale pick from a previous class
+	// would silently filter to nothing.
 	useEffect(() => {
 		setSelectedSection("");
 	}, [selectedClass]);
 
-	const handleGenerate = () => {
+	const handleSearch = () => {
 		if (selectedClass) {
-			onGenerate(selectedClass, selectedSection, selectedSession);
+			onSearch(session, selectedClass, selectedSection);
 		}
+	};
+
+	const handleClear = () => {
+		setSession(selectedSessionId || "");
+		setSelectedClass("");
+		setSelectedSection("");
+		onClear();
 	};
 
 	return (
 		<Card className="border-none shadow-sm">
 			<CardContent className="pt-6">
-				<div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
-					<Select
-						value={selectedClass}
-						onValueChange={(val) => setSelectedClass(val || "")}
-					>
+				<div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-5">
+					<Select value={session} onValueChange={(val) => setSession(val || "")}>
+						<SelectTrigger className="h-10! w-full">
+							<SelectValue placeholder={t("filters.session")} />
+						</SelectTrigger>
+						<SelectContent>
+							{sessionOptions.map((option) => (
+								<SelectItem className="py-2" key={option.value} value={option.value}>
+									{option.label}
+								</SelectItem>
+							))}
+						</SelectContent>
+					</Select>
+
+					<Select value={selectedClass} onValueChange={(val) => setSelectedClass(val || "")}>
 						<SelectTrigger className="h-10! w-full">
 							<SelectValue placeholder={t("filters.class")} />
 						</SelectTrigger>
 						<SelectContent>
-							{classes?.map((c: any) => (
-								<SelectItem className="py-2" key={c.id} value={c.id}>
-									{getLocalizedName(c.name, locale)}
+							{classOptions.map((option) => (
+								<SelectItem className="py-2" key={option.value} value={option.value}>
+									{option.label}
 								</SelectItem>
 							))}
 						</SelectContent>
@@ -78,43 +98,31 @@ export default function CertificatesFilter({ onGenerate, isLoading }: Certificat
 					<Select
 						value={selectedSection}
 						onValueChange={(val) => setSelectedSection(val || "")}
-						disabled={!selectedClass || availableSections.length === 0}
+						disabled={!selectedClass}
 					>
 						<SelectTrigger className="h-10! w-full">
 							<SelectValue placeholder={t("filters.section")} />
 						</SelectTrigger>
 						<SelectContent>
-							{availableSections.map((sec: any) => (
-								<SelectItem className="py-2" key={sec.name} value={sec.name}>
-									Section {sec.name}
+							{sectionOptions.map((option) => (
+								<SelectItem className="py-2" key={option.value} value={option.value}>
+									{option.label}
 								</SelectItem>
 							))}
 						</SelectContent>
 					</Select>
 
-					<Select
-						value={selectedSession}
-						onValueChange={(val) => setSelectedSession(val || "")}
-					>
-						<SelectTrigger className="h-10! w-full">
-							<SelectValue placeholder={t("filters.session")} />
-						</SelectTrigger>
-						<SelectContent>
-							{sessions?.map((ses: any) => (
-								<SelectItem className="py-2" key={ses.id} value={ses.id}>
-									{ses.name}
-								</SelectItem>
-							))}
-						</SelectContent>
-					</Select>
-
-					<Button
-						onClick={handleGenerate}
-						disabled={!selectedClass || isLoading}
-						className="w-full"
-					>
+					<Button onClick={handleSearch} disabled={!selectedClass || isLoading} className="w-full">
+						<Search className="h-4 w-4" />
 						{isLoading ? "..." : t("filters.generate")}
 					</Button>
+
+					{hasResults && (
+						<Button variant="outline" onClick={handleClear} className="w-full">
+							<X className="h-4 w-4" />
+							{t("filters.clear")}
+						</Button>
+					)}
 				</div>
 			</CardContent>
 		</Card>

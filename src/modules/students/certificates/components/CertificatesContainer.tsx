@@ -15,24 +15,35 @@ export default function CertificatesContainer() {
 	const t = useTranslations("StudentCertificates");
 
 	const [filter, setFilter] = useState<{
+		sessionId: string;
 		classId: string;
-		section: string;
-		session: string;
+		sectionId: string;
 	} | null>(null);
 	const [selectedStudentIds, setSelectedStudentIds] = useState<string[]>([]);
 	const [activePreviewId, setActivePreviewId] = useState<string | undefined>();
 	const [templateType, setTemplateType] = useState<CertificateTemplate>("transfer-certificate");
 
-	// Fetch students based on filter
-	const { data: students, isLoading } = useSWR(
-		filter ? `students` : null,
+	const { data: studentsRes, isLoading } = useSWR(
+		filter ? "/students" : null,
 		filter
-			? { class: filter.classId, section: filter.section, session: filter.session }
+			? {
+					sessionId: filter.sessionId,
+					classId: filter.classId,
+					...(filter.sectionId ? { sectionId: filter.sectionId } : {}),
+					limit: 200,
+				}
 			: undefined
 	);
+	const students: any[] = studentsRes?.data?.items || [];
 
-	const handleGenerate = (classId: string, section: string, session: string) => {
-		setFilter({ classId, section, session });
+	const handleSearch = (sessionId: string, classId: string, sectionId: string) => {
+		setFilter({ sessionId, classId, sectionId });
+		setSelectedStudentIds([]);
+		setActivePreviewId(undefined);
+	};
+
+	const handleClear = () => {
+		setFilter(null);
 		setSelectedStudentIds([]);
 		setActivePreviewId(undefined);
 	};
@@ -44,14 +55,21 @@ export default function CertificatesContainer() {
 	};
 
 	const handleSelectAll = (checked: boolean) => {
-		if (checked && students) {
-			setSelectedStudentIds(students.map((s: any) => s.id));
+		if (checked) {
+			setSelectedStudentIds(
+				students.filter((s) => s.status !== "transferred").map((s: any) => s.id)
+			);
 		} else {
 			setSelectedStudentIds([]);
 		}
 	};
 
 	const handlePreviewSelect = (student: any) => {
+		setActivePreviewId(student.id);
+	};
+
+	const handleQuickSelect = (student: any) => {
+		setSelectedStudentIds([student.id]);
 		setActivePreviewId(student.id);
 	};
 
@@ -125,24 +143,31 @@ export default function CertificatesContainer() {
 
 	return (
 		<div className="space-y-6">
-			<CertificatesFilter onGenerate={handleGenerate} isLoading={isLoading} />
+			<CertificatesFilter
+				onSearch={handleSearch}
+				onClear={handleClear}
+				hasResults={!!filter}
+				isLoading={isLoading}
+			/>
 
 			<div className="grid grid-cols-1 gap-6 lg:grid-cols-12">
 				{/* Left Column: Student List */}
 				<div className="space-y-4 lg:col-span-5">
 					<CertificatesStudentList
-						students={students || []}
+						students={students}
 						selectedStudentIds={selectedStudentIds}
 						onSelect={handleSelect}
 						onSelectAll={handleSelectAll}
 						onPreviewSelect={handlePreviewSelect}
+						onQuickSelect={handleQuickSelect}
 						activePreviewId={activePreviewId}
+						templateType={templateType}
 					/>
 				</div>
 
 				{/* Right Column: Preview & Presets (Split) */}
 				<div className="space-y-4 lg:col-span-7">
-					
+
 					<div className="grid grid-cols-1 lg:grid-cols-4 gap-4">
 						{/* Preview Area */}
 						<div className="flex flex-col space-y-4 h-full lg:col-span-3">
@@ -166,7 +191,7 @@ export default function CertificatesContainer() {
 									</Button>
 								</div>
 							</div>
-							
+
 							{/* Canvas */}
 							<div className="bg-muted/30 flex flex-1 flex-col items-center justify-center overflow-auto rounded-md border p-6 min-h-[400px]">
 								<CertificatesPreview student={activeStudent} templateType={templateType} />
@@ -179,7 +204,7 @@ export default function CertificatesContainer() {
 								<LayoutTemplate className="text-primary h-5 w-5" />
 								<h3 className="font-semibold text-center text-sm">{t("preview.templateType")}</h3>
 							</div>
-							
+
 							{/* Scrollable list */}
 							<div className="flex-1 overflow-y-auto space-y-3">
 								{templates.map((tpl) => (
@@ -198,11 +223,11 @@ export default function CertificatesContainer() {
 												<CheckCircle2 className="h-4 w-4" />
 											</div>
 										)}
-										
+
 										<div className="mb-2 transform transition-transform group-hover:scale-105">
 											{tpl.icon}
 										</div>
-										
+
 										<div className="text-xs font-semibold leading-tight">
 											{t(`preview.${tpl.nameKey}` as any)}
 										</div>

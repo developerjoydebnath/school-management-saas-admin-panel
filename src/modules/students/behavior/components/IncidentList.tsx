@@ -1,39 +1,75 @@
 "use client";
 
-import { TOption } from "@/shared/components/form/FilterButton";
+import ConfirmationModal from "@/shared/components/custom/ConfirmationModal";
+import PermissionGuard from "@/shared/components/custom/PermissionGuard";
 import DataTable from "@/shared/components/table/DataTable";
 import TableFilter from "@/shared/components/table/TableFilter";
+import { AlertDialogTrigger } from "@/shared/components/ui/alert-dialog";
 import { Badge } from "@/shared/components/ui/badge";
 import { Button } from "@/shared/components/ui/button";
 import { Card, CardContent, CardHeader } from "@/shared/components/ui/card";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/shared/components/ui/dialog";
-import { ScrollArea } from "@/shared/components/ui/scroll-area";
-import { useTableData } from "@/shared/hooks/use-table-data";
+import { PATHS } from "@/shared/configs/paths.config";
+import { PERMISSIONS } from "@/shared/configs/permissions.config";
 import { ColumnDef } from "@tanstack/react-table";
 import { format } from "date-fns";
-import { Edit, FileText } from "lucide-react";
+import { PhoneCall, Pencil, Trash2 } from "lucide-react";
 import { useTranslations } from "next-intl";
-import { useMemo, useState } from "react";
+import Link from "next/link";
+import { useState } from "react";
+import { toast } from "sonner";
+import { IncidentListItem } from "../dto/incident.dto";
+import { deleteIncident } from "../hooks/use-behavior-incident-mutations";
+import { useIncidents } from "../hooks/use-behavior-incidents";
 import BehaviorFilterBar from "./BehaviorFilterBar";
-import IncidentForm from "./IncidentForm";
 
 export type IncidentFilter = {
 	search: string;
 	type: string[];
-	status: string[];
 	category: string[];
+	actionTaken: string[];
+	status: string[];
+	sessionId: string[];
+	classId: string[];
+	sectionId: string[];
+	dateFrom: string;
+	dateTo: string;
 };
 
-const initialFilters: IncidentFilter = { search: "", type: [], status: [], category: [] };
+const initialFilters: IncidentFilter = {
+	search: "",
+	type: [],
+	category: [],
+	actionTaken: [],
+	status: [],
+	sessionId: [],
+	classId: [],
+	sectionId: [],
+	dateFrom: "",
+	dateTo: "",
+};
 
 export function IncidentList() {
 	const t = useTranslations("StudentBehavior");
-	const [selectedIncident, setSelectedIncident] = useState<any | null>(null);
+	const tc = useTranslations("Common");
 	const [filter, setFilter] = useState<IncidentFilter>(initialFilters);
 	const [page, setPage] = useState(1);
 	const [limit, setLimit] = useState(10);
+	const [deletingId, setDeletingId] = useState<string | null>(null);
 
-	const { data: rawIncidents, meta, isLoading } = useTableData("/behaviorIncidents");
+	const { data, meta, isLoading } = useIncidents({
+		page,
+		limit,
+		search: filter.search,
+		type: filter.type,
+		category: filter.category,
+		actionTaken: filter.actionTaken,
+		status: filter.status,
+		sessionId: filter.sessionId[0] || "",
+		classId: filter.classId[0] || "",
+		sectionId: filter.sectionId[0] || "",
+		dateFrom: filter.dateFrom,
+		dateTo: filter.dateTo,
+	});
 
 	const resetFilters = () => {
 		setFilter(initialFilters);
@@ -41,25 +77,17 @@ export function IncidentList() {
 		setLimit(10);
 	};
 
-	const incidents = useMemo(() => {
-		if (!rawIncidents) return [];
-		return rawIncidents.filter((incident: any) => {
-			const matchesType =
-				filter.type.length === 0 || filter.type.includes(incident.type);
-			const matchesStatus =
-				filter.status.length === 0 ||
-				filter.status.includes(incident.status);
-			const matchesCategory =
-				filter.category.length === 0 ||
-				filter.category.includes(incident.category);
-			const matchesSearch =
-				!filter.search ||
-				incident.studentName?.toLowerCase().includes(filter.search.toLowerCase()) ||
-				incident.studentId?.toLowerCase().includes(filter.search.toLowerCase());
-
-			return matchesType && matchesStatus && matchesCategory && matchesSearch;
-		});
-	}, [rawIncidents, filter]);
+	const confirmDelete = async (id: string) => {
+		setDeletingId(id);
+		try {
+			await deleteIncident(id);
+			toast.success(t("dialog.deleteSuccess"));
+		} catch {
+			// Global axios interceptor already shows a toast for the error.
+		} finally {
+			setDeletingId(null);
+		}
+	};
 
 	const getTypeBadge = (type: string) => {
 		switch (type) {
@@ -77,39 +105,32 @@ export function IncidentList() {
 	};
 
 	const getStatusBadge = (status: string) => {
-		switch (status) {
-			case "resolved":
-				return (
-					<Badge
-						variant="outline"
-						className="border-emerald-600 text-emerald-600 dark:border-emerald-400 dark:text-emerald-400"
-					>
-						{t("statuses.resolved")}
-					</Badge>
-				);
-			case "pending":
-				return (
-					<Badge
-						variant="outline"
-						className="border-amber-600 text-amber-600 dark:border-amber-400 dark:text-amber-400"
-					>
-						{t("statuses.pending")}
-					</Badge>
-				);
-			default:
-				return <Badge variant="outline">{status}</Badge>;
+		if (status === "resolved") {
+			return (
+				<Badge
+					variant="outline"
+					className="border-emerald-600 text-emerald-600 dark:border-emerald-400 dark:text-emerald-400"
+				>
+					{t("statuses.resolved")}
+				</Badge>
+			);
 		}
+		return (
+			<Badge
+				variant="outline"
+				className="border-amber-600 text-amber-600 dark:border-amber-400 dark:text-amber-400"
+			>
+				{t("statuses.pending")}
+			</Badge>
+		);
 	};
 
-	const columns: ColumnDef<any>[] = [
+	const columns: ColumnDef<IncidentListItem>[] = [
 		{
 			id: "date",
-			accessorKey: "date",
 			header: t("table.date"),
 			cell: ({ row }) => (
-				<span className="font-medium">
-					{format(new Date(row.original.date), "dd MMM, yyyy")}
-				</span>
+				<span className="font-medium">{format(new Date(row.original.date), "dd MMM, yyyy")}</span>
 			),
 		},
 		{
@@ -119,43 +140,41 @@ export function IncidentList() {
 				<div>
 					<p className="font-medium">{row.original.studentName}</p>
 					<p className="text-muted-foreground text-xs">
-						{row.original.studentId} • {row.original.class}
+						{row.original.studentCode}
+						{row.original.className ? ` • ${row.original.className}` : ""}
+						{row.original.sectionName ? ` (${row.original.sectionName})` : ""}
 					</p>
 				</div>
 			),
 		},
 		{
 			id: "type",
-			accessorKey: "type",
 			header: t("table.type"),
 			cell: ({ row }) => getTypeBadge(row.original.type),
 		},
 		{
 			id: "category",
-			accessorKey: "category",
 			header: t("table.category"),
 			cell: ({ row }) => (
-				<div className="flex items-center gap-2">
-					<FileText className="text-muted-foreground h-4 w-4" />
-					<span className="text-sm">
-						{t(`categories.${row.original.category}` as any) || row.original.category}
-					</span>
-				</div>
+				<span className="text-sm">{t(`categories.${row.original.category}` as any)}</span>
 			),
 		},
 		{
 			id: "actionTaken",
-			accessorKey: "actionTaken",
 			header: t("table.actionTaken"),
 			cell: ({ row }) => (
-				<span className="text-muted-foreground text-sm">
-					{t(`actions.${row.original.actionTaken}` as any) || row.original.actionTaken}
-				</span>
+				<div className="flex items-center gap-1.5">
+					<span className="text-muted-foreground text-sm">
+						{t(`actions.${row.original.actionTaken}` as any)}
+					</span>
+					{row.original.guardianCallRequired && (
+						<PhoneCall className="text-destructive h-3.5 w-3.5" />
+					)}
+				</div>
 			),
 		},
 		{
 			id: "status",
-			accessorKey: "status",
 			header: t("table.status"),
 			cell: ({ row }) => getStatusBadge(row.original.status),
 		},
@@ -163,62 +182,67 @@ export function IncidentList() {
 			id: "actions",
 			header: () => <div className="text-right">{t("table.actions")}</div>,
 			cell: ({ row }) => (
-				<div className="flex justify-end">
-					<Button
-						variant="ghost"
-						size="icon"
-						onClick={() => setSelectedIncident(row.original)}
+				<div className="flex justify-end gap-2">
+					<PermissionGuard
+						permissions={[PERMISSIONS.STUDENTS.BEHAVIOR.EDIT, PERMISSIONS.STUDENTS.BEHAVIOR.ALL]}
 					>
-						<Edit className="h-4 w-4" />
-						<span className="sr-only">View</span>
-					</Button>
+						<Link href={PATHS.STUDENTS.BEHAVIOR.EDIT(row.original.id)} passHref>
+							<Button variant="outline" size="icon-sm">
+								<Pencil className="text-muted-foreground hover:text-foreground h-4 w-4" />
+							</Button>
+						</Link>
+					</PermissionGuard>
+					<PermissionGuard
+						permissions={[PERMISSIONS.STUDENTS.BEHAVIOR.DELETE, PERMISSIONS.STUDENTS.BEHAVIOR.ALL]}
+					>
+						<ConfirmationModal
+							onConfirm={() => confirmDelete(row.original.id)}
+							title={t("dialog.deleteTitle")}
+							description={t("dialog.deleteDescription")}
+							confirmText={tc("delete")}
+							variant="destructive"
+							isLoading={deletingId === row.original.id}
+						>
+							<AlertDialogTrigger asChild>
+								<Button variant="destructive" size="icon-sm">
+									<Trash2 className="h-4 w-4 text-red-500 hover:text-red-600" />
+								</Button>
+							</AlertDialogTrigger>
+						</ConfirmationModal>
+					</PermissionGuard>
 				</div>
 			),
 		},
 	];
 
 	return (
-		<Card className="p-4 shadow-none ring-0 sm:p-6">
+		<Card className="@container/page p-4 shadow-none ring-0 sm:p-6">
 			<CardHeader className="p-0">
 				<BehaviorFilterBar filter={filter} setFilter={setFilter} />
 			</CardHeader>
 			<CardContent className="space-y-4 p-0">
 				<TableFilter filter={filter} setFilter={setFilter} resetFilters={resetFilters} />
 				<DataTable
-					data={incidents || []}
+					data={data || []}
 					isLoading={isLoading}
-					pagination={{
-						page: meta?.page || page,
-						limit: meta?.limit || limit,
-						total: meta?.total || (incidents ? incidents.length : 0),
-						totalPages:
-							meta?.totalPages ||
-							Math.ceil((incidents ? incidents.length : 0) / limit),
-						onPageChange: setPage,
-						onLimitChange: setLimit,
-					}}
+					pagination={
+						meta
+							? {
+									page: meta.page,
+									limit: meta.limit,
+									total: meta.total,
+									totalPages: meta.totalPages,
+									onPageChange: setPage,
+									onLimitChange: (nextLimit: number) => {
+										setLimit(nextLimit);
+										setPage(1);
+									},
+								}
+							: undefined
+					}
 					columns={columns}
 				/>
 			</CardContent>
-
-			<Dialog
-				open={!!selectedIncident}
-				onOpenChange={(open) => !open && setSelectedIncident(null)}
-			>
-				<DialogContent className="sm:max-w-[500px]">
-					<DialogHeader>
-						<DialogTitle>{t("dialog.title")}</DialogTitle>
-					</DialogHeader>
-					<ScrollArea className="max-h-[80vh]">
-						{selectedIncident && (
-							<IncidentForm
-								initialData={selectedIncident}
-								onSuccess={() => setSelectedIncident(null)}
-							/>
-						)}
-					</ScrollArea>
-				</DialogContent>
-			</Dialog>
 		</Card>
 	);
 }

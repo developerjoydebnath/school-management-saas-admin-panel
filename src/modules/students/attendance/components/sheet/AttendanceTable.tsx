@@ -12,16 +12,18 @@ import {
 	TableHeader,
 	TableRow,
 } from "@/shared/components/ui/table";
-import { AlertCircle, CalendarCheck, Check, Lock, Save, Users } from "lucide-react";
+import { AlertCircle, CalendarCheck, CalendarOff, Check, Lock, Save, Users } from "lucide-react";
 
-type AttendanceStatus = "present" | "absent" | "late";
+type MarkedStatus = "present" | "absent" | "late";
+type AttendanceStatus = MarkedStatus | "unmarked";
 
 interface AttendanceTableProps {
 	isFuture: boolean;
+	isHoliday: boolean;
 	isLoading: boolean;
 	filteredStudents: any[];
 	attendanceData: Record<string, AttendanceStatus>;
-	toggleStatus: (studentId: string, status: AttendanceStatus) => void;
+	toggleStatus: (studentId: string, status: MarkedStatus) => void;
 	canEdit: boolean;
 	stats: {
 		total: number;
@@ -29,23 +31,27 @@ interface AttendanceTableProps {
 		absent: number;
 		late: number;
 	};
-	isSubmitted: boolean;
+	allMarked: boolean;
+	isSubmitting: boolean;
 	isDateSubmitted: boolean;
 	handleSubmit: () => void;
 }
 
 export function AttendanceTable({
 	isFuture,
+	isHoliday,
 	isLoading,
 	filteredStudents,
 	attendanceData,
 	toggleStatus,
 	canEdit,
 	stats,
-	isSubmitted,
+	allMarked,
+	isSubmitting,
 	isDateSubmitted,
 	handleSubmit,
 }: AttendanceTableProps) {
+	const unmarkedCount = stats.total - stats.present - stats.absent - stats.late;
 	return (
 		<Card className="border-none shadow-sm">
 			<CardHeader className="border-b pb-3">
@@ -53,7 +59,7 @@ export function AttendanceTable({
 					<CardTitle className="flex items-center gap-2 text-base font-semibold">
 						<CalendarCheck className="text-muted-foreground h-4 w-4" />
 						Attendance Sheet
-						{!canEdit && !isFuture && (
+						{!canEdit && !isFuture && !isHoliday && (
 							<Badge variant="secondary" className="ml-2 gap-1 text-[10px]">
 								<Lock className="h-2.5 w-2.5" />
 								Read Only
@@ -74,12 +80,25 @@ export function AttendanceTable({
 								<div className="h-2.5 w-2.5 rounded-full bg-amber-500" />
 								<span>L: {stats.late}</span>
 							</div>
+							{canEdit && unmarkedCount > 0 && (
+								<div className="flex items-center gap-1">
+									<div className="bg-muted-foreground/40 h-2.5 w-2.5 rounded-full" />
+									<span>Unmarked: {unmarkedCount}</span>
+								</div>
+							)}
 						</div>
 					</div>
 				</div>
 			</CardHeader>
 			<CardContent className="pt-0">
-				{isFuture ? (
+				{isHoliday ? (
+					<div className="flex flex-col items-center justify-center gap-3 py-16">
+						<CalendarOff className="text-muted-foreground/30 h-12 w-12" />
+						<p className="text-muted-foreground">
+							School is closed on this date — no attendance can be taken.
+						</p>
+					</div>
+				) : isFuture ? (
 					<div className="flex flex-col items-center justify-center gap-3 py-16">
 						<AlertCircle className="text-muted-foreground/30 h-12 w-12" />
 						<p className="text-muted-foreground">
@@ -121,7 +140,7 @@ export function AttendanceTable({
 							</TableHeader>
 							<TableBody>
 								{filteredStudents.map((student: any, index: number) => {
-									const status = attendanceData[student.id] || "present";
+									const status = attendanceData[student.id] || "unmarked";
 									return (
 										<TableRow
 											key={student.id}
@@ -130,7 +149,9 @@ export function AttendanceTable({
 													? "bg-red-50/50 dark:bg-red-950/10"
 													: status === "late"
 														? "bg-amber-50/50 dark:bg-amber-950/10"
-														: ""
+														: status === "unmarked" && canEdit
+															? "bg-muted/30"
+															: ""
 											}
 										>
 											<TableCell className="text-muted-foreground">
@@ -235,19 +256,33 @@ export function AttendanceTable({
 										{stats.late}
 									</span>{" "}
 									late
+									{unmarkedCount > 0 && (
+										<>
+											{" "}
+											•{" "}
+											<span className="font-semibold text-amber-600">
+												{unmarkedCount} left to mark
+											</span>
+										</>
+									)}
 								</p>
 								<Button
 									onClick={handleSubmit}
+									disabled={isSubmitting || !allMarked}
 									className="gap-2 bg-green-600 hover:bg-green-700"
 								>
 									<Save className="h-4 w-4" />
-									Submit Attendance
+									{isSubmitting
+										? "Submitting..."
+										: allMarked
+											? "Submit Attendance"
+											: `Mark all students (${unmarkedCount} left)`}
 								</Button>
 							</div>
 						)}
 
 						{/* Submitted Notice */}
-						{(isSubmitted || isDateSubmitted) && !isFuture && (
+						{isDateSubmitted && !isFuture && (
 							<div className="text-muted-foreground flex items-center gap-2 border-t pt-4 text-sm">
 								<Lock className="h-4 w-4 text-green-600" />
 								<span>

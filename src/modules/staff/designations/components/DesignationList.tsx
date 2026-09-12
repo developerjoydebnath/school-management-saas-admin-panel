@@ -5,6 +5,7 @@ import PermissionGuard from "@/shared/components/custom/PermissionGuard";
 import DataTable from "@/shared/components/table/DataTable";
 import TableFilter from "@/shared/components/table/TableFilter";
 import { AlertDialogTrigger } from "@/shared/components/ui/alert-dialog";
+import { Badge } from "@/shared/components/ui/badge";
 import { Button } from "@/shared/components/ui/button";
 import { Card, CardContent, CardHeader } from "@/shared/components/ui/card";
 import { Sheet, SheetTrigger } from "@/shared/components/ui/sheet";
@@ -30,9 +31,12 @@ export type DesignationFilter = {
 	search: string;
 	isActive: string[];
 	category: string[];
+	type: string[];
 };
 
-const initialFilters: DesignationFilter = { search: "", isActive: [], category: [] };
+const initialFilters: DesignationFilter = { search: "", isActive: [], category: [], type: [] };
+
+const typeLabels: Record<string, string> = { teacher: "Teacher", staff: "Staff" };
 
 function DesignationDetailsAction({ id }: { id: string }) {
 	const [open, setOpen] = useState(false);
@@ -75,6 +79,7 @@ export default function DesignationList() {
 		search: filter.search,
 		isActive: filter.isActive.length === 1 ? filter.isActive[0] === "true" : undefined,
 		category: filter.category,
+		type: filter.type,
 	});
 
 	const confirmDelete = async (id: string) => {
@@ -115,6 +120,15 @@ export default function DesignationList() {
 			id: "category",
 			header: t("category"),
 			cell: ({ row }) => <span className="font-medium">{row.original.category}</span>,
+		},
+		{
+			id: "type",
+			header: t("type"),
+			cell: ({ row }) => (
+				<Badge variant="outline" className="capitalize">
+					{typeLabels[row.original.type] || row.original.type}
+				</Badge>
+			),
 		},
 		{
 			id: "level",

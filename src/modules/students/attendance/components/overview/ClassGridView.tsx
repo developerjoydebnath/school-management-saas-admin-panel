@@ -89,8 +89,8 @@ export function ClassGridView({ classSummaries, locale }: ClassGridViewProps) {
 								<div className="grid grid-cols-2 gap-2">
 									{cls.sections.map((sec: any) => (
 										<Link
-											key={sec.name}
-											href={`/students/attendance/${cls.id}?section=${sec.name}`}
+											key={sec.id}
+											href={`/students/attendance/${cls.id}?sectionId=${sec.id}`}
 										>
 											<Button
 												variant="outline"

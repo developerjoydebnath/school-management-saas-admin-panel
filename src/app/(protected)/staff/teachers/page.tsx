@@ -1,6 +1,7 @@
 "use client";
 
 import TeacherList from "@/modules/staff/teachers/components/TeacherList";
+import TeacherSummary from "@/modules/staff/teachers/components/TeacherSummary";
 import PageHeading from "@/shared/components/custom/PageHeading";
 import PermissionGuard from "@/shared/components/custom/PermissionGuard";
 import { Button } from "@/shared/components/ui/button";
@@ -45,6 +46,7 @@ export default function TeachersPage() {
 					</PermissionGuard>
 				</div>
 			</PageHeading>
+			<TeacherSummary />
 			<TeacherList />
 		</div>
 	);

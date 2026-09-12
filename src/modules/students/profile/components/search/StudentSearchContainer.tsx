@@ -12,10 +12,13 @@ export default function StudentSearchContainer() {
 	const [isScannerOpen, setIsScannerOpen] = useState(false);
 	
 	// Fetch all students for frontend filtering
-	const { data: allStudents, isLoading: isStudentsLoading } = useSWR("students");
+	// GET /students returns the paginated envelope { data: { items, meta } }
+	const { data: studentsResponse, isLoading: isStudentsLoading } = useSWR("/students", { limit: 1000 });
+	const allStudents = studentsResponse?.data?.items || [];
 
 	// Fetch classes for mapping class names
-	const { data: classes } = useSWR("classes");
+	const { data: classesResponse } = useSWR("/classes/active-list");
+	const classes = classesResponse?.data || [];
 
 	const handleSearch = (query: string) => {
 		if (!query.trim()) {
@@ -38,7 +41,7 @@ export default function StudentSearchContainer() {
 	};
 
 	// Filter students in the frontend
-	const filteredStudents = (allStudents || []).filter((student: any) => {
+	const filteredStudents = allStudents.filter((student: any) => {
 		if (!searchQuery.trim()) return false;
 		const query = searchQuery.toLowerCase();
 		return (
@@ -61,14 +64,14 @@ export default function StudentSearchContainer() {
 			/>
 			<StudentSearchResults
 				results={hasSearched ? filteredStudents : []}
-				classes={classes || []}
+				classes={classes}
 				isLoading={isStudentsLoading}
 				hasSearched={hasSearched}
 			/>
 			<QrBarcodeScannerModal
 				open={isScannerOpen}
 				onOpenChange={setIsScannerOpen}
-				students={allStudents || []}
+				students={allStudents}
 			/>
 		</div>
 	);

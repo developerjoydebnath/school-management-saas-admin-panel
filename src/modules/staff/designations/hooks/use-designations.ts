@@ -10,6 +10,9 @@ export function useDesignations(params?: Record<string, any>) {
 	if (params?.category) {
 		apiParams.category = params.category;
 	}
+	if (params?.type) {
+		apiParams.type = Array.isArray(params.type) ? params.type.join(",") : params.type;
+	}
 	if (params?.isActive) {
 		apiParams.isActive = params.isActive;
 	}

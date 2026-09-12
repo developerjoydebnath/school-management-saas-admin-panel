@@ -97,8 +97,8 @@ export function ClassListView({ classSummaries, locale }: ClassListViewProps) {
 										<div className="flex flex-wrap gap-1.5">
 											{cls.sections.map((sec: any) => (
 												<Link
-													key={sec.name}
-													href={`/students/attendance/${cls.id}?section=${sec.name}`}
+													key={sec.id}
+													href={`/students/attendance/${cls.id}?sectionId=${sec.id}`}
 												>
 													<Button
 														variant="outline"

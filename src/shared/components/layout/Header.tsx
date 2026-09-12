@@ -1,6 +1,7 @@
 "use client";
 
 import { LanguageSwitcher } from "@/shared/components/custom/LanguageSwitcher";
+import { MenuSearch } from "@/shared/components/custom/MenuSearch";
 import { NavUser } from "@/shared/components/custom/nav-user";
 import { SessionSwitcher } from "@/shared/components/custom/SessionSwitcher";
 import {
@@ -61,6 +62,8 @@ export default function Header() {
 				</Breadcrumb>
 			</div>
 			<div className="flex items-center gap-2 sm:gap-4">
+				<MenuSearch />
+				<Separator orientation="vertical" className="my-auto hidden h-4 sm:block" />
 				<SessionSwitcher />
 				<Separator orientation="vertical" className="my-auto h-4" />
 				<LanguageSwitcher />

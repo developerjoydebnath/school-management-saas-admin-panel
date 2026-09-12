@@ -23,6 +23,7 @@ import { useLocale, useTranslations } from "next-intl";
 import Link from "next/link";
 import { useCallback, useMemo, useState } from "react";
 import { toast } from "sonner";
+import StudentListSectionTabs from "./StudentListSectionTabs";
 
 interface StudentListTableProps {
 	classId: string;
@@ -62,6 +63,7 @@ export default function StudentListTable({ classId }: StudentListTableProps) {
 	const locale = useLocale();
 	const [page, setPage] = useState(1);
 	const [limit, setLimit] = useState(10);
+	const [sectionId, setSectionId] = useState("");
 	const [deleteId, setDeleteId] = useState<string | null>(null);
 	const [statusUpdatingId, setStatusUpdatingId] = useState<string | null>(null);
 
@@ -73,6 +75,7 @@ export default function StudentListTable({ classId }: StudentListTableProps) {
 	} = useTableData(`/students/by-class/${classId}`, {
 		page,
 		limit,
+		sectionId,
 	});
 
 	const { data: classResponse } = useSWR(`/classes/${classId}`);
@@ -284,20 +287,29 @@ export default function StudentListTable({ classId }: StudentListTableProps) {
 	);
 
 	return (
-		<Card className="p-4 shadow-none ring-0 sm:p-6">
+		<Card className="@container/page p-4 shadow-none ring-0 sm:p-6">
 			<CardHeader className="p-0 pb-4">
-				<div className="flex items-center gap-3">
-					<h2 className="text-lg font-semibold">
-						{classData
-							? getLocalizedName(
-									classData.name || classData.enName || classData.bnName,
-									locale
-								)
-							: `Class ${classId}`}
-					</h2>
-					<Badge variant="outline">
-						{meta.total} {t("studentName")}
-					</Badge>
+				<div className="flex flex-col gap-4">
+					<div className="flex items-center gap-3">
+						<h2 className="text-lg font-semibold">
+							{classData
+								? getLocalizedName(
+										classData.name || classData.enName || classData.bnName,
+										locale
+									)
+								: `Class ${classId}`}
+						</h2>
+						<Badge variant="outline">
+							{meta.total} {t("studentName")}
+						</Badge>
+					</div>
+					<div className="overflow-x-auto">
+						<StudentListSectionTabs
+							classId={classId}
+							sectionId={sectionId}
+							onChange={setSectionId}
+						/>
+					</div>
 				</div>
 			</CardHeader>
 			<CardContent className="space-y-4 p-0">

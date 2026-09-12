@@ -1,6 +1,15 @@
 "use client";
 
+import ConfirmationModal from "@/shared/components/custom/ConfirmationModal";
 import InputField from "@/shared/components/form/InputField";
+import {
+	Accordion,
+	AccordionContent,
+	AccordionItem,
+	AccordionTrigger,
+} from "@/shared/components/ui/accordion";
+import { AlertDialogTrigger } from "@/shared/components/ui/alert-dialog";
+import { Badge } from "@/shared/components/ui/badge";
 import { Button } from "@/shared/components/ui/button";
 import {
 	Card,
@@ -12,15 +21,18 @@ import {
 import { PATHS } from "@/shared/configs/paths.config";
 import { useSWR } from "@/shared/hooks/use-swr";
 import { cn } from "@/shared/lib/utils";
+import { Subject } from "@/shared/models/subject.model";
+import { getLocalizedName } from "@/shared/utils/localization";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Plus, Trash2 } from "lucide-react";
-import { useTranslations } from "next-intl";
+import { FileText, ListTree, Plus, Trash2 } from "lucide-react";
+import { useLocale, useTranslations } from "next-intl";
 import { useRouter } from "next/navigation";
-import { useEffect, useMemo, useRef } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useFieldArray, useForm } from "react-hook-form";
 import { toast } from "sonner";
 import {
 	SyllabusFormValues,
+	SyllabusModeEnum,
 	SyllabusStatusEnum,
 	syllabusSchema,
 } from "../dto/syllabus.dto";
@@ -71,7 +83,10 @@ const normalizeOptionalString = (value?: string) => {
 const normalizeSyllabusPayload = (data: SyllabusFormValues): SyllabusFormValues => ({
 	...data,
 	title: normalizeOptionalString(data.title),
-	subjects: data.subjects.map((subject) => ({
+	// A manual syllabus is a document only — never ship the (possibly
+	// half-filled) subject scaffold the form keeps around for mode switching.
+	content: data.mode === SyllabusModeEnum.MANUAL ? data.content : undefined,
+	subjects: (data.mode === SyllabusModeEnum.MANUAL ? [] : data.subjects).map((subject) => ({
 		...subject,
 		teacherId: normalizeOptionalString(subject.teacherId),
 		chapters: subject.chapters.map((chapter) => ({
@@ -189,10 +204,47 @@ export default function SyllabusForm({ id, defaultValues, isEdit = false }: Prop
 		name: "subjects",
 	});
 
+	// Editing an existing syllabus can mean a dozen subjects with dozens of
+	// chapters each, so those start collapsed. A brand-new syllabus starts
+	// with a single empty subject the user is about to fill in, so that one
+	// starts open. Either way, newly appended subjects auto-open below.
+	const [openSubjects, setOpenSubjects] = useState<string[]>(() =>
+		isEdit ? [] : fields.map((f) => f.id)
+	);
+	const previousFieldsLength = useRef(fields.length);
+	useEffect(() => {
+		if (fields.length > previousFieldsLength.current) {
+			const newField = fields[fields.length - 1];
+			if (newField) setOpenSubjects((current) => [...current, newField.id]);
+		}
+		previousFieldsLength.current = fields.length;
+	}, [fields]);
+
 	const classId = form.watch("classId");
 	const sessionId = form.watch("sessionId");
 	const sectionIds = form.watch("sectionIds") || [];
 	const subjects = form.watch("subjects") || [];
+	const mode = form.watch("mode");
+	const isManual = mode === SyllabusModeEnum.MANUAL;
+
+	// Same option source SubjectSingleSelection uses, kept here just to
+	// resolve each subject's picked name for the accordion header — the
+	// select itself only ever gives the form a raw subjectId.
+	const locale = useLocale();
+	const { data: subjectListResponse } = useSWR(
+		classId ? "/subjects/active-list" : null,
+		{ classId }
+	);
+	const subjectNameById = useMemo(() => {
+		const list = subjectListResponse?.data || subjectListResponse || [];
+		const map = new Map<string, string>();
+		for (const raw of list) {
+			const subject = new Subject(raw);
+			map.set(subject.id, getLocalizedName(subject.name, locale));
+		}
+		return map;
+	}, [subjectListResponse, locale]);
+
 	const previousClassId = useRef(classId);
 	const previousSessionId = useRef(sessionId);
 
@@ -201,20 +253,31 @@ export default function SyllabusForm({ id, defaultValues, isEdit = false }: Prop
 			(previousClassId.current && previousClassId.current !== classId) ||
 			(previousSessionId.current && previousSessionId.current !== sessionId)
 		) {
-			form.setValue("sectionIds", [], { shouldValidate: true });
+			// Deliberately no `shouldValidate` here. The form validates on submit
+			// (reValidateMode only kicks in once submitted), so validating a field
+			// we just programmatically emptied raises an error that the user's own
+			// next selection cannot clear — the field would keep reading
+			// "Exam is required" with a valid exam picked. Clear stale errors
+			// instead and let submit do the validating.
+			form.setValue("sectionIds", []);
+			// The exam list is scoped by session + class, so a previously picked
+			// exam may no longer be on offer.
+			form.setValue("examId", "");
 			form.setValue(
 				"subjects",
 				form.getValues("subjects").map((subject) => ({
 					...subject,
 					subjectId: "",
 					teacherId: "",
-				})),
-				{ shouldValidate: true }
+				}))
 			);
+			form.clearErrors(["examId", "sectionIds", "subjects"]);
 		}
 		previousClassId.current = classId;
 		previousSessionId.current = sessionId;
 	}, [classId, sessionId, form]);
+
+	console.log(form.formState.errors)
 
 	const onSubmit = async (data: SyllabusFormValues) => {
 		try {
@@ -299,13 +362,20 @@ export default function SyllabusForm({ id, defaultValues, isEdit = false }: Prop
 						required
 						disabled={isEdit}
 					/>
+					{/* Exams carry both a session and a class list, so the picker is
+					    scoped by the two selected above — a Class 9 syllabus should
+					    never offer an exam that Class 9 does not sit. */}
 					<InputField
 						control={form.control}
 						name="examId"
 						label="Exam"
 						type="examSelect"
-						placeholder="Select exam"
-						dependencyId={form.watch("sessionId")}
+						placeholder={
+							!sessionId || !classId ? "Select session and class first" : "Select exam"
+						}
+						dependencyId={sessionId}
+						classId={classId}
+						disabled={!sessionId || !classId}
 						required
 					/>
 					<InputField
@@ -344,190 +414,306 @@ export default function SyllabusForm({ id, defaultValues, isEdit = false }: Prop
 				</CardContent>
 			</Card>
 
-			<div className="space-y-4">
-				{fields.map((field, subjectIndex) => (
-					<Card key={field.id} className="shadow-none ring-0">
-						<CardHeader className="flex-row items-start justify-between gap-4">
-							<div>
-								<CardTitle>{t("subjectPlan")}</CardTitle>
-								<CardDescription>{t("subjectPlanDescription")}</CardDescription>
-							</div>
-							<Button
+			<Card className="shadow-none ring-0">
+				<CardHeader>
+					<CardTitle>{t("syllabusMode")}</CardTitle>
+					<CardDescription>{t("syllabusModeDescription")}</CardDescription>
+				</CardHeader>
+				<CardContent className="grid grid-cols-1 gap-3 @3xl/page:grid-cols-2">
+					{[
+						{
+							value: SyllabusModeEnum.STRUCTURED,
+							icon: ListTree,
+							title: t("modeStructured"),
+							description: t("modeStructuredDescription"),
+						},
+						{
+							value: SyllabusModeEnum.MANUAL,
+							icon: FileText,
+							title: t("modeManual"),
+							description: t("modeManualDescription"),
+						},
+					].map((option) => {
+						const selected = mode === option.value;
+						return (
+							<button
+								key={option.value}
 								type="button"
-								variant="destructive"
-								size="icon-sm"
-								disabled={fields.length === 1}
-								onClick={() => remove(subjectIndex)}
+								onClick={() => form.setValue("mode", option.value, { shouldValidate: true })}
+								className={cn(
+									"flex items-start gap-3 rounded-lg border p-4 text-left transition-colors",
+									selected
+										? "border-primary bg-primary/5"
+										: "hover:bg-accent/5 border-border"
+								)}
 							>
-								<Trash2 className="size-4" />
-							</Button>
-						</CardHeader>
-						<CardContent className="space-y-4">
-							<div className="grid grid-cols-1 gap-4 @3xl/page:grid-cols-2">
-								<InputField
-									control={form.control}
-									name={`subjects.${subjectIndex}.subjectId`}
-									label="Subject"
-									type="subjectSingleSelect"
-									placeholder="Select subject"
-									dependencyId={classId}
-									required
-								/>
-								<InputField
-									control={form.control}
-									name={`subjects.${subjectIndex}.teacherId`}
-									label="Teacher"
-									type="teacherSelect"
-									placeholder="Select teacher"
-								/>
-							</div>
-
-							{subjects[subjectIndex]?.chapters?.map((chapter: any, chapterIndex: number) => (
-								<div
-									key={`${subjectIndex}-${chapterIndex}`}
-									className="space-y-4 rounded-md border p-4"
+								<span
+									className={cn(
+										"flex size-9 shrink-0 items-center justify-center rounded-md",
+										selected ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground"
+									)}
 								>
-									<div className="flex items-center justify-between gap-4">
-										<p className="text-sm font-medium">
-											Chapter {chapterIndex + 1}
-										</p>
+									<option.icon className="size-4" />
+								</span>
+								<span className="min-w-0">
+									<span className="block text-sm font-semibold">{option.title}</span>
+									<span className="text-muted-foreground mt-1 block text-xs leading-relaxed">
+										{option.description}
+									</span>
+								</span>
+							</button>
+						);
+					})}
+				</CardContent>
+			</Card>
+
+			{isManual ? (
+				<Card className="shadow-none ring-0">
+					<CardHeader>
+						<CardTitle>{t("syllabusDocument")}</CardTitle>
+						<CardDescription>{t("syllabusDocumentDescription")}</CardDescription>
+					</CardHeader>
+					<CardContent>
+						<InputField
+							control={form.control}
+							name="content"
+							type="textEditor"
+							documentMode
+						/>
+					</CardContent>
+				</Card>
+			) : (
+				<Accordion
+					type="multiple"
+					value={openSubjects}
+					onValueChange={setOpenSubjects}
+					className="gap-4"
+				>
+					{fields.map((field, subjectIndex) => (
+						<AccordionItem key={field.id} value={field.id} className="bg-card rounded-md border">
+							<div className="has-data-[state=open]:border-b flex items-center gap-2 px-6 py-4">
+								{/* AccordionTrigger's own Header wrapper has no width of its own —
+							    without an explicit flex-1 ancestor it shrinks to fit the label,
+							    trapping the chevron (which is ml-auto'd *inside* the trigger)
+							    right next to the badge instead of at the row's far edge. */}
+								<div className="min-w-0 flex-1">
+									<AccordionTrigger className="py-0 hover:no-underline">
+										<div className="flex min-w-0 items-center gap-2">
+											<CardTitle className="min-w-0 truncate">
+												{subjectNameById.get(subjects[subjectIndex]?.subjectId) || t("subjectPlan")}
+											</CardTitle>
+											<Badge variant="secondary" className="h-5 shrink-0 px-1.5 text-[11px] font-normal">
+												{subjects[subjectIndex]?.chapters?.length || 0} ch
+											</Badge>
+										</div>
+									</AccordionTrigger>
+								</div>
+								<ConfirmationModal
+									onConfirm={() => remove(subjectIndex)}
+									title="Remove subject?"
+									description="This removes the subject along with all its chapters and topics from this syllabus."
+									variant="destructive"
+								>
+									<AlertDialogTrigger asChild>
 										<Button
 											type="button"
-											variant="outline"
+											variant="destructive"
 											size="icon-sm"
-											disabled={subjects[subjectIndex].chapters.length === 1}
-											onClick={() => removeChapter(subjectIndex, chapterIndex)}
+											className="shrink-0"
+											disabled={fields.length === 1}
 										>
 											<Trash2 className="size-4" />
 										</Button>
-									</div>
-									<div className="grid grid-cols-1 gap-4 @3xl/page:grid-cols-5">
-										<InputField
-											control={form.control}
-											name={`subjects.${subjectIndex}.chapters.${chapterIndex}.chapterNo`}
-											label="Chapter No"
-											type="number"
-											placeholder="e.g. 1"
-											required
-										/>
-										<InputField
-											control={form.control}
-											name={`subjects.${subjectIndex}.chapters.${chapterIndex}.title`}
-											label="Chapter Title"
-											type="text"
-											placeholder="e.g. Algebra"
-											required
-										/>
-										<InputField
-											control={form.control}
-											name={`subjects.${subjectIndex}.chapters.${chapterIndex}.titleBn`}
-											label="Bangla Title"
-											type="text"
-											placeholder="e.g. বীজগণিত"
-										/>
-										<InputField
-											control={form.control}
-											name={`subjects.${subjectIndex}.chapters.${chapterIndex}.pageRange`}
-											label="Page Range"
-											type="text"
-											placeholder="e.g. 12-24"
-										/>
-										<InputField
-											control={form.control}
-											name={`subjects.${subjectIndex}.chapters.${chapterIndex}.weightPercent`}
-											label="Chapter Weight"
-											type="number"
-											placeholder="e.g. 40"
-											required
-										/>
-									</div>
+									</AlertDialogTrigger>
+								</ConfirmationModal>
+							</div>
+							<AccordionContent className="space-y-4 px-6 pt-1 pb-6">
+								<CardDescription>{t("subjectPlanDescription")}</CardDescription>
+								<div className="grid grid-cols-1 gap-4 @3xl/page:grid-cols-2">
 									<InputField
 										control={form.control}
-										name={`subjects.${subjectIndex}.chapters.${chapterIndex}.learningOutcome`}
-										label="Learning Outcome"
-										type="textarea"
-										placeholder="Write expected learning outcomes"
+										name={`subjects.${subjectIndex}.subjectId`}
+										label="Subject"
+										type="subjectSingleSelect"
+										placeholder="Select subject"
+										dependencyId={classId}
+										required
 									/>
+									<InputField
+										control={form.control}
+										name={`subjects.${subjectIndex}.teacherId`}
+										label="Teacher"
+										type="teacherSelect"
+										placeholder="Select teacher"
+									/>
+								</div>
 
-									<div className="space-y-3">
-										{chapter.topics?.map((_: any, topicIndex: number) => (
-											<div
-												key={`${subjectIndex}-${chapterIndex}-${topicIndex}`}
-												className={cn(
-													"grid grid-cols-1 gap-4 rounded-md bg-muted/30 p-3 @3xl/page:grid-cols-[1fr_120px_120px_auto]"
-												)}
+								{subjects[subjectIndex]?.chapters?.map((chapter: any, chapterIndex: number) => (
+									<div
+										key={`${subjectIndex}-${chapterIndex}`}
+										className="space-y-4 rounded-md border p-4"
+									>
+										<div className="flex items-center justify-between gap-4">
+											<p className="text-sm font-medium">
+												Chapter {chapterIndex + 1}
+											</p>
+											<ConfirmationModal
+												onConfirm={() => removeChapter(subjectIndex, chapterIndex)}
+												title="Remove chapter?"
+												description="This removes the chapter along with all its topics from this subject."
+												variant="destructive"
 											>
-												<InputField
-													control={form.control}
-													name={`subjects.${subjectIndex}.chapters.${chapterIndex}.topics.${topicIndex}.title`}
-													label="Topic"
-													type="text"
-													placeholder="e.g. Linear equation"
-													required
-												/>
-												<InputField
-													control={form.control}
-													name={`subjects.${subjectIndex}.chapters.${chapterIndex}.topics.${topicIndex}.estimatedClasses`}
-													label="Classes"
-													type="number"
-													placeholder="e.g. 2"
-													required
-												/>
-												<InputField
-													control={form.control}
-													name={`subjects.${subjectIndex}.chapters.${chapterIndex}.topics.${topicIndex}.weightPercent`}
-													label="Weight"
-													type="number"
-													placeholder="e.g. 30"
-													required
-												/>
-												<div className="flex items-end">
+												<AlertDialogTrigger asChild>
 													<Button
 														type="button"
 														variant="outline"
 														size="icon-sm"
-														disabled={chapter.topics.length === 1}
-														onClick={() =>
-															removeTopic(subjectIndex, chapterIndex, topicIndex)
-														}
+														disabled={subjects[subjectIndex].chapters.length === 1}
 													>
 														<Trash2 className="size-4" />
 													</Button>
+												</AlertDialogTrigger>
+											</ConfirmationModal>
+										</div>
+										<div className="grid grid-cols-1 gap-4 @3xl/page:grid-cols-5">
+											<InputField
+												control={form.control}
+												name={`subjects.${subjectIndex}.chapters.${chapterIndex}.chapterNo`}
+												label="Chapter No"
+												type="number"
+												placeholder="e.g. 1"
+												required
+											/>
+											<InputField
+												control={form.control}
+												name={`subjects.${subjectIndex}.chapters.${chapterIndex}.title`}
+												label="Chapter Title"
+												type="text"
+												placeholder="e.g. Algebra"
+												required
+											/>
+											<InputField
+												control={form.control}
+												name={`subjects.${subjectIndex}.chapters.${chapterIndex}.titleBn`}
+												label="Bangla Title"
+												type="text"
+												placeholder="e.g. বীজগণিত"
+											/>
+											<InputField
+												control={form.control}
+												name={`subjects.${subjectIndex}.chapters.${chapterIndex}.pageRange`}
+												label="Page Range"
+												type="text"
+												placeholder="e.g. 12-24"
+											/>
+											<InputField
+												control={form.control}
+												name={`subjects.${subjectIndex}.chapters.${chapterIndex}.weightPercent`}
+												label="Chapter Weight"
+												type="number"
+												placeholder="e.g. 40"
+												required
+											/>
+										</div>
+										<InputField
+											control={form.control}
+											name={`subjects.${subjectIndex}.chapters.${chapterIndex}.learningOutcome`}
+											label="Learning Outcome"
+											type="textarea"
+											placeholder="Write expected learning outcomes"
+										/>
+
+										<div className="space-y-3">
+											{chapter.topics?.map((_: any, topicIndex: number) => (
+												<div
+													key={`${subjectIndex}-${chapterIndex}-${topicIndex}`}
+													className={cn(
+														"grid grid-cols-1 gap-4 rounded-md bg-muted/30 p-3 @3xl/page:grid-cols-[1fr_120px_120px_auto]"
+													)}
+												>
+													<InputField
+														control={form.control}
+														name={`subjects.${subjectIndex}.chapters.${chapterIndex}.topics.${topicIndex}.title`}
+														label="Topic"
+														type="text"
+														placeholder="e.g. Linear equation"
+														required
+													/>
+													<InputField
+														control={form.control}
+														name={`subjects.${subjectIndex}.chapters.${chapterIndex}.topics.${topicIndex}.estimatedClasses`}
+														label="Classes"
+														type="number"
+														placeholder="e.g. 2"
+														required
+													/>
+													<InputField
+														control={form.control}
+														name={`subjects.${subjectIndex}.chapters.${chapterIndex}.topics.${topicIndex}.weightPercent`}
+														label="Weight"
+														type="number"
+														placeholder="e.g. 30"
+														required
+													/>
+													<div className="flex items-end">
+														<ConfirmationModal
+															onConfirm={() => removeTopic(subjectIndex, chapterIndex, topicIndex)}
+															title="Remove topic?"
+															description="This removes the topic from this chapter."
+															variant="destructive"
+														>
+															<AlertDialogTrigger asChild>
+																<Button
+																	type="button"
+																	variant="outline"
+																	size="icon-sm"
+																	disabled={chapter.topics.length === 1}
+																>
+																	<Trash2 className="size-4" />
+																</Button>
+															</AlertDialogTrigger>
+														</ConfirmationModal>
+													</div>
 												</div>
-											</div>
-										))}
-										<Button
-											type="button"
-											variant="outline"
-											size="sm"
-											onClick={() => addTopic(subjectIndex, chapterIndex)}
-										>
-											<Plus className="size-4" />
-											Add Topic
-										</Button>
+											))}
+											<Button
+												type="button"
+												variant="outline"
+												size="sm"
+												onClick={() => addTopic(subjectIndex, chapterIndex)}
+											>
+												<Plus className="size-4" />
+												Add Topic
+											</Button>
+										</div>
 									</div>
-								</div>
-							))}
-							<Button
-								type="button"
-								variant="outline"
-								onClick={() => addChapter(subjectIndex)}
-							>
-								<Plus className="size-4" />
-								Add Chapter
-							</Button>
-						</CardContent>
-					</Card>
-				))}
-				<Button
-					type="button"
-					variant="outline"
-					onClick={() => append(createEmptySubject())}
-				>
-					<Plus className="size-4" />
-					Add Subject
-				</Button>
-			</div>
+								))}
+								<Button
+									type="button"
+									variant="outline"
+									onClick={() => addChapter(subjectIndex)}
+								>
+									<Plus className="size-4" />
+									Add Chapter
+								</Button>
+							</AccordionContent>
+						</AccordionItem>
+					))}
+				</Accordion>
+			)}
+
+			{!isManual ? (
+				<div className="mt-4">
+					<Button
+						type="button"
+						variant="outline"
+						onClick={() => append(createEmptySubject())}
+					>
+						<Plus className="size-4" />
+						Add Subject
+					</Button>
+				</div>
+			) : null}
 
 			<div className="sticky bottom-0 z-10 flex justify-end gap-3 rounded-md bg-background/95 p-4 shadow-lg backdrop-blur">
 				<Button

@@ -352,6 +352,20 @@ export function selectionWithinConvertibleTypes(
 }
 
 /**
+ * The API stores media as `/public/uploads/...`, which the backend serves under
+ * its own origin. Editor content is reused verbatim in two places that are not
+ * the admin panel — the Puppeteer PDF renderer and the details preview — so the
+ * URL baked into the document has to be absolute or the image silently 404s
+ * there.
+ */
+function toAbsoluteMediaUrl(src: string) {
+  if (/^(https?:|data:)/.test(src)) return src
+  const base = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000"
+  const safeBase = base.endsWith("/") ? base.slice(0, -1) : base
+  return `${safeBase}/${src.startsWith("/") ? src.slice(1) : src}`
+}
+
+/**
  * Handles image upload with progress tracking and abort capability
  * @param file The file to upload
  * @param onProgress Optional callback for tracking upload progress
@@ -374,17 +388,63 @@ export const handleImageUpload = async (
     )
   }
 
-  // For demo/testing: Simulate upload progress. In production, replace the following code
-  // with your own upload implementation.
-  for (let progress = 0; progress <= 100; progress += 10) {
-    if (abortSignal?.aborted) {
-      throw new Error("Upload cancelled")
-    }
-    await new Promise((resolve) => setTimeout(resolve, 500))
-    onProgress?.({ progress })
+  // The backend only accepts these for /uploads/image; failing here gives a
+  // clearer message than a 400 after the bytes have already been sent.
+  const allowedTypes = ["image/jpeg", "image/png", "image/webp"]
+  if (!allowedTypes.includes(file.type)) {
+    throw new Error("Only JPEG, PNG and WebP images are allowed")
   }
 
-  return "/images/tiptap-ui-placeholder-image.jpg"
+  const formData = new FormData()
+  formData.append("file", file)
+  formData.append("module", "rich-editor")
+
+  // XHR rather than fetch: it reports real upload progress, which the editor's
+  // image-upload node uses to drive its progress bar.
+  const url: string = await new Promise((resolve, reject) => {
+    const request = new XMLHttpRequest()
+    request.open("POST", "/api/proxy/uploads/image")
+    request.withCredentials = true
+
+    request.upload.onprogress = (event) => {
+      if (!event.lengthComputable) return
+      onProgress?.({ progress: Math.round((event.loaded / event.total) * 100) })
+    }
+
+    request.onload = () => {
+      if (request.status < 200 || request.status >= 300) {
+        let message = "Image upload failed"
+        try {
+          message = JSON.parse(request.responseText)?.message || message
+        } catch {
+          // Non-JSON error body; keep the generic message.
+        }
+        reject(new Error(message))
+        return
+      }
+
+      try {
+        const body = JSON.parse(request.responseText)
+        const uploaded = body?.data ?? body
+        if (!uploaded?.url) {
+          reject(new Error("Image upload failed"))
+          return
+        }
+        onProgress?.({ progress: 100 })
+        resolve(toAbsoluteMediaUrl(uploaded.url as string))
+      } catch {
+        reject(new Error("Image upload failed"))
+      }
+    }
+
+    request.onerror = () => reject(new Error("Image upload failed"))
+    request.onabort = () => reject(new Error("Upload cancelled"))
+
+    abortSignal?.addEventListener("abort", () => request.abort(), { once: true })
+    request.send(formData)
+  })
+
+  return url
 }
 
 type ProtocolOptions = {

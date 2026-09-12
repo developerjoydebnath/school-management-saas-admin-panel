@@ -3,13 +3,13 @@
 import { Badge } from "@/shared/components/ui/badge";
 import { Button } from "@/shared/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/shared/components/ui/card";
-import { Skeleton } from "@/shared/components/ui/skeleton";
 import {
 	ChartConfig,
 	ChartContainer,
 	ChartTooltip,
 	ChartTooltipContent,
 } from "@/shared/components/ui/chart";
+import { Skeleton } from "@/shared/components/ui/skeleton";
 import {
 	Table,
 	TableBody,
@@ -63,13 +63,12 @@ function StatCard({
 }) {
 	return (
 		<div
-			className={`bg-card/70 border-border/70 flex min-h-24 items-start justify-between rounded-md border p-4 ${
-				accent === "success"
-					? "border-emerald-500/40 bg-emerald-500/10"
-					: accent === "warning"
-						? "border-amber-500/40 bg-amber-500/10"
-						: ""
-			}`}
+			className={`bg-card/70 border-border/70 flex min-h-24 items-start justify-between rounded-md border p-4 ${accent === "success"
+				? "border-emerald-500/40 bg-emerald-500/10"
+				: accent === "warning"
+					? "border-amber-500/40 bg-amber-500/10"
+					: ""
+				}`}
 		>
 			<div className="space-y-2">
 				<p className="text-muted-foreground text-sm">{label}</p>
@@ -252,11 +251,10 @@ export default function ClassSummaryGrid() {
 						<button
 							type="button"
 							onClick={() => setViewMode("grid")}
-							className={`flex h-8 cursor-pointer items-center gap-1.5 rounded-md px-3 py-1.5 text-xs font-medium transition-all ${
-								viewMode === "grid"
-									? "bg-background text-foreground shadow-sm"
-									: "text-muted-foreground hover:text-foreground"
-							}`}
+							className={`flex h-8 cursor-pointer items-center gap-1.5 rounded-md px-3 py-1.5 text-xs font-medium transition-all ${viewMode === "grid"
+								? "bg-background text-foreground shadow-sm"
+								: "text-muted-foreground hover:text-foreground"
+								}`}
 						>
 							<LayoutGrid className="h-3.5 w-3.5" />
 							Grid
@@ -264,11 +262,10 @@ export default function ClassSummaryGrid() {
 						<button
 							type="button"
 							onClick={() => setViewMode("list")}
-							className={`flex h-8 cursor-pointer items-center gap-1.5 rounded-md px-3 py-1.5 text-xs font-medium transition-all ${
-								viewMode === "list"
-									? "bg-background text-foreground shadow-sm"
-									: "text-muted-foreground hover:text-foreground"
-							}`}
+							className={`flex h-8 cursor-pointer items-center gap-1.5 rounded-md px-3 py-1.5 text-xs font-medium transition-all ${viewMode === "list"
+								? "bg-background text-foreground shadow-sm"
+								: "text-muted-foreground hover:text-foreground"
+								}`}
 						>
 							<List className="h-3.5 w-3.5" />
 							List
@@ -290,7 +287,7 @@ export default function ClassSummaryGrid() {
 						<Skeleton
 							key={i}
 							className={
-								viewMode === "grid" ? "h-[190px] rounded-xl" : "h-14 rounded-lg"
+								viewMode === "grid" ? "h-53 rounded-xl" : "h-14 rounded-lg"
 							}
 						/>
 					))}
@@ -305,71 +302,103 @@ export default function ClassSummaryGrid() {
 			) : viewMode === "grid" ? (
 				/* ========== GRID VIEW ========== */
 				<div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-					{classSummaries.map((cls: any) => (
-						<div key={cls.id} className="h-full">
-							<Card className="group flex h-full min-h-[190px] flex-col">
-								<CardHeader className="pb-2">
-									<div className="flex items-center justify-between">
-										<CardTitle className="text-base font-bold">
-											{getLocalizedName(cls.name, locale)}
-										</CardTitle>
-										<div className="bg-primary/10 text-primary group-hover:bg-primary group-hover:text-primary-foreground flex h-9 w-9 items-center justify-center rounded-lg transition-colors">
-											<GraduationCap className="h-4.5 w-4.5" />
-										</div>
-									</div>
-								</CardHeader>
-								<CardContent className="flex flex-1 flex-col space-y-3 pt-0">
-									<div className="flex items-center gap-2">
-										<Users className="text-muted-foreground h-4 w-4" />
-										<span className="text-muted-foreground text-sm">
-											{t("totalStudents")}:
-										</span>
-										<span className="text-lg font-bold">
-											{cls.totalStudents}
-										</span>
-									</div>
+					{classSummaries.map((cls: any) => {
+						const isEmpty = Number(cls.totalStudents || 0) === 0;
+						const sections = Array.isArray(cls.sections) ? cls.sections : [];
+						const sectionShades = ["bg-primary", "bg-primary/70", "bg-primary/45", "bg-primary/25"];
 
-									{cls.sections.length > 0 && (
-										<div className="space-y-2">
-											<p className="text-muted-foreground text-xs font-medium tracking-wider uppercase">
-												{t("sections")}
-											</p>
-											<div className="flex flex-wrap gap-2">
-												{cls.sections.map((sec: any) => (
-													<Badge
-														key={sec.name}
-														variant="secondary"
-														className="h-5 gap-1 px-2 text-[11px]"
-													>
-														{sec.name}
-														<span className="text-muted-foreground">
-															({sec.count})
-														</span>
-													</Badge>
+						return (
+							<Link
+								key={cls.id}
+								href={`/students/directory/${cls.id}`}
+								className="group block h-full"
+							>
+								<Card
+									size="sm"
+									className={`h-full transition-colors duration-200 hover:bg-background/40 ${isEmpty ? "border-dashed" : ""
+										}`}
+								>
+									<CardContent className="flex h-full flex-col gap-4">
+										{/* Header */}
+										<div className="flex items-start justify-between gap-3">
+											<div className="flex items-center gap-3">
+												<div className="bg-primary/10 text-primary flex h-10 w-10 shrink-0 items-center justify-center rounded-lg">
+													<GraduationCap className="h-4.5 w-4.5" />
+												</div>
+												<div>
+													<p className="text-muted-foreground text-[11px] font-medium tracking-wider uppercase">
+														{t("class")}
+													</p>
+													<p className="text-base leading-tight font-bold">
+														{getLocalizedName(cls.name, locale)}
+													</p>
+												</div>
+											</div>
+											{isEmpty && (
+												<Badge variant="outline" className="text-muted-foreground shrink-0 text-[10px]">
+													{t("emptyClasses")}
+												</Badge>
+											)}
+										</div>
+
+										{/* Stat */}
+										<div className="flex items-baseline gap-2">
+											<span className="text-3xl leading-none font-bold tabular-nums">
+												{cls.totalStudents}
+											</span>
+											<span className="text-muted-foreground flex items-center gap-1 text-xs">
+												<Users className="h-3.5 w-3.5" />
+												{t("totalStudents")}
+											</span>
+										</div>
+
+										{/* Section proportion bar */}
+										{sections.length > 0 && !isEmpty && (
+											<div className="flex h-1.5 w-full overflow-hidden rounded-full bg-muted">
+												{sections.map((sec: any, index: number) => (
+													<div
+														key={sec.id || sec.name}
+														title={`${sec.name}: ${sec.count}`}
+														className={sectionShades[index % sectionShades.length]}
+														style={{
+															width: `${Math.max((Number(sec.count || 0) / Math.max(cls.totalStudents, 1)) * 100, 3)}%`,
+														}}
+													/>
 												))}
 											</div>
-										</div>
-									)}
+										)}
 
-									<Link
-										key={cls.id}
-										href={`/students/directory/${cls.id}`}
-										passHref
-										className="mt-auto block pt-1"
-									>
-										<Button
-											variant="ghost"
-											size="sm"
-											className="group-hover:bg-primary/10 group-hover:text-primary w-full gap-2 text-xs font-semibold transition-all"
-										>
+										{/* Section chips */}
+										<div className="flex flex-1 flex-wrap content-start gap-1.5">
+											{sections.length > 0 ? (
+												sections.map((sec: any, index: number) => (
+													<Badge
+														key={sec.id || sec.name}
+														variant="secondary"
+														className="h-5 gap-1.5 px-2 text-[11px] font-normal"
+													>
+														<span
+															className={`h-1.5 w-1.5 rounded-full ${sectionShades[index % sectionShades.length]}`}
+														/>
+														{sec.name}
+														<span className="text-muted-foreground">({sec.count})</span>
+													</Badge>
+												))
+											) : (
+												<p className="text-muted-foreground text-xs">{t("noSections")}</p>
+											)}
+										</div>
+
+										{/* Footer CTA */}
+										<div className="text-muted-foreground group-hover:text-primary mt-auto flex items-center justify-between border-t pt-3 text-xs font-semibold transition-colors">
 											{t("viewStudents")}
 											<ArrowRight className="h-3.5 w-3.5 transition-transform group-hover:translate-x-1" />
-										</Button>
-									</Link>
-								</CardContent>
-							</Card>
-						</div>
-					))}
+										</div>
+									</CardContent>
+								</Card>
+							</Link>
+						);
+					})}
 				</div>
 			) : (
 				/* ========== LIST VIEW ========== */

@@ -3,6 +3,7 @@ export type DesignationModel = {
 	name: string;
 	nameBn?: string;
 	category: string;
+	type: string;
 	level: number;
 	isHeadRole: boolean;
 	isSystem: boolean;
